@@ -138,7 +138,8 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   async function sendMentorMessage() {
     const content = mentorDraft.trim();
     if (!content || mentorBusy || mentorProviderStatus !== "ready") return;
-    const history: MentorChatMessage[] = [...mentorMessages, { role: "user", content }].slice(-12);
+    const userMessage: MentorChatMessage = { role: "user", content };
+    const history = [...mentorMessages, userMessage].slice(-12);
     setMentorMessages(history);
     setMentorDraft("");
     setMentorBusy(true);
@@ -151,7 +152,8 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(typeof payload.detail === "string" ? payload.detail : "The local mentor could not answer.");
-      setMentorMessages([...history, { role: "assistant", content: payload.answer }].slice(-12));
+      const assistantMessage: MentorChatMessage = { role: "assistant", content: payload.answer };
+      setMentorMessages([...history, assistantMessage].slice(-12));
     } catch (error) {
       setMentorError(error instanceof Error ? error.message : "Could not reach your local AI model.");
     } finally {
