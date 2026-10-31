@@ -19,12 +19,14 @@
 - [x] Weekly Dependabot proposals for npm, pip and GitHub Actions
 - [ ] Verify the published site and scheduled snapshots in GitHub Pages
 - [ ] Add RBI DBIE table explorer with units, periods, revisions and provenance
+- [x] Show scheduled source items and official-feed health in the News Intelligence workspace
 - [ ] Add cross-source event clustering, independent corroboration and claim-level evidence
 - [ ] Select a market-data provider with explicit public website-display rights
 - [ ] Add live/delayed/EOD quote adapter only after provider entitlement is confirmed
 - [ ] Add source freshness monitoring and alerts for failed scheduled refreshes
 
 ## Phase 3 — India and global research
+- [x] Add a candidate research worksheet that checks evidence completeness without producing a buy/sell score
 - [ ] NSE/BSE official filings and corporate actions
 - [ ] IPO tracker: DRHP/RHP, dates, valuations, promoter holdings, use of proceeds, risks and official links
 - [ ] Government securities, T-bills, SDLs, corporate bonds and deposits
@@ -35,10 +37,10 @@
 - [ ] Connect a real AI model through a secure server-side provider; do not expose API keys in the browser
 - [ ] Add source-grounded answers, citations, uncertainty labels and a risk-review step
 - [x] Cash-flow and SIP illustration calculators (educational, not forecasts)
-- [x] Browser-local manual asset notes with privacy warning
+- [x] Browser-local manual asset notes with privacy warning and JSON backup/clear controls
 - [x] Beginner learning path and official career-resource links
 - [ ] Secure budget, emergency fund, net worth and goal tracker with account-based private storage
-- [ ] Beginner-friendly explainers and structured learning paths
+- [x] Beginner-friendly explainers and structured learning paths
 - [ ] Student income and career roadmap, verified internships and recruitment opportunities
 - [ ] Personalized guidance based on user-approved financial inputs
 
