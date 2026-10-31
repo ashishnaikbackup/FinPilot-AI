@@ -32,6 +32,7 @@ The 31 October 2026 project review recorded successful frontend/backend/public-d
 - [ ] Confirm TradingView widgets load or show their fallback; do not describe all embedded prices as real-time.
 - [ ] Test calculator inputs and zero-return goal baseline.
 - [ ] Test local portfolio/research save, JSON export and restore in the same browser.
+- [ ] Test paper portfolio creation, manual mark updates, fee-aware P/L and JSON export; verify no order execution or live quote claim.
 - [ ] Confirm privacy warnings are visible before entering personal data.
 - [ ] Confirm no API keys, passwords, broker credentials or private financial records are committed.
 - [ ] Check GitHub Actions for the latest green CI and Pages deployment.
