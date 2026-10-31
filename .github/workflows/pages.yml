@@ -6,6 +6,7 @@ on:
     paths:
       - "frontend/**"
       - "scripts/refresh_public_data.py"
+      - "scripts/validate_public_data.py"
       - ".github/workflows/pages.yml"
   schedule:
     - cron: "17 */6 * * *"
@@ -28,11 +29,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
       - name: Refresh public data snapshots
         run: python scripts/refresh_public_data.py
       - name: Validate public data snapshots
@@ -43,12 +46,12 @@ jobs:
           node-version: 22
       - name: Install dependencies
         working-directory: frontend
-        run: npm install
+        run: npm ci
       - name: Build website
         working-directory: frontend
         run: npm run build -- --base=/FinPilot-AI/
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: frontend/dist
       - name: Deploy to GitHub Pages
