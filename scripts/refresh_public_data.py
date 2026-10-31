@@ -4,12 +4,12 @@
 Only public endpoints are called. Failures are recorded; no market quotes are invented.
 """
 import json
-import os
-import time
 import urllib.parse
+import xml.etree.ElementTree as ET
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "frontend" / "public" / "data"
@@ -28,6 +28,31 @@ def write(name, payload):
     path = OUT / name
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def fetch_rss(url, provider, allowed_domains, limit=12):
+    request = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/rss+xml, application/xml, text/xml"})
+    with urllib.request.urlopen(request, timeout=25) as response:
+        root = ET.fromstring(response.read())
+    items = root.findall(".//item")
+    normalized = []
+    for item in items[:limit]:
+        title = (item.findtext("title") or "").strip()
+        link = (item.findtext("link") or "").strip()
+        domain = (urlparse(link).hostname or "").lower()
+        if not title or not link or not any(domain == allowed or domain.endswith("." + allowed) for allowed in allowed_domains):
+            continue
+        normalized.append({
+            "title": title,
+            "url": link,
+            "domain": domain,
+            "source": provider,
+            "source_type": "official_primary_source",
+            "published_at": (item.findtext("pubDate") or item.findtext("date") or "").strip() or None,
+            "seen_at": NOW,
+            "source_country": "India",
+        })
+    return normalized
 
 
 # World Bank: annual India GDP, current US dollars. This is not a market quote.
@@ -64,6 +89,20 @@ except Exception as exc:
         "observations": [], "error": macro_error,
     })
 
+# Official Indian primary-source updates. Feed availability is checked independently.
+official_feeds = [
+    ("RBI Press Releases", "https://www.rbi.org.in/pressreleases_rss.xml", ["rbi.org.in"]),
+    ("RBI Notifications", "https://www.rbi.org.in/notifications_rss.xml", ["rbi.org.in"]),
+    ("Press Information Bureau", "https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=1", ["pib.gov.in"]),
+]
+official_articles = []
+official_errors = []
+for provider, feed_url, domains in official_feeds:
+    try:
+        official_articles.extend(fetch_rss(feed_url, provider, domains))
+    except Exception as exc:
+        official_errors.append({"provider": provider, "error": str(exc)[:240]})
+
 # GDELT is a discovery index. Its seendate is the index/seen time, not necessarily publisher time.
 query = '("India economy" OR "global markets" OR "central bank" OR geopolitics)'
 gdelt_url = "https://api.gdeltproject.org/api/v2/doc/doc?" + urllib.parse.urlencode({
@@ -77,8 +116,11 @@ try:
         "title": item.get("title"),
         "url": item.get("url"),
         "domain": item.get("domain"),
+        "source": "GDELT DOC API",
+        "source_type": "discovery_unverified",
         "source_country": item.get("sourcecountry"),
         "seen_at": item.get("seendate"),
+        "published_at": None,
         "language": item.get("language"),
     } for item in articles if item.get("title") and item.get("url")]
     write("news-global.json", {
@@ -95,7 +137,7 @@ except Exception as exc:
     write("news-global.json", {
         "provider": "GDELT DOC API", "source_url": gdelt_url,
         "retrieved_at": NOW, "freshness": "unavailable",
-        "verification": "discovery_only_not_fact_checked", "articles": [], "error": news_error,
+        "verification": "discovery_only_not_fact_checked", "articles": official_articles, "official_primary_source_count": len(official_articles), "discovery_index_count": 0, "official_feed_errors": official_errors, "error": news_error,
     })
 
 status = {
