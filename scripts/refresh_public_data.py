@@ -126,11 +126,14 @@ try:
     write("news-global.json", {
         "provider": "GDELT DOC API", "source_url": gdelt_url,
         "retrieved_at": NOW, "freshness": "rolling_3_day_discovery_index",
-        "verification": "discovery_only_not_fact_checked", "articles": normalized,
+        "verification": "mixed_official_primary_source_and_unverified_discovery", "articles": official_articles + normalized,
+        "official_primary_source_count": len(official_articles),
+        "discovery_index_count": len(normalized),
+        "official_feed_errors": official_errors,
         "error": None,
     })
-    news_ok = True
-    news_error = None
+    news_ok = bool(normalized)
+    news_error = None if news_ok else "GDELT returned no articles"
 except Exception as exc:
     news_ok = False
     news_error = str(exc)[:300]
@@ -152,9 +155,12 @@ status = {
     },
     "global_news": {
         "status": "available" if news_ok else "unavailable",
-        "provider": "GDELT DOC API",
-        "freshness": "rolling_3_day_discovery_index",
-        "caveat": "News discovery only. GDELT does not verify truth; seen_at is not publisher publication time.",
+        "provider": "RBI + PIB official RSS and GDELT discovery",
+        "freshness": "feed_dependent; GDELT rolling 3 days",
+        "caveat": "RBI/PIB items link to primary releases. GDELT items are discovery only and not fact-checked; seen_at is not publisher publication time.",
+        "official_primary_source_count": len(official_articles),
+        "discovery_index_count": len(normalized) if news_ok else 0,
+        "official_feed_errors": official_errors,
         "error": news_error,
     },
     "market_quotes": {
