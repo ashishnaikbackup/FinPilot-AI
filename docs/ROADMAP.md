@@ -71,7 +71,8 @@
 
 ## Phase 6 — Portfolio and simulation
 - [ ] Portfolio tracker with fees, taxes and allocation
-- [ ] Paper trading and backtesting with look-ahead controls
+- [x] Basic manual-price paper portfolio simulator (user-entered marks, fee-aware illustrative P/L; no live data or execution)
+- [ ] Advanced paper trading and backtesting with historical data, realistic fills and look-ahead controls
 - [ ] Read-only broker connectivity after security review
 
 ## Phase 7 — Research framework adapters
