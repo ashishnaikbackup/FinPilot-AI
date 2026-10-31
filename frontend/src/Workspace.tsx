@@ -244,7 +244,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       const next = [...holdings, ...cleaned].slice(0,200);
       setHoldings(next);
       localStorage.setItem("finpilot-holdings", JSON.stringify(next));
-      setImportMessage("Imported " + Math.min(cleaned.length, 200 - holdings.length) + " valid entries into this browser.");
+      setImportMessage("Imported " + Math.max(0, Math.min(cleaned.length, 200 - holdings.length)) + " valid entries into this browser.");
     } catch (error) {
       setImportMessage(error instanceof Error ? error.message : "Could not import this file.");
     }
