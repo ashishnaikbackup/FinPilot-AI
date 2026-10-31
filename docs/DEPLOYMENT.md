@@ -15,9 +15,9 @@ The workflow `.github/workflows/pages.yml` runs the Python script `scripts/refre
 - World Bank India annual GDP observations.
 - GDELT global news discovery results.
 
-It writes JSON snapshots into the frontend build output and deploys them with the static site. In addition to World Bank and GDELT, it checks RBI press-release/notification RSS and the official PIB press-release RSS. A validation step checks timestamps, schema, source URLs and the no-fabricated-quotes invariant before deployment. A scheduled run is configured approximately every six hours. Dependabot checks npm, pip and GitHub Actions dependencies weekly and opens update pull requests; updates are not silently merged. GitHub may delay scheduled runs; always read the timestamp in the snapshot.
+It writes JSON snapshots into the frontend build output and deploys them with the static site. In addition to World Bank and GDELT, it checks RBI press-release/notification RSS and the official PIB press-release RSS. A validation step checks timestamps, schema, source URLs and the no-fabricated-quotes invariant before deployment. A scheduled run is configured approximately hourly (GitHub may delay scheduled runs). Dependabot checks npm, pip and GitHub Actions dependencies weekly and opens update pull requests; updates are not silently merged. GitHub may delay scheduled runs; always read the timestamp in the snapshot.
 
-No server, Render account, API key or paid hosting is needed for these public snapshots. The public dashboard is static, so it cannot safely store private personal finance data or server-side secrets.
+No server, Render account, market-data API key or paid hosting is needed for these public snapshots. The Markets page also embeds TradingView widgets directly; their market coverage and data speed depend on the exchange. The public dashboard is static, so it cannot safely store private personal finance data or server-side secrets.
 
 ## 3. No local installation required
 
@@ -35,6 +35,6 @@ A future generative AI feature would need an active hosted inference provider, a
 ## 5. Production boundaries
 
 - GitHub Pages is a public static host. Do not put private records, account balances, passwords, broker tokens or API secrets in the frontend or repository.
-- Market quotes are intentionally not connected. A licensed provider must explicitly permit public website display and redistribution before quotes can be enabled.
+- The Markets workspace embeds TradingView charts, heatmaps and an economic calendar. These widgets are hosted by TradingView and are not a first-party FinPilot quote feed. Real-time access varies by exchange; a direct quote API still needs explicit display/redistribution rights and a provider agreement.
 - GDELT is a discovery index, not a fact-checker.
 - Add authentication, privacy controls, secure storage, monitoring and a server-side API before introducing personal financial records or private AI features.
