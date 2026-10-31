@@ -32,7 +32,8 @@
 
 ## Phase 3 — India and global research
 - [x] Add a candidate research worksheet that checks evidence completeness without producing a buy/sell score
-- [ ] Add official IPO offer-document calendar and structured issue comparisons
+- [x] Add an official-source IPO/public-issue headline watchlist (not a complete issue calendar)
+- [ ] Add structured issue comparisons with offer-document dates, valuation, promoter holdings and risk factors
 - [ ] NSE/BSE official filings and corporate actions
 - [ ] IPO tracker: DRHP/RHP, dates, valuations, promoter holdings, use of proceeds, risks and official links
 - [ ] Government securities, T-bills, SDLs, corporate bonds and deposits
