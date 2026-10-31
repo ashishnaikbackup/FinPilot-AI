@@ -34,13 +34,22 @@ def fetch_rss(url, provider, allowed_domains, country="India", limit=8):
     request = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/rss+xml, application/xml, text/xml"})
     with urllib.request.urlopen(request, timeout=25) as response:
         root = ET.fromstring(response.read())
-    items = root.findall(".//item")
+    items = root.findall(".//item") or root.findall(".//{*}entry")
     normalized = []
+
+    def child_text(element, name):
+        child = element.find(name) or element.find(f"{{*}}{name}")
+        return (child.text or "").strip() if child is not None and child.text else ""
+
     for item in items[:limit]:
-        title = (item.findtext("title") or "").strip()
-        link = (item.findtext("link") or "").strip()
+        title = child_text(item, "title")
+        link_element = item.find("link") or item.find("{*}link")
+        link = ((link_element.text or "").strip() if link_element is not None and link_element.text else "")
+        if not link and link_element is not None:
+            link = (link_element.attrib.get("href") or "").strip()
         parsed_link = urlparse(link)
         domain = (parsed_link.hostname or "").lower()
+        published = child_text(item, "pubDate") or child_text(item, "published") or child_text(item, "updated") or child_text(item, "date")
         if not title or parsed_link.scheme != "https" or not domain or not any(domain == allowed or domain.endswith("." + allowed) for allowed in allowed_domains):
             continue
         normalized.append({
@@ -49,7 +58,7 @@ def fetch_rss(url, provider, allowed_domains, country="India", limit=8):
             "domain": domain,
             "source": provider,
             "source_type": "official_primary_source",
-            "published_at": (item.findtext("pubDate") or item.findtext("date") or "").strip() or None,
+            "published_at": published or None,
             "seen_at": NOW,
             "source_country": country,
         })
