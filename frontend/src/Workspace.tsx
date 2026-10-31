@@ -89,6 +89,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     candidateLiquidity === "Not assessed" ? "Check liquidity, redemption terms and exit constraints." : ""
   ].filter(Boolean);
 
+  const ipoItems = useMemo(() => newsItems.filter(item => item.source_type === "official_primary_source" && /(ipo|public issue|offer document|drhp|rhp|issue summary|initial public)/i.test(item.title + " " + (item.source || ""))).slice(0, 10), [newsItems]);
   const macroCountryHistory = useMemo(() => globalMacro.filter(item => item.country_code === macroCountry && item.indicator_code === macroIndicator && item.value !== null).sort((a,b) => Number(a.date)-Number(b.date)), [globalMacro, macroCountry, macroIndicator]);
   const macroCountryLatest = useMemo(() => globalMacro.filter(item => item.indicator_code === macroIndicator && item.value !== null).reduce((latest, item) => { const current = latest.get(item.country_code); if (!current || Number(item.date) > Number(current.date)) latest.set(item.country_code, item); return latest; }, new Map<string, MacroObservation>()), [globalMacro, macroIndicator]);
   const holdingTotal = holdings.reduce((sum, item) => sum + item.amount, 0);
@@ -150,6 +151,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   </div>;
 
   if (active === "Opportunities") return <div className="workspace-stack">
+    <div className="panel workspace-panel"><div className="eyebrow">OFFICIAL ISSUE NOTICE DISCOVERY</div><h2>IPO and public-issue watch</h2><p>Filtered from official SEBI, NSE and BSE source headlines when available. This is a notice-discovery queue, not a complete IPO calendar or an application recommendation. Verify issue dates, price band, DRHP/RHP and eligibility in the original filing.</p>{ipoItems.length ? <div className="research-news-list">{ipoItems.map((item,index)=><article className="research-news-item" key={item.url || index}><div className="news-meta"><span>{item.source || item.domain}</span><small>{item.published_at || item.seen_at || "Date not supplied"}</small></div><a href={item.url} target="_blank" rel="noreferrer">{item.title}</a></article>)}</div> : <div className="empty-data">No matching official IPO/public-issue headlines in the latest snapshot. Check the NSE and SEBI issue pages directly.</div>}<div className="resource-links"><a href="https://www.sebi.gov.in/filings/public-issues.html" target="_blank" rel="noreferrer">SEBI public issues <ExternalLink size={13}/></a><a href="https://www.nseindia.com/market-data/all-upcoming-issues-ipo" target="_blank" rel="noreferrer">NSE IPOs <ExternalLink size={13}/></a></div></div>
     <div className="panel workspace-panel"><div className="eyebrow">RESEARCH WORKBENCH · NOT A BUY SIGNAL</div><h2>Build an evidence-backed candidate review</h2><p>Use this worksheet to organise a candidate. It does not calculate expected returns, rank assets or recommend a transaction. Enter only public instrument details; no personal financial information is needed.</p>
       <div className="calculator-grid">
         <div className="calculator-card">
