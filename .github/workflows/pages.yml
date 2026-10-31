@@ -11,7 +11,7 @@ on:
       - "scripts/validate_public_data.py"
       - ".github/workflows/pages.yml"
   schedule:
-    - cron: "17 */6 * * *"
+    - cron: "17 * * * *"
   workflow_dispatch:
 
 permissions:
