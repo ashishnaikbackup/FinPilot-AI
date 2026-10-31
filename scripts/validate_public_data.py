@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Validate public snapshots before a GitHub Pages deployment."""
 import json
+import math
 from datetime import datetime
-from pathlib import Path\nfrom urllib.parse import urlparse\nimport math
+from pathlib import Path
+from urllib.parse import urlparse
 
 DATA = Path(__file__).resolve().parents[1] / "frontend" / "public" / "data"
 
@@ -26,7 +28,9 @@ for label, payload in [("status", status), ("macro", macro), ("news", news)]:
     if not timestamp:
         raise SystemExit(f"{label} snapshot has no retrieved_at timestamp")
     try:
-        parsed_timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))\n        if parsed_timestamp.tzinfo is None:\n            raise ValueError("timestamp must include a timezone")
+        parsed_timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        if parsed_timestamp.tzinfo is None:
+            raise ValueError("timestamp must include a timezone")
     except ValueError as exc:
         raise SystemExit(f"{label} snapshot has invalid retrieved_at: {timestamp}") from exc
 
@@ -34,14 +38,26 @@ if not isinstance(macro.get("observations"), list):
     raise SystemExit("macro observations must be an array")
 if not isinstance(news.get("articles"), list):
     raise SystemExit("news articles must be an array")
+if len(news["articles"]) > 100:
+    raise SystemExit("news snapshot exceeds the expected item limit")
 if status.get("market_quotes", {}).get("status") != "not_connected":
     raise SystemExit("Market quotes must remain explicitly disconnected until licensed data is configured")
+
+for observation in macro["observations"]:
+    if not isinstance(observation.get("date"), str) or not observation["date"].isdigit():
+        raise SystemExit("macro observation has an invalid period")
+    value = observation.get("value")
+    if not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise SystemExit("macro observation has an invalid numeric value")
 
 for item in news["articles"]:
     if not item.get("title") or not item.get("url"):
         raise SystemExit("Every news item must include a title and source URL")
+    parsed_url = urlparse(item["url"])
+    if parsed_url.scheme != "https" or not parsed_url.hostname:
+        raise SystemExit("Every news source URL must use HTTPS and have a hostname")
     if item.get("source_type") == "official_primary_source":
-        host = (item.get("domain") or "").lower()
+        host = (parsed_url.hostname or "").lower()
         if not (host == "rbi.org.in" or host.endswith(".rbi.org.in") or host == "pib.gov.in" or host.endswith(".pib.gov.in")):
             raise SystemExit(f"Unexpected domain marked as official primary source: {host}")
 
