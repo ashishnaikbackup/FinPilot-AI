@@ -13,7 +13,7 @@
 - [x] GitHub Actions scheduled refresh and GitHub Pages deployment (no hosted backend required)
 - [x] Honest no-market-feed status; no fabricated prices
 - [x] RBI press-release and notification RSS feeds
-- [x] PIB official press-release RSS feed
+- [x] PIB official press-release RSS feed\n- [x] SEBI regulator RSS feed\n- [x] NSE announcements, corporate actions and board-meeting RSS feeds\n- [x] Federal Reserve and ECB official press-release feeds
 - [x] Distinguish official primary-source releases from GDELT discovery items
 - [x] Snapshot schema validation before Pages deployment
 - [x] Weekly Dependabot proposals for npm, pip and GitHub Actions
