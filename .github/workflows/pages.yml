@@ -35,6 +35,8 @@ jobs:
           python-version: "3.11"
       - name: Refresh public data snapshots
         run: python scripts/refresh_public_data.py
+      - name: Validate public data snapshots
+        run: python scripts/validate_public_data.py
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
