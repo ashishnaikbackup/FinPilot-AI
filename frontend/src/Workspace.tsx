@@ -33,7 +33,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [years, setYears] = useState("10");
   const [rate, setRate] = useState("10");
   const [holdings, setHoldings] = useState<{ name: string; amount: number }[]>(() => {
-    try { return JSON.parse(localStorage.getItem("finpilot-holdings") || "[]"); } catch { return []; }
+    try { const parsed = JSON.parse(localStorage.getItem("finpilot-holdings") || "[]"); return Array.isArray(parsed) ? parsed.filter((item: any) => item && typeof item.name === "string" && Number.isFinite(Number(item.amount)) && Number(item.amount) >= 0) : []; } catch { return []; }
   });
   const [assetName, setAssetName] = useState("");
   const [assetAmount, setAssetAmount] = useState("");
@@ -45,7 +45,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [candidateLiquidity, setCandidateLiquidity] = useState("Not assessed");
   const [candidateSource, setCandidateSource] = useState("");
   const [candidateRisks, setCandidateRisks] = useState("");
-  const researchComplete = Boolean(candidateName.trim() && candidateSource.trim().startsWith("https://") && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed");
+  const researchComplete = Boolean(candidateName.trim() && isHttpsUrl(candidateSource.trim()) && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed");
   const reviewGaps = [
     !candidateName.trim() ? "Name the instrument or opportunity." : "",
     !candidateSource.trim().startsWith("https://") ? "Add a primary-source HTTPS link (offer document, factsheet, filing or issuer disclosure)." : "",
@@ -114,8 +114,8 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
           <div className="calc-result"><span>Evidence checklist</span><b>{researchComplete ? "Core fields entered" : "Incomplete"}</b></div>
           <p className="calc-foot">{researchComplete ? "The basic worksheet fields are filled. This is not an approval, risk score or investment recommendation." : "Complete these items before treating the candidate as researched."}</p>
           {reviewGaps.length > 0 && <ul className="review-gaps">{reviewGaps.map(g=><li key={g}>{g}</li>)}</ul>}
-          <div className="review-summary"><b>{candidateName.trim() || "No candidate entered"}</b><span>{candidateType} · {candidateHorizon}</span><span>Valuation: {candidateValuation}</span><span>Liquidity: {candidateLiquidity}</span>{candidateSource.startsWith("https://") && <a href={candidateSource} target="_blank" rel="noreferrer">Open primary source <ExternalLink size={12}/></a>}</div>
-          <p className="calc-foot">Never rely on one source. Also review fees, tax, issuer quality, concentration, currency exposure, eligibility, custody, fraud risk and downside scenarios. Save the original document and its date outside this temporary worksheet.</p>
+          <div className="review-summary"><b>{candidateName.trim() || "No candidate entered"}</b><span>{candidateType} · {candidateHorizon}</span><span>Valuation: {candidateValuation}</span><span>Liquidity: {candidateLiquidity}</span>{isHttpsUrl(candidateSource.trim()) && <a href={candidateSource} target="_blank" rel="noreferrer">Open primary source <ExternalLink size={12}/></a>}</div>
+          {candidateRisks.trim() && <div className="review-summary"><b>Your risk notes</b><span>{candidateRisks}</span></div>}\n          <p className="calc-foot">Never rely on one source. Also review fees, tax, issuer quality, concentration, currency exposure, eligibility, custody, fraud risk and downside scenarios. Save the original document and its date outside this temporary worksheet.</p>
         </div>
       </div>
     </div>
