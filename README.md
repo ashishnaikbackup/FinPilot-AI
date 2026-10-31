@@ -9,9 +9,10 @@ FinPilot is being built to help a beginner understand markets, economics, person
 ## Current release
 
 - Responsive React + TypeScript dashboard.
-- Public data snapshots for India's annual GDP indicator (World Bank) and global news discovery (GDELT).
+- Public data snapshots for India's annual GDP indicator (World Bank), RBI press releases/notifications and PIB releases, plus GDELT global news discovery.
 - Scheduled refresh and static hosting using GitHub Actions + GitHub Pages. **No Render or paid backend hosting required for the current public dashboard.**
-- Explicit source, retrieval time, freshness and caveat labels.
+- Explicit source, retrieval time, freshness and caveat labels; official RBI/PIB items are distinguished from unverified GDELT discovery.
+- Working planning modules: cash-flow check, illustrative SIP calculator, beginner learning path, official career links and a browser-local manual asset tracker.
 - Exchange quotes remain blank until an appropriately licensed market-data provider is configured.
 - FastAPI adapters remain available for local development and future server-side features; the deployed static site does not depend on them.
 
@@ -36,14 +37,15 @@ The script writes public-source snapshots to `frontend/public/data/`. If a provi
 4. When the workflow succeeds, the site is published at:
    https://ashishnaikbackup.github.io/FinPilot-AI/
 
-The workflow refreshes public data and rebuilds the website approximately every six hours. GitHub scheduled jobs can be delayed, so the UI must always show the snapshot's actual retrieval time. This is periodic data, not a guaranteed real-time service.
+The workflow refreshes public data and rebuilds the website approximately every six hours. Weekly Dependabot checks propose frontend, backend and GitHub Actions dependency updates as pull requests; CI must pass before you merge them. GitHub scheduled jobs can be delayed, so the UI must always show the snapshot's actual retrieval time. This is periodic data, not a guaranteed real-time service.
 
 ## Public data and freshness
 
 | Data | Source | What it means |
 |---|---|---|
 | India GDP | World Bank Indicators API, `NY.GDP.MKTP.CD` | Annual macroeconomic observation in current US dollars; subject to revision, not a live indicator |
-| Global news | GDELT DOC API | Rolling discovery index; not fact-checked and not necessarily the publisher's publication time |
+| Official India updates | RBI RSS (press releases and notifications), PIB press-release RSS | Primary-source links; feed timestamps and original documents should be checked |
+| Global news discovery | GDELT DOC API | Rolling discovery index; not fact-checked and not necessarily the publisher's publication time |
 | Exchange prices | Not connected | No NIFTY, SENSEX, US index or asset prices are displayed as current until licensing permits it |
 
 See [Data Sources](docs/DATA_SOURCES.md) for official provider documentation and licensing boundaries.
@@ -68,8 +70,8 @@ API docs: http://localhost:8000/docs. The deployed GitHub Pages site currently u
 1. Public-data reliability, timestamps, error handling and data provenance.
 2. RBI DBIE explorer and verified official-source news/event intelligence.
 3. India and global research: IPOs, stocks, mutual funds, ETFs, bonds, deposits, gold, REITs/InvITs and international access checks.
-4. Personal finance: budget, emergency fund, goals, net worth and beginner education.
-5. Career and income: verified internships, remote roles and government recruitment.
+4. Personal finance: improve the local-only cash-flow, SIP and asset-note tools; add goals and emergency-fund tracking only with clear privacy controls.
+5. Career and income: verified internships, remote roles and government recruitment with source dates and eligibility checks.
 6. Portfolio tracking, risk analysis, scenario tools and paper trading.
 7. Carefully isolated open-source research adapters after security and license review.
 
