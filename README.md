@@ -46,7 +46,7 @@ The workflow refreshes public data and rebuilds the website approximately every 
 | Data | Source | What it means |
 |---|---|---|
 | India GDP | World Bank Indicators API, `NY.GDP.MKTP.CD` | Annual macroeconomic observation in current US dollars; subject to revision, not a live indicator |
-| Official India updates | RBI, SEBI and PIB RSS feeds; NSE announcements, corporate actions and board meetings RSS | Primary-source links; feed timestamps and original documents should be checked |
+| Official India updates | RBI, SEBI and PIB RSS feeds; NSE announcements, corporate actions and board meetings RSS plus BSE announcements/notices | Primary-source links; feed timestamps and original documents should be checked |
 | Global official releases | Federal Reserve monetary-policy RSS and ECB press-release RSS | Primary-source releases, subject to feed availability |
 | Global macro comparison | World Bank Indicators API | Annual GDP growth, inflation, unemployment and nominal GDP for India, US, China, UK, Germany and Japan; latest years vary. |
 | Global news discovery | GDELT DOC API | Rolling discovery index; not fact-checked and not necessarily the publisher's publication time |
