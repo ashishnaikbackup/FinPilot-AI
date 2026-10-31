@@ -114,8 +114,9 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
           <div className="calc-result"><span>Evidence checklist</span><b>{researchComplete ? "Core fields entered" : "Incomplete"}</b></div>
           <p className="calc-foot">{researchComplete ? "The basic worksheet fields are filled. This is not an approval, risk score or investment recommendation." : "Complete these items before treating the candidate as researched."}</p>
           {reviewGaps.length > 0 && <ul className="review-gaps">{reviewGaps.map(g=><li key={g}>{g}</li>)}</ul>}
-          <div className="review-summary"><b>{candidateName.trim() || "No candidate entered"}</b><span>{candidateType} · {candidateHorizon}</span><span>Valuation: {candidateValuation}</span><span>Liquidity: {candidateLiquidity}</span>{isHttpsUrl(candidateSource.trim()) && <a href={candidateSource} target="_blank" rel="noreferrer">Open primary source <ExternalLink size={12}/></a>}</div>
-          {candidateRisks.trim() && <div className="review-summary"><b>Your risk notes</b><span>{candidateRisks}</span></div>}\n          <p className="calc-foot">Never rely on one source. Also review fees, tax, issuer quality, concentration, currency exposure, eligibility, custody, fraud risk and downside scenarios. Save the original document and its date outside this temporary worksheet.</p>
+          <div className="review-summary"><b>{candidateName.trim() || "No candidate entered"}</b><span>{candidateType} · {candidateHorizon}</span><span>Valuation: {candidateValuation}</span><span>Liquidity: {candidateLiquidity}</span>{isHttpsUrl(candidateSource.trim()) && <a href={candidateSource.trim()} target="_blank" rel="noreferrer">Open primary source <ExternalLink size={12}/></a>}</div>
+          {candidateRisks.trim() && <div className="review-summary"><b>Your risk notes</b><span>{candidateRisks}</span></div>}
+          <p className="calc-foot">Never rely on one source. Also review fees, tax, issuer quality, concentration, currency exposure, eligibility, custody, fraud risk and downside scenarios. Save the original document and its date outside this temporary worksheet.</p>
         </div>
       </div>
     </div>
