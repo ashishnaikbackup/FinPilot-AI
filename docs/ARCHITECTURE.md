@@ -4,7 +4,7 @@
 FinPilot is a research, education and personal finance workspace. Phase 1 does not connect to brokers or execute orders. Any eventual regulated advice workflow, broker integration or market-data redistribution requires a separate legal, security and licensing review.
 
 ## System layout
-- **Frontend:** React + TypeScript + Vite. Presentation components consume typed API/data-provider contracts.
+- **Frontend:** React + TypeScript + Vite. Presentation components consume typed API/data-provider contracts. The Markets workspace embeds TradingView Web Components for charts, stock/crypto heatmaps and the economic calendar; widget quotes remain external and are not ingested by FinPilot.
 - **Backend:** FastAPI provider adapters are retained for development and future secured features; the published GitHub Pages application does not depend on a hosted backend.
 - **Mentor:** The deployed site uses a transparent browser-based rules engine and curated educational responses. It does not call a hosted LLM, run a local model or transmit chat prompts.
 - **Storage (later phase):** PostgreSQL for authenticated user records and normalized market/news metadata. SQLite is acceptable for local experiments only.
@@ -19,7 +19,7 @@ Every quote/series should carry:
 - freshness class: live, delayed, end-of-day, indicative or demo
 - provider disclaimer / entitlement where applicable
 
-Never silently fall back from live to stale data. Show the freshness class in the UI.
+Never silently fall back from live to stale data. Show the freshness class in the UI. External TradingView widgets retain their own provider connection and market-specific data entitlement; do not present them as a first-party quote API or guarantee that every market is real-time.
 
 ## Research assessment contract (planned)
 Each assessment should show:
