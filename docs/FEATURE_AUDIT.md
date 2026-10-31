@@ -18,6 +18,8 @@ The frontend received a focused usability and accessibility pass:
 - Added visible keyboard focus treatment and a skip-to-content link.
 - Added navigation landmark labels, active-page semantics, a screen-reader heading for non-overview workspaces, and a mobile navigation backdrop that closes on click or Escape.
 - Tightened narrow-screen layout behaviour down to 320–360px widths and improved long-link wrapping and touch target sizing.
+- Added page-specific browser titles, search/social sharing metadata and a consistent Inter font stack across headings and controls.
+- Made the application crash fallback announce itself to assistive technology, with a labelled error heading and reload action.
 - Preserved the existing external market-widget disclosure and did not add a fake quote feed.
 
 This is a source-level implementation pass. Automated CI/build and real-device/browser checks must pass before calling the release fully verified. Embedded TradingView content remains third-party and can fail independently of the FinPilot app.
