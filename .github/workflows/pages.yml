@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "frontend/**"
+      - "index.html"
       - "scripts/refresh_public_data.py"
       - "scripts/feed_utils.py"
       - "scripts/validate_public_data.py"
