@@ -38,12 +38,16 @@ def fetch_rss(url, provider, allowed_domains, country="India", limit=8):
     normalized = []
 
     def child_text(element, name):
-        child = element.find(name) or element.find(f"{{*}}{name}")
+        child = element.find(name)
+        if child is None:
+            child = element.find(f"{{*}}{name}")
         return (child.text or "").strip() if child is not None and child.text else ""
 
     for item in items[:limit]:
         title = child_text(item, "title")
-        link_element = item.find("link") or item.find("{*}link")
+        link_element = item.find("link")
+        if link_element is None:
+            link_element = item.find("{*}link")
         link = ((link_element.text or "").strip() if link_element is not None and link_element.text else "")
         if not link and link_element is not None:
             link = (link_element.attrib.get("href") or "").strip()
