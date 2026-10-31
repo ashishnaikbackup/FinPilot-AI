@@ -24,13 +24,13 @@ const navItems: { label: Section; icon: typeof LayoutDashboard }[] = [
 type MacroPoint = { date: string; value: number };
 type NewsItem = { title: string; url: string; domain: string; seen_at: string; source_country: string };
 type StatusPayload = {
-  market_quotes: { status: string; message: string; official_sources: {name:string;url:string}[] };
-  india_macro: { status: string; freshness: string; provider: string };
-  global_macro: { status: string; freshness: string; provider: string };
-  global_news: { status: string; freshness: string; provider: string; caveat: string };
-  us_filings: { status: string; provider: string };
+  retrieved_at: string;
+  refresh_interval: string;
+  market_quotes: { status: string; message: string; freshness: string };
+  india_macro: { status: string; freshness: string; provider: string; message: string; error?: string | null };
+  global_news: { status: string; freshness: string; provider: string; caveat: string; error?: string | null };
+  sec_filings: { status: string; provider: string; message: string };
 };
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 const markets = [
   { name: "NIFTY 50", area: "India · NSE index", value: "—", change: "Licensed quote feed required" },
   { name: "SENSEX", area: "India · BSE index", value: "—", change: "Licensed quote feed required" },
@@ -47,7 +47,7 @@ function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [showNotice, setShowNotice] = useState(true);
-  const [apiState, setApiState] = useState<"loading" | "connected" | "offline">("loading");
+  const [apiState, setApiState] = useState<"loading" | "connected" | "partial" | "offline">("loading");
   const [providerStatus, setProviderStatus] = useState<StatusPayload | null>(null);
   const [macroSeries, setMacroSeries] = useState<MacroPoint[]>([]);
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
@@ -56,24 +56,26 @@ function App() {
   useEffect(() => {
     let cancelled = false;
     async function loadIntelligence() {
+      const base = import.meta.env.BASE_URL;
       const results = await Promise.allSettled([
-        fetch(API_BASE + "/api/data/status"),
-        fetch(API_BASE + "/api/data/global/world-bank?country=IND&indicator=NY.GDP.MKTP.CD&per_page=12"),
-        fetch(API_BASE + "/api/news/global?days=3&limit=8")
+        fetch(base + "data/status.json"),
+        fetch(base + "data/macro-india-gdp.json"),
+        fetch(base + "data/news-global.json")
       ]);
       if (cancelled) return;
       let successes = 0;
       const [statusResult, macroResult, newsResult] = results;
+      let loadedStatus: StatusPayload | null = null;
       if (statusResult.status === "fulfilled" && statusResult.value.ok) {
-        setProviderStatus(await statusResult.value.json());
+        loadedStatus = await statusResult.value.json();
+        setProviderStatus(loadedStatus);
         successes += 1;
       }
       if (macroResult.status === "fulfilled" && macroResult.value.ok) {
         const macro = await macroResult.value.json();
         const points = (macro.observations || [])
           .filter((item: {date:string;value:number|null}) => item.value !== null)
-          .map((item: {date:string;value:number}) => ({date:item.date,value:item.value}))
-          .reverse();
+          .map((item: {date:string;value:number}) => ({date:item.date,value:item.value}));
         setMacroSeries(points);
         successes += 1;
       }
@@ -82,7 +84,8 @@ function App() {
         setNewsItems(news.articles || []);
         successes += 1;
       }
-      setApiState(successes > 0 ? "connected" : "offline");
+      const sourcesAvailable = loadedStatus?.india_macro.status === "available" && loadedStatus?.global_news.status === "available";
+      setApiState(successes === 0 ? "offline" : sourcesAvailable ? "connected" : "partial");
       setLastRefresh(new Date().toLocaleTimeString("en-IN"));
     }
     loadIntelligence();
@@ -115,7 +118,7 @@ function App() {
       <div className="page-content">
         <section className="welcome-row"><div><div className="eyebrow"><span className="pulse"/> YOUR FINANCIAL COMMAND CENTRE</div><h1>{greeting}. <span>Let's build your financial edge.</span></h1><p>Understand the world. Research opportunities. Make better-informed decisions.</p></div><button className="date-pill"><CalendarDays size={15}/> {new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date())}</button></section>
 
-        {showNotice && <div className="demo-notice"><div className="notice-icon"><CircleHelp size={18}/></div><div><b>{apiState === "connected" ? "Public data connections active" : apiState === "loading" ? "Connecting to public data sources" : "Backend connection unavailable"}</b><p>{apiState === "connected" ? "Macroeconomic observations and news discovery are loaded from their named providers. Exchange prices still require a licensed market-data feed." : apiState === "loading" ? "FinPilot is checking the API, macroeconomic sources and global news discovery." : "Start the FastAPI backend locally or deploy it and set VITE_API_BASE_URL. No market prices or headlines are invented when a source is unavailable."}</p></div><button onClick={() => setShowNotice(false)} aria-label="Dismiss notice"><X size={16}/></button></div>}
+        {showNotice && <div className="demo-notice"><div className="notice-icon"><CircleHelp size={18}/></div><div><b>{apiState === "connected" ? "Public data snapshots available" : apiState === "partial" ? "Some public data sources are unavailable" : apiState === "loading" ? "Loading public data snapshots" : "Public data snapshots unavailable"}</b><p>{apiState === "connected" ? "The latest scheduled public-source snapshots are loaded. Exchange prices still require a licensed market-data feed." : apiState === "partial" ? "At least one source did not refresh successfully. Check source status and timestamps; missing values are not filled with guesses." : apiState === "loading" ? "Loading the latest snapshots refreshed by GitHub Actions." : "No public data snapshots were loaded. Check the scheduled refresh workflow. No market prices or headlines are invented when a source is unavailable."}</p></div><button onClick={() => setShowNotice(false)} aria-label="Dismiss notice"><X size={16}/></button></div>}
 
         {active !== "Overview" && <div className="section-banner"><div className="section-icon"><Sparkles size={19}/></div><div><b>{active}</b><p>This module is part of the FinPilot roadmap. The first release establishes its interface and data foundations.</p></div><span className="status-chip">PHASE 1 FOUNDATION</span></div>}
 
@@ -143,7 +146,7 @@ function App() {
         </section>
 
         <section className="footer-grid"><div className="foot-card"><div className="foot-icon"><BookOpen/></div><div><b>Learn the language of money</b><p>Plain-English explainers, from bonds and ETFs to inflation and valuation.</p><button onClick={() => setActive("Learning Centre")}>Go to learning centre <ArrowUpRight size={13}/></button></div></div><div className="foot-card"><div className="foot-icon"><BriefcaseBusiness/></div><div><b>Grow your earning power</b><p>Build skills, explore career paths and find legitimate income opportunities.</p><button onClick={() => setActive("Career & Income")}>Explore career workspace <ArrowUpRight size={13}/></button></div></div></section>
-        <div className="data-footnote"><b>Data integrity</b><span>API: {apiState} {lastRefresh ? "· refreshed " + lastRefresh : ""}</span><span>India macro: {providerStatus?.india_macro.status || "checking"}</span><span>Exchange quotes: {providerStatus?.market_quotes.status || "checking"}</span><span>News: discovery only, not verified facts</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
+        <div className="data-footnote"><b>Data integrity</b><span>Public data: {apiState} {lastRefresh ? "· loaded " + lastRefresh : ""}</span><span>India GDP: {providerStatus?.india_macro.status || "checking"}</span><span>Exchange quotes: {providerStatus?.market_quotes.status || "checking"}</span><span>News: {providerStatus?.global_news.status || "checking"} · discovery only</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
       </div>
     </main>
   </div>;
