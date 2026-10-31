@@ -13,9 +13,9 @@
 - GDELT rolling news discovery, clearly labelled as unverified.
 - Provider health, retrieval timestamps, source links, freshness labels, stale-cache handling and pre-deployment data validation.
 - Independent RSS feeds fetched concurrently; source ordering remains stable.
-- GitHub Actions refreshes and deploys the public site approximately every six hours (schedule delays are possible).
+- GitHub Actions refreshes and deploys public snapshots approximately hourly (schedule delays are possible).
 
-### Financial planning and education
+### Market views\n- TradingView embedded advanced chart with editable exchange:ticker symbol and interval.\n- Global stock heatmap, crypto heatmap and global economic calendar.\n- India, US, ETF and crypto screener links.\n- These widgets are externally hosted; per-market data may be real-time, delayed or end-of-day. They are not a FinPilot quote API and do not guarantee every exchange or instrument is live.\n\n### Financial planning and education
 - Monthly cash-flow and emergency-reserve planner.
 - SIP illustration with explicit assumptions and risk caveats.
 - Inflation-aware goal planner, including a 0%-return monthly savings baseline.
@@ -47,7 +47,7 @@
 
 These are not bugs to conceal; they require permissions, hosting, security review or an explicit budget decision:
 
-1. **Market quotes:** no licensed live, delayed or end-of-day exchange feed is connected. Quote values remain blank rather than fabricated.
+1. **Market quotes:** TradingView widgets provide embedded chart and market views, but FinPilot has no first-party quote ingestion API. Data level and instrument coverage vary by exchange; comprehensive real-time NSE/BSE/global feeds require appropriate provider/exchange entitlements.
 2. **Generative AI:** not enabled. A real online LLM requires a secure hosted inference provider, server-side secret storage, privacy review, abuse controls and an approved budget. Do not put an API key in frontend code or GitHub Pages.
 3. **Private accounts:** no login, cloud-synced financial records or secure user database. Portfolio and research notes stay in the current browser.
 4. **Personalised investment advice and trading:** no recommendations, broker connection, order execution, leverage, derivatives or unattended trading.
@@ -75,4 +75,4 @@ GitHub scheduled jobs may be delayed or upstream feeds may fail. The site should
 
 ## Handover recommendation
 
-Treat this as a usable **free, static first release** and stop adding speculative integrations. Before any future expansion, make a separate decision on licensed market data, secure backend hosting, user privacy/authentication and the cost/privacy terms of hosted AI. Keep those decisions independent; do not compromise source integrity or expose private financial information to make a feature appear complete.
+Treat this as a more capable **free-first research release**, not a fully institutional or real-time terminal. The remaining production decisions are direct licensed market-data coverage, secure backend hosting, private account storage, source-verified event intelligence, live recruitment feeds and hosted generative AI. Keep those decisions independent; do not compromise source integrity or expose private financial information to make a feature appear complete.
