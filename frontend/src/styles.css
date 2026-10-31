@@ -59,8 +59,8 @@ button,input,select,textarea{font-family:inherit}
 .mentor-message b{font-size:11px}
 .data-footnote{font-size:10px}
 footer{font-size:10px}
-.tv-widget-shell{width:100%;overflow:hidden;border:1px solid #2b3851;border-radius:12px;background:#0b1220;margin:14px 0}
-.tv-widget-host{width:100%;min-width:0;overflow:hidden}
+.tv-widget-shell{width:100%;overflow:visible;border:1px solid #2b3851;border-radius:12px;background:#0b1220;margin:14px 0}
+.tv-widget-host{width:100%;min-width:0;overflow:visible}
 .tv-widget-host>*{width:100%!important;max-width:100%!important}
 .tv-widget-fallback{padding:18px;color:#d9e2f3;font-size:13px}
 .tv-widget-fallback a{color:#b9c3ff}
