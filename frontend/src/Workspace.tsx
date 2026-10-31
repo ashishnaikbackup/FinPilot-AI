@@ -3,7 +3,7 @@ import { ArrowUpRight, Calculator, ShieldCheck, Wallet, BriefcaseBusiness, Exter
 
 type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Portfolio" | "Learning Centre" | "Career & Income";
 type NewsItem = { title: string; url: string; domain?: string; seen_at?: string; source_country?: string; source?: string; source_type?: string; published_at?: string | null };
-type ProviderStatus = { global_news?: { official_primary_source_count?: number; discovery_index_count?: number; official_feeds?: {provider:string;status:string;items?:number;error?:string}[] } };
+type ProviderStatus = { global_news?: { official_primary_source_count?: number; discovery_index_count?: number; discovery_status?: string; discovery_error?: string | null; official_feeds?: {provider:string;status:string;items?:number;error?:string}[] } };
 
 const lessons = [
   ["1", "Money foundations", "Income, expenses, cash flow, emergency funds and inflation."],
@@ -138,7 +138,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
 
   if (active === "News Intelligence") return <div className="workspace-stack">
     <div className="panel workspace-panel"><div className="eyebrow">GLOBAL EVENT MONITOR</div><h2>Official releases and global discovery</h2><p>Official RBI/PIB releases link to primary sources. GDELT items are a discovery index, not fact-checked. Check the original document, date and independent corroboration before relying on any claim.</p>
-      <div className="module-grid">{(providerStatus?.global_news?.official_feeds || []).map(feed=><div className="module-tile" key={feed.provider}><b>{feed.provider}</b><span>{feed.status}{feed.items !== undefined ? " · "+feed.items+" items" : ""}{feed.error ? " · "+feed.error : ""}</span></div>)}</div>
+      <div className="module-grid"><div className="module-tile"><b>GDELT news discovery</b><span>{providerStatus?.global_news?.discovery_status || "checking"} · {providerStatus?.global_news?.discovery_index_count ?? 0} items{providerStatus?.global_news?.discovery_error ? " · "+providerStatus.global_news.discovery_error : ""}</span></div>{(providerStatus?.global_news?.official_feeds || []).map(feed=><div className="module-tile" key={feed.provider}><b>{feed.provider}</b><span>{feed.status}{feed.items !== undefined ? " · "+feed.items+" items" : ""}{feed.error ? " · "+feed.error : ""}</span></div>)}</div>
       <div className="resource-links"><a href="https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx" target="_blank" rel="noreferrer">RBI press releases <ExternalLink size={13}/></a><a href="https://www.pib.gov.in/" target="_blank" rel="noreferrer">Press Information Bureau <ExternalLink size={13}/></a><a href="https://www.sebi.gov.in/rss.html" target="_blank" rel="noreferrer">SEBI RSS <ExternalLink size={13}/></a><a href="https://www.nseindia.com/static/rss-feed" target="_blank" rel="noreferrer">NSE RSS <ExternalLink size={13}/></a><a href="https://www.federalreserve.gov/newsevents/pressreleases.htm" target="_blank" rel="noreferrer">Federal Reserve <ExternalLink size={13}/></a><a href="https://www.ecb.europa.eu/press/html/index.en.html" target="_blank" rel="noreferrer">European Central Bank <ExternalLink size={13}/></a><a href="https://www.imf.org/en/News" target="_blank" rel="noreferrer">IMF News <ExternalLink size={13}/></a></div>
     </div>
     <div className="panel workspace-panel"><div className="eyebrow">LATEST SNAPSHOT</div><h2>Recent source items</h2>
