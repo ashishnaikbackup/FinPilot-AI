@@ -102,3 +102,8 @@ FinPilot-AI/
 ## License
 
 No project-wide license has been selected yet. Third-party dependencies and future integrations retain their own licenses. Do not assume this repository grants rights to reuse third-party code or market data.
+
+
+## Deployment
+
+Follow [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) to publish the frontend on GitHub Pages and deploy the API using the Render Blueprint. See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) for provider and freshness details.
