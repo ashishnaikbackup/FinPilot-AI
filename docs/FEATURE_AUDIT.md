@@ -10,6 +10,18 @@ FinPilot now has a more usable multi-asset market workspace with externally host
 
 This is **not** a complete institutional financial terminal. The most important outstanding requirement is a direct, properly licensed, first-party quote service that covers every required exchange and instrument. TradingView embeds display current market information where their exchange coverage permits, but quote speed can be real-time, delayed or end-of-day (market-dependent) depending on market and entitlement. FinPilot does not receive those quotes as structured data.
 
+## Product-quality release pass — 31 October 2026
+
+The frontend received a focused usability and accessibility pass:
+- Consolidated the effective interface typography on Inter/system fallbacks and added a small set of shared surface, border, text and accent tokens.
+- Added restrained hover feedback and short page/panel entrance transitions; all nonessential motion is disabled for users who request reduced motion.
+- Added visible keyboard focus treatment and a skip-to-content link.
+- Added navigation landmark labels, active-page semantics, a screen-reader heading for non-overview workspaces, and a mobile navigation backdrop that closes on click or Escape.
+- Tightened narrow-screen layout behaviour down to 320–360px widths and improved long-link wrapping and touch target sizing.
+- Preserved the existing external market-widget disclosure and did not add a fake quote feed.
+
+This is a source-level implementation pass. Automated CI/build and real-device/browser checks must pass before calling the release fully verified. Embedded TradingView content remains third-party and can fail independently of the FinPilot app.
+
 ## Requirement matrix
 
 | Requirement discussed | Status | Delivered / remaining |
