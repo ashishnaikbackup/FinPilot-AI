@@ -37,10 +37,23 @@ jobs:
           python-version: "3.11"
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+      - name: Restore last-known-good public snapshots
+        uses: actions/cache/restore@v4
+        with:
+          path: frontend/public/data
+          key: finpilot-public-data-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            finpilot-public-data-
       - name: Refresh public data snapshots
         run: python scripts/refresh_public_data.py
       - name: Validate public data snapshots
         run: python scripts/validate_public_data.py
+      - name: Cache refreshed public snapshots
+        uses: actions/cache/save@v4
+        if: success()
+        with:
+          path: frontend/public/data
+          key: finpilot-public-data-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
