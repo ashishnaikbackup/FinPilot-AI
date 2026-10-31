@@ -30,7 +30,7 @@ type StatusPayload = {
   global_news: { status: string; freshness: string; provider: string; caveat: string };
   us_filings: { status: string; provider: string };
 };
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000").replace(/\\/$/, "");
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 const markets = [
   { name: "NIFTY 50", area: "India · NSE index", value: "—", change: "Licensed quote feed required" },
   { name: "SENSEX", area: "India · BSE index", value: "—", change: "Licensed quote feed required" },
