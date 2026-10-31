@@ -19,7 +19,7 @@
 - TradingView embedded advanced chart with editable exchange:ticker symbol and interval.
 - Global stock heatmap, crypto heatmap and global economic calendar.
 - India, US, ETF and crypto screener links.
-- These widgets are externally hosted; per-market data may be real-time, delayed or end-of-day. They are not a FinPilot quote API and do not guarantee every exchange or instrument is live.
+- These widgets are externally hosted; stock widgets may be delayed; forex and crypto widgets may be real-time, depending on the market (market-dependent). They are not a FinPilot quote API and do not guarantee every exchange or instrument is live.
 
 ### Financial planning and education
 - Monthly cash-flow and emergency-reserve planner.
