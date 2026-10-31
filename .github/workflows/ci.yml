@@ -35,3 +35,17 @@ jobs:
       - run: pip install -r requirements.txt
       - run: python -m compileall -q app
       - run: pytest -q
+
+  public-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Check public data scripts
+        run: python -m py_compile scripts/refresh_public_data.py scripts/feed_utils.py scripts/validate_public_data.py
+      - name: Test feed parser and source allowlist
+        env:
+          PYTHONPATH: scripts
+        run: python -m unittest discover -s scripts/tests -v
