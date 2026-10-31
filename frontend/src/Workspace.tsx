@@ -14,7 +14,7 @@ const lessons = [
 const careerLinks = [
   ["National Career Service", "Government employment and career services", "https://www.ncs.gov.in/"],
   ["NATS", "Apprenticeship opportunities in India", "https://nats.education.gov.in/"],
-  ["Employment News", "Official government recruitment and vacancy notices", "https://www रोजगार.gov.in/"],
+  ["Employment News", "Official government recruitment and vacancy notices", "https://employmentnews.gov.in/"],
   ["Goa Government", "Official Goa government portal and department notices", "https://www.goa.gov.in/"],
   ["RBI Opportunities", "RBI recruitment and career notices", "https://opportunities.rbi.org.in/"],
   ["SEBI Careers", "SEBI recruitment notices", "https://www.sebi.gov.in/"]
@@ -27,11 +27,9 @@ function money(value: number) {
 export default function Workspace({ active }: { active: Section }) {
   const [monthlyIncome, setMonthlyIncome] = useState("0");
   const [monthlyExpenses, setMonthlyExpenses] = useState("0");
-  const [monthlySavings, setMonthlySavings] = useState("0");
   const [sip, setSip] = useState("1000");
   const [years, setYears] = useState("10");
   const [rate, setRate] = useState("10");
-  const [capital, setCapital] = useState("0");
   const [holdings, setHoldings] = useState<{ name: string; amount: number }[]>(() => {
     try { return JSON.parse(localStorage.getItem("finpilot-holdings") || "[]"); } catch { return []; }
   });
