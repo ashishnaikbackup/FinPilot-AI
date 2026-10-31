@@ -14,7 +14,7 @@ FinPilot is being built to help a beginner understand markets, economics, person
 - Explicit source, retrieval time, freshness and caveat labels; official RBI/SEBI/NSE/BSE/PIB/Federal Reserve/ECB items are distinguished from unverified GDELT discovery.
 - Working planning modules: cash-flow and emergency-reserve check, illustrative SIP calculator, beginner learning path, official career links, a browser-local asset tracker with category allocation and JSON backup, and a research worksheet with locally saved bull/base/bear notes and JSON export.
 - News Intelligence displays scheduled regulator, exchange and central-bank source items alongside GDELT discovery, with per-feed health when available.
-- The Opportunities workspace includes an official-source IPO/public-issue headline watchlist (not a complete issue calendar). The AI Mentor includes a transparent rules-based financial-stage and goal planner; it is not a connected LLM or personalized regulated advisory service. Career pages are official portal links, not a live job feed.
+- The Opportunities workspace includes an official-source IPO/public-issue headline watchlist (not a complete issue calendar). The AI Mentor includes a transparent rules-based financial-stage and goal planner plus an optional local Ollama chat connector. It is not a hosted LLM service or personalized regulated advisory service; the local model cannot verify live market facts. Career pages are official portal links, not a live job feed.
 - Exchange quotes remain blank until an appropriately licensed market-data provider is configured.
 - FastAPI adapters remain available for local development and future server-side features; the deployed static site does not depend on them.
 
@@ -52,7 +52,7 @@ The workflow refreshes public data and rebuilds the website approximately every 
 | Global news discovery | GDELT DOC API | Rolling discovery index; not fact-checked and not necessarily the publisher's publication time |
 | Exchange prices | Not connected | No NIFTY, SENSEX, US index or asset prices are displayed as current until licensing permits it |
 
-See [Data Sources](docs/DATA_SOURCES.md) for official provider documentation and licensing boundaries, and [Open-source Adapter Review](docs/OPEN_SOURCE_ADAPTER_REVIEW.md) for project-by-project reuse and safety decisions.
+See [Data Sources](docs/DATA_SOURCES.md) for official provider documentation and licensing boundaries, [Local AI Mentor](docs/LOCAL_AI_MENTOR.md) for the optional Ollama setup, and [Open-source Adapter Review](docs/OPEN_SOURCE_ADAPTER_REVIEW.md) for project-by-project reuse and safety decisions.
 
 ## Optional local API
 
