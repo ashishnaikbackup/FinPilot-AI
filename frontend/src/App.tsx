@@ -106,6 +106,8 @@ function App() {
     loadIntelligence();
     return () => { cancelled = true; };
   }, []);
+  useEffect(() => { document.title = active === "Overview" ? "FinPilot AI — Financial Intelligence" : `${active} | FinPilot AI`; }, [active]);
+
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     return hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
