@@ -63,11 +63,19 @@ try:
 except Exception as exc:
     macro_ok = False
     macro_error = str(exc)[:300]
+    try:
+        previous_macro = json.loads((OUT / "macro-india-gdp.json").read_text(encoding="utf-8"))
+    except Exception:
+        previous_macro = {}
+    observations = previous_macro.get("observations", []) if isinstance(previous_macro.get("observations"), list) else []
     write("macro-india-gdp.json", {
         "provider": "World Bank Indicators API", "source_url": wb_url,
-        "retrieved_at": NOW, "freshness": "unavailable", "indicator_code": "NY.GDP.MKTP.CD",
+        "retrieved_at": previous_macro.get("retrieved_at", NOW) if observations else NOW,
+        "last_attempt_at": NOW,
+        "freshness": "stale_last_known_good" if observations else "unavailable",
+        "indicator_code": "NY.GDP.MKTP.CD",
         "indicator_name": "GDP (current US$)", "country": "India", "unit": "current US$",
-        "observations": [], "error": macro_error,
+        "observations": observations, "error": macro_error,
     })
 
 # Global macro snapshot: annual World Bank indicators, not market prices.
@@ -114,14 +122,20 @@ try:
 except Exception as exc:
     global_macro_ok = False
     global_macro_error = str(exc)[:300]
+    try:
+        previous_global_macro = json.loads((OUT / "macro-global.json").read_text(encoding="utf-8"))
+    except Exception:
+        previous_global_macro = {}
+    global_observations = previous_global_macro.get("observations", []) if isinstance(previous_global_macro.get("observations"), list) else []
     write("macro-global.json", {
         "provider": "World Bank Indicators API",
         "source_url": global_macro_url,
-        "retrieved_at": NOW,
-        "freshness": "unavailable",
+        "retrieved_at": previous_global_macro.get("retrieved_at", NOW) if global_observations else NOW,
+        "last_attempt_at": NOW,
+        "freshness": "stale_last_known_good" if global_observations else "unavailable",
         "countries": ["India", "United States", "China", "United Kingdom", "Germany", "Japan"],
         "indicators": global_indicator_names,
-        "observations": [],
+        "observations": global_observations,
         "error": global_macro_error,
         "caveat": "Annual macroeconomic indicators. Not live market data.",
     })
@@ -152,6 +166,8 @@ for provider, feed_url, domains, country in official_feeds:
         official_feed_status.append({"provider": provider, "source_url": feed_url, "status": "unavailable", "error": error})
 
 # GDELT is a discovery index. Its seendate is the index/seen time, not necessarily publisher time.
+normalized = []
+news_stale = False
 query = '("India economy" OR "global markets" OR "central bank" OR geopolitics)'
 gdelt_url = "https://api.gdeltproject.org/api/v2/doc/doc?" + urllib.parse.urlencode({
     "query": "India economy OR global markets OR central bank OR geopolitics", "mode": "ArtList", "format": "json", "sort": "DateDesc",
@@ -187,39 +203,53 @@ try:
     news_error = None if news_ok else "GDELT returned no articles"
 except Exception as exc:
     news_ok = False
+    news_stale = True
     news_error = str(exc)[:300]
+    try:
+        previous_news = json.loads((OUT / "news-global.json").read_text(encoding="utf-8"))
+    except Exception:
+        previous_news = {}
+    previous_articles = previous_news.get("articles", []) if isinstance(previous_news.get("articles"), list) else []
+    official_articles = [item for item in previous_articles if item.get("source_type") == "official_primary_source"]
+    normalized = [item for item in previous_articles if item.get("source_type") == "discovery_unverified"]
     write("news-global.json", {
         "provider": "Official RBI/SEBI/NSE/PIB/Fed/ECB RSS and GDELT discovery", "source_url": gdelt_url,
-        "retrieved_at": NOW, "freshness": "feed_dependent",
-        "verification": "official_primary_source_items_plus_unavailable_discovery", "articles": official_articles, "official_primary_source_count": len(official_articles), "discovery_index_count": 0, "discovery_status": "unavailable", "discovery_error": news_error, "official_feed_errors": official_errors, "official_feeds": official_feed_status, "error": None if official_articles else news_error,
+        "retrieved_at": previous_news.get("retrieved_at", NOW) if previous_articles else NOW,
+        "last_attempt_at": NOW, "freshness": "stale_last_known_good" if previous_articles else "unavailable",
+        "verification": "previously_collected_official_sources_and_unverified_discovery",
+        "articles": previous_articles, "official_primary_source_count": len(official_articles),
+        "discovery_index_count": len(normalized),
+        "discovery_status": "stale" if normalized else "unavailable",
+        "discovery_error": news_error, "official_feed_errors": official_errors,
+        "official_feeds": official_feed_status, "error": news_error,
     })
 
 status = {
     "retrieved_at": NOW,
     "refresh_interval": "approximately every 6 hours (GitHub Actions schedule; may be delayed)",
     "global_macro": {
-        "status": "available" if global_macro_ok else "unavailable",
+        "status": "available" if global_macro_ok else ("stale" if global_observations else "unavailable"),
         "provider": "World Bank Indicators API",
         "freshness": "annual_dataset; subject_to_revision",
         "message": "Six-country macroeconomic comparison; latest observation year varies by series",
-        "observation_count": len(global_observations) if global_macro_ok else 0,
+        "observation_count": len(global_observations),
         "error": global_macro_error,
     },
     "india_macro": {
-        "status": "available" if macro_ok else "unavailable",
+        "status": "available" if macro_ok else ("stale" if observations else "unavailable"),
         "provider": "World Bank Indicators API",
         "freshness": "annual_dataset; subject_to_revision",
         "message": "India GDP indicator; not live economic activity",
         "error": macro_error,
     },
     "global_news": {
-        "status": "available" if (news_ok or bool(official_articles)) else "unavailable",
+        "status": "stale" if news_stale else ("available" if (news_ok or bool(official_articles)) else "unavailable"),
         "provider": "Official RBI/SEBI/NSE/PIB/Fed/ECB RSS and GDELT discovery",
         "freshness": "feed_dependent; GDELT rolling 3 days",
         "caveat": "RBI/SEBI/NSE/PIB/Federal Reserve/ECB items link to primary releases. GDELT items are discovery only and not fact-checked; seen_at is not publisher publication time.",
         "official_primary_source_count": len(official_articles),
-        "discovery_index_count": len(normalized) if news_ok else 0,
-        "discovery_status": "available" if news_ok else "unavailable",
+        "discovery_index_count": len(normalized),
+        "discovery_status": "stale" if news_stale and normalized else ("available" if news_ok else "unavailable"),
         "discovery_error": news_error,
         "official_feed_errors": official_errors,
         "official_feeds": official_feed_status,
