@@ -54,6 +54,7 @@ GDELT is only the discovery connector in Phase 2. Do not show an aggregated head
 - NSE data products: https://www.nseindia.com/static/market-data/real-time-data-subscription
 - BSE market data: https://marketdata.bseindia.com/
 - SEBI securities market data terms: https://www.sebi.gov.in/legal/circulars/feb-2022/approach-to-securities-market-data-access-and-terms-of-usage-of-data-provided-by-data-sources-in-indian-securities-market_56420.html
+- SEBI May 8, 2026 educational price-data circular (30-day lag; NISM simulation-lab exception): https://www.sebi.gov.in/legal/circulars/may-2026/norms-for-sharing-and-usage-of-price-data-for-educational-purposes_101293.html
 - SEC developer resources: https://www.sec.gov/about/developer-resources
 - World Bank API: https://datahelpdesk.worldbank.org/knowledgebase/articles/889392
 - FRED API (API key required): https://fred.stlouisfed.org/docs/api/fred/overview.html
