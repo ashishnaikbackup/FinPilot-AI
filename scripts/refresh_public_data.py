@@ -135,6 +135,7 @@ try:
         "official_primary_source_count": len(official_articles),
         "discovery_index_count": len(normalized),
         "official_feed_errors": official_errors,
+        "official_feeds": official_feed_status,
         "error": None if normalized else "GDELT returned no articles",
     })
     news_ok = bool(normalized)
@@ -166,6 +167,7 @@ status = {
         "official_primary_source_count": len(official_articles),
         "discovery_index_count": len(normalized) if news_ok else 0,
         "official_feed_errors": official_errors,
+        "official_feeds": official_feed_status,
         "error": news_error,
     },
     "market_quotes": {
