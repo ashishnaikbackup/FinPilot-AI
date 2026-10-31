@@ -11,9 +11,9 @@ FinPilot is being built to help a beginner understand markets, economics, person
 - Responsive React + TypeScript dashboard.
 - Public data snapshots for India's annual GDP indicator (World Bank), RBI, SEBI and NSE updates, PIB releases, and Federal Reserve/ECB updates, plus GDELT global news discovery.
 - Scheduled refresh and static hosting using GitHub Actions + GitHub Pages. **No Render or paid backend hosting required for the current public dashboard.**
-- Explicit source, retrieval time, freshness and caveat labels; official RBI/PIB items are distinguished from unverified GDELT discovery.
+- Explicit source, retrieval time, freshness and caveat labels; official RBI/SEBI/NSE/PIB/Federal Reserve/ECB items are distinguished from unverified GDELT discovery.
 - Working planning modules: cash-flow check, illustrative SIP calculator, beginner learning path, official career links, a browser-local asset tracker with JSON backup, and an evidence-completeness research worksheet.
-- News Intelligence displays the scheduled RBI/PIB/GDELT snapshot and per-feed health when available.
+- News Intelligence displays scheduled regulator, exchange and central-bank source items alongside GDELT discovery, with per-feed health when available.
 - The AI Mentor is currently a guided educational framework, not a connected LLM or personalized regulated advisory service. Career pages are official portal links, not a live job feed.
 - Exchange quotes remain blank until an appropriately licensed market-data provider is configured.
 - FastAPI adapters remain available for local development and future server-side features; the deployed static site does not depend on them.
