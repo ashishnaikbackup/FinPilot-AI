@@ -1,4 +1,4 @@
-# Free deployment guide (no Render required)
+# GitHub-only deployment guide (no local setup or Render required)
 
 ## 1. Enable GitHub Pages
 
@@ -19,16 +19,18 @@ It writes JSON snapshots into the frontend build output and deploys them with th
 
 No server, Render account, API key or paid hosting is needed for these public snapshots. The public dashboard is static, so it cannot safely store private personal finance data or server-side secrets.
 
-## 3. Optional backend
+## 3. No local installation required
 
-The FastAPI backend is kept for local development and future secured features. It is not required to publish or use the current public dashboard. If a later feature needs authentication, private data storage, user-specific AI workflows or server-side API credentials, we can add a serverless backend (for example, Cloudflare Workers) without using Render. That is a later deployment choice, not a current dependency.
+The public dashboard and browser-based learning assistant run from GitHub Pages. Visitors do not need Python, Node.js, Ollama, an API key or a local server. The assistant uses transparent built-in topic rules; it is not a generative LLM. The optional FastAPI code is retained for developer work only and is not called by the deployed site.
+
+A future generative AI feature would need an active hosted inference provider, a secure server-side secret, privacy review and an approved budget. Do not put provider keys in frontend code or GitHub Pages assets.
 
 ## 4. Check a deployment
 
 - In GitHub **Actions**, confirm both the public-data refresh and frontend build/deploy steps succeeded.
 - Open the website and check the data-integrity strip for the snapshot load time and source status.
 - If a source fails, its dataset should be empty and show as unavailable; the site must not fill in invented values.
-- If Pages is not enabled, the workflow may build but GitHub will not publish the website until Pages is configured.
+- If Pages is not enabled, the workflow may build but GitHub will not publish the website until Pages is configured. A frontend push also triggers the CI checks and the Pages deployment workflow.
 
 ## 5. Production boundaries
 
