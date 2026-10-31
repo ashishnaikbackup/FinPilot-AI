@@ -17,6 +17,7 @@
 - [x] PIB official press-release RSS feed
 - [x] SEBI regulator RSS feed
 - [x] NSE announcements, corporate actions and board-meeting RSS feeds
+- [x] BSE corporate announcements and notices RSS feeds
 - [x] Federal Reserve and ECB official press-release feeds
 - [x] Distinguish official primary-source releases from GDELT discovery items
 - [x] Snapshot schema validation before Pages deployment
