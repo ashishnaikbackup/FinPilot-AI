@@ -176,3 +176,10 @@ button:disabled{cursor:not-allowed}
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
+
+
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.sidebar-backdrop{display:none}
+@media(max-width:800px){
+  .sidebar-backdrop{display:block;position:fixed;inset:0;z-index:10;border:0;border-radius:0;background:#050a15b8;backdrop-filter:blur(2px)}
+}
