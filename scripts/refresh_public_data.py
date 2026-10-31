@@ -138,9 +138,9 @@ except Exception as exc:
     news_ok = False
     news_error = str(exc)[:300]
     write("news-global.json", {
-        "provider": "GDELT DOC API", "source_url": gdelt_url,
-        "retrieved_at": NOW, "freshness": "unavailable",
-        "verification": "discovery_only_not_fact_checked", "articles": official_articles, "official_primary_source_count": len(official_articles), "discovery_index_count": 0, "official_feed_errors": official_errors, "error": news_error,
+        "provider": "RBI + PIB official RSS and GDELT discovery", "source_url": gdelt_url,
+        "retrieved_at": NOW, "freshness": "feed_dependent",
+        "verification": "official_primary_source_items_plus_unavailable_discovery", "articles": official_articles, "official_primary_source_count": len(official_articles), "discovery_index_count": 0, "official_feed_errors": official_errors, "error": news_error,
     })
 
 status = {
@@ -154,7 +154,7 @@ status = {
         "error": macro_error,
     },
     "global_news": {
-        "status": "available" if news_ok else "unavailable",
+        "status": "available" if (news_ok or bool(official_articles)) else "unavailable",
         "provider": "RBI + PIB official RSS and GDELT discovery",
         "freshness": "feed_dependent; GDELT rolling 3 days",
         "caveat": "RBI/PIB items link to primary releases. GDELT items are discovery only and not fact-checked; seen_at is not publisher publication time.",
