@@ -102,7 +102,7 @@ export default function Workspace({ active, query }: { active: Section; query: s
   </div>;
 
   if (active === "Career & Income") return <div className="workspace-stack">
-    <div className="panel workspace-panel"><div className="eyebrow">EARNING POWER</div><h2>Career and income research</h2><p>Official starting points for recruitment and apprenticeships. Always confirm eligibility, age cut-off, category rules, location, dates and fees in the original notification.</p><div className="career-list">{careerLinks.filter(x=>x[0]!=="Employment News").map(([name,desc,url])=><a href={url} target="_blank" rel="noreferrer" key={name}><BriefcaseBusiness size={16}/><div><b>{name}</b><span>{desc}</span></div><ArrowUpRight size={14}/></a>)}</div></div>
+    <div className="panel workspace-panel"><div className="eyebrow">EARNING POWER</div><h2>Career and income research</h2><p>Official starting points for recruitment and apprenticeships. Always confirm eligibility, age cut-off, category rules, location, dates and fees in the original notification.</p><div className="career-list">{careerLinks.map(([name,desc,url])=><a href={url} target="_blank" rel="noreferrer" key={name}><BriefcaseBusiness size={16}/><div><b>{name}</b><span>{desc}</span></div><ArrowUpRight size={14}/></a>)}</div></div>
   </div>;
 
   return <div className="workspace-stack">
