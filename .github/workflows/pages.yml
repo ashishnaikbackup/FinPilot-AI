@@ -102,7 +102,7 @@ jobs:
           find dist/assets -maxdepth 1 -type f -name '*.js' -size +0c | grep -q .
           find dist/assets -maxdepth 1 -type f -name '*.css' -size +0c | grep -q .
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: frontend/dist
       - name: Deploy to GitHub Pages
