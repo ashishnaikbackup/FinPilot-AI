@@ -154,9 +154,9 @@ function App() {
         </section>
 
         <section className="footer-grid"><div className="foot-card"><div className="foot-icon"><BookOpen/></div><div><b>Learn the language of money</b><p>Plain-English explainers, from bonds and ETFs to inflation and valuation.</p><button onClick={() => setActive("Learning Centre")}>Go to learning centre <ArrowUpRight size={13}/></button></div></div><div className="foot-card"><div className="foot-icon"><BriefcaseBusiness/></div><div><b>Grow your earning power</b><p>Build skills, explore career paths and find legitimate income opportunities.</p><button onClick={() => setActive("Career & Income")}>Explore career workspace <ArrowUpRight size={13}/></button></div></div></section>
-        <Workspace active="Overview" query={query}/>
+        <Workspace active="Overview" query={query} newsItems={newsItems} providerStatus={providerStatus}/>
         </>}
-        {active !== "Overview" && <Workspace active={active} query={query}/>}
+        {active !== "Overview" && <Workspace active={active} query={query} newsItems={newsItems} providerStatus={providerStatus}/>}
         <div className="data-footnote"><b>Data integrity</b><span>Public data: {apiState} {lastRefresh ? "· snapshot " + lastRefresh : ""}</span><span>India GDP: {providerStatus?.india_macro.status || "checking"}</span><span>Exchange quotes: {providerStatus?.market_quotes.status || "checking"}</span><span>News: {providerStatus?.global_news.status || "checking"} · {providerStatus?.global_news.official_primary_source_count ?? 0} official / {providerStatus?.global_news.discovery_index_count ?? 0} discovery</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
       </div>
     </main>
