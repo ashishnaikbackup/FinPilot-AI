@@ -8,7 +8,7 @@ This document records the initial public-source integrations. Provider availabil
 |---|---|---|---|
 | Indian macroeconomics | RBI Database on Indian Economy (DBIE) | Public read-only JSON API, no key | Backend/local adapter only; not currently included in the static public snapshot. Periodic dataset loads, not a live market feed. Tables have different frequencies and units. |
 | Global macroeconomics | World Bank Indicators API | Public API | Indicator-specific; many observations are annual or quarterly and may be revised. |
-| Official Indian updates | RBI RSS (press releases and notifications), PIB press-release RSS | Public RSS feeds | Original government/regulator releases; the feed is an index, and consequential claims should be checked in the linked document. |
+| Official Indian updates | RBI RSS, SEBI RSS, PIB RSS, NSE announcements/corporate actions/board meetings RSS | Public RSS feeds | Regulator, exchange and government primary-source releases. Feed health is recorded separately; open and check the original document. |\n| Global official updates | Federal Reserve monetary-policy RSS, ECB press-release RSS | Public RSS feeds | Central-bank releases; subject to provider feed availability. |
 | Global news discovery | GDELT DOC | Public API | Discovery/coverage aggregation. Not a truth-verification service and not a substitute for primary documents. |
 | US listed-company filings | SEC EDGAR submissions API | Public JSON API; descriptive User-Agent required | Backend/local adapter only; not currently included in the static public snapshot. Filing updates are disseminated through SEC systems; respect SEC fair-access rules. |
 
@@ -38,7 +38,7 @@ GDELT is only the discovery connector in Phase 2. Do not show an aggregated head
 
 - RBI press releases RSS: https://www.rbi.org.in/pressreleases_rss.xml
 - RBI notifications RSS: https://www.rbi.org.in/notifications_rss.xml
-- PIB press releases RSS: https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=1
+- PIB press releases RSS: https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=1\n- SEBI RSS: https://www.sebi.gov.in/sebirss.xml\n- NSE RSS directory: https://www.nseindia.com/static/rss-feed\n- NSE announcements RSS: https://nsearchives.nseindia.com/content/RSS/Online_announcements.xml\n- NSE corporate actions RSS: https://nsearchives.nseindia.com/content/RSS/Corporate_action.xml\n- NSE board meetings RSS: https://nsearchives.nseindia.com/content/RSS/Board_Meetings.xml\n- Federal Reserve monetary policy RSS: https://www.federalreserve.gov/feeds/press_monetary.xml\n- ECB press releases RSS: https://www.ecb.europa.eu/rss/press.html
 - RBI DBIE: https://dev.dbie.rbihub.in/docs/using-the-site
 - NSE data products: https://www.nseindia.com/static/market-data/real-time-data-subscription
 - BSE market data: https://marketdata.bseindia.com/
