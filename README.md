@@ -18,9 +18,13 @@ FinPilot is being built to help a beginner understand markets, economics, person
 - Exchange quotes remain blank until an appropriately licensed market-data provider is configured.
 - FastAPI adapters remain available for local development and future server-side features; the deployed static site does not depend on them.
 
-## Run locally
+## Use the public website (no installation)
 
-Requirements: Node.js 22+, Python 3.11+.
+Open https://ashishnaikbackup.github.io/FinPilot-AI/. The dashboard and browser-based learning assistant run directly in the browser. No Ollama, Python, Node.js, API key, local server or paid hosting setup is required. The built-in assistant is rules-based educational guidance, not a generative AI model.
+
+## Optional developer setup
+
+Requirements: Node.js 22+, Python 3.11+. This is only for contributors who want to modify and test the source code; it is not needed to use FinPilot.
 
 ```bash
 python scripts/refresh_public_data.py
