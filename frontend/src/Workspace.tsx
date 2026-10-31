@@ -41,9 +41,9 @@ export default function Workspace({ active }: { active: Section }) {
   const projected = useMemo(() => {
     const p = Math.max(0, Number(sip) || 0);
     const n = Math.max(0, Number(years) || 0) * 12;
-    const r = Math.max(0, Number(rate) || 0) / 1200;
+    const r = Math.min(50, Math.max(-50, Number(rate) || 0)) / 1200;
     if (!n) return 0;
-    return r === 0 ? p * n : p * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
+    return r === 0 ? p * n : p * ((Math.pow(1 + r, n) - 1) / r);
   }, [sip, years, rate]);
 
   function saveHolding() {
@@ -108,7 +108,7 @@ export default function Workspace({ active }: { active: Section }) {
     <div className="panel workspace-panel"><div className="eyebrow">FINANCIAL TOOLS</div><h2>Simple planning calculators</h2><p>Illustrative calculations only. They are not forecasts, promises or investment recommendations.</p>
       <div className="calculator-grid">
         <div className="calculator-card"><div className="tool-heading"><Wallet size={17}/><b>Monthly cash-flow check</b></div><label>Monthly take-home income (₹)<input type="number" min="0" value={monthlyIncome} onChange={e=>setMonthlyIncome(e.target.value)}/></label><label>Monthly expenses (₹)<input type="number" min="0" value={monthlyExpenses} onChange={e=>setMonthlyExpenses(e.target.value)}/><div className="calc-result"><span>Monthly surplus / shortfall</span><b>{money(monthlySurplus)}</b></div></label><p className="calc-foot">A positive surplus is not automatically investable; account for debt, irregular expenses and emergency savings.</p></div>
-        <div className="calculator-card"><div className="tool-heading"><Calculator size={17}/><b>SIP illustration</b></div><label>Monthly contribution (₹)<input type="number" min="0" value={sip} onChange={e=>setSip(e.target.value)}/></label><label>Years<input type="number" min="1" max="60" value={years} onChange={e=>setYears(e.target.value)}/></label><label>Assumed annual return (%)<input type="number" min="0" max="50" step="0.5" value={rate} onChange={e=>setRate(e.target.value)}/></label><div className="calc-result"><span>Illustrative future value</span><b>{money(projected)}</b></div><p className="calc-foot">Assumed constant return, monthly compounding and month-end contributions approximation; actual returns vary and can be negative. Taxes and fees excluded.</p></div>
+        <div className="calculator-card"><div className="tool-heading"><Calculator size={17}/><b>SIP illustration</b></div><label>Monthly contribution (₹)<input type="number" min="0" value={sip} onChange={e=>setSip(e.target.value)}/></label><label>Years<input type="number" min="1" max="60" value={years} onChange={e=>setYears(e.target.value)}/></label><label>Assumed annual return (%)<input type="number" min="-50" max="50" step="0.5" value={rate} onChange={e=>setRate(e.target.value)}/></label><div className="calc-result"><span>Illustrative future value</span><b>{money(projected)}</b></div><p className="calc-foot">Assumed constant return, monthly compounding and month-end contributions; actual returns vary and can be negative. Taxes and fees excluded.</p></div>
       </div>
     </div>
   </div>;
