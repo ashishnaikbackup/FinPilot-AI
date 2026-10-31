@@ -2,7 +2,7 @@
 """Validate public snapshots before a GitHub Pages deployment."""
 import json
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path\nfrom urllib.parse import urlparse\nimport math
 
 DATA = Path(__file__).resolve().parents[1] / "frontend" / "public" / "data"
 
@@ -26,7 +26,7 @@ for label, payload in [("status", status), ("macro", macro), ("news", news)]:
     if not timestamp:
         raise SystemExit(f"{label} snapshot has no retrieved_at timestamp")
     try:
-        datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        parsed_timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))\n        if parsed_timestamp.tzinfo is None:\n            raise ValueError("timestamp must include a timezone")
     except ValueError as exc:
         raise SystemExit(f"{label} snapshot has invalid retrieved_at: {timestamp}") from exc
 
