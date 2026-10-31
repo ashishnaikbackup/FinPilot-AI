@@ -70,6 +70,57 @@ except Exception as exc:
         "observations": [], "error": macro_error,
     })
 
+# Global macro snapshot: annual World Bank indicators, not market prices.
+global_countries = "IND;USA;CHN;GBR;DEU;JPN"
+global_indicators = "NY.GDP.MKTP.KD.ZG;FP.CPI.TOTL.ZG;SL.UEM.TOTL.ZS;NY.GDP.MKTP.CD"
+global_macro_url = f"https://api.worldbank.org/v2/country/{global_countries}/indicator/{global_indicators}?format=json&per_page=500"
+global_indicator_names = {
+    "NY.GDP.MKTP.KD.ZG": "GDP growth (annual %)",
+    "FP.CPI.TOTL.ZG": "Inflation, consumer prices (annual %)",
+    "SL.UEM.TOTL.ZS": "Unemployment, total (% of labour force)",
+    "NY.GDP.MKTP.CD": "GDP (current US$)",
+}
+try:
+    payload = fetch_json(global_macro_url)
+    rows = payload[1] if isinstance(payload, list) and len(payload) > 1 and isinstance(payload[1], list) else []
+    global_observations = [{
+        "country_code": row.get("countryiso3code"),
+        "country": (row.get("country") or {}).get("value"),
+        "indicator_code": (row.get("indicator") or {}).get("id"),
+        "indicator": (row.get("indicator") or {}).get("value"),
+        "date": row.get("date"),
+        "value": row.get("value"),
+        "unit": row.get("unit") or ("%" if (row.get("indicator") or {}).get("id") != "NY.GDP.MKTP.CD" else "current US$"),
+        "observation_status": row.get("obs_status"),
+    } for row in rows if row.get("date") and row.get("countryiso3code") and (row.get("indicator") or {}).get("id")]
+    global_macro_ok = bool(global_observations)
+    global_macro_error = None if global_macro_ok else "No observations returned by World Bank"
+    write("macro-global.json", {
+        "provider": "World Bank Indicators API",
+        "source_url": global_macro_url,
+        "retrieved_at": NOW,
+        "freshness": "annual_dataset; subject_to_revision",
+        "countries": ["India", "United States", "China", "United Kingdom", "Germany", "Japan"],
+        "indicators": global_indicator_names,
+        "observations": global_observations,
+        "error": global_macro_error,
+        "caveat": "Annual macroeconomic indicators. Latest available years differ by country and series; not live market data or a forecast.",
+    })
+except Exception as exc:
+    global_macro_ok = False
+    global_macro_error = str(exc)[:300]
+    write("macro-global.json", {
+        "provider": "World Bank Indicators API",
+        "source_url": global_macro_url,
+        "retrieved_at": NOW,
+        "freshness": "unavailable",
+        "countries": ["India", "United States", "China", "United Kingdom", "Germany", "Japan"],
+        "indicators": global_indicator_names,
+        "observations": [],
+        "error": global_macro_error,
+        "caveat": "Annual macroeconomic indicators. Not live market data.",
+    })
+
 # Official Indian primary-source updates. Feed availability is checked independently.
 official_feeds = [
     ("RBI Press Releases", "https://www.rbi.org.in/pressreleases_rss.xml", ["rbi.org.in"], "India"),
@@ -141,7 +192,7 @@ except Exception as exc:
 status = {
     "retrieved_at": NOW,
     "refresh_interval": "approximately every 6 hours (GitHub Actions schedule; may be delayed)",
-    "india_macro": {
+    "global_macro": {\n        "status": "available" if global_macro_ok else "unavailable",\n        "provider": "World Bank Indicators API",\n        "freshness": "annual_dataset; subject_to_revision",\n        "message": "Six-country macroeconomic comparison; latest observation year varies by series",\n        "observation_count": len(global_observations) if global_macro_ok else 0,\n        "error": global_macro_error,\n    },\n    "india_macro": {
         "status": "available" if macro_ok else "unavailable",
         "provider": "World Bank Indicators API",
         "freshness": "annual_dataset; subject_to_revision",
