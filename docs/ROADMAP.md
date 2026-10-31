@@ -55,6 +55,7 @@
 - [x] Portfolio concentration flags and local JSON backup restore
 - [x] Rules-based financial-stage and goal planner with transparent limitations
 - [x] Browser-local asset tracker with asset-class allocation, privacy warning and JSON backup/clear controls
+- [x] Manual-price paper portfolio simulator with editable marks, fee-aware illustrative P/L and JSON export (no live quotes or order execution)
 - [x] Beginner learning path and official career-resource links
 - [ ] Secure budget, emergency fund, net worth and goal tracker with account-based private storage
 - [x] Beginner-friendly explainers and structured learning paths
