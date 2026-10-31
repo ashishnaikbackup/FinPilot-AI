@@ -334,7 +334,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       <div className="market-symbol-row">
         {[
           ["NIFTY 50","NSE:NIFTY"],["SENSEX","BSE:SENSEX"],["RELIANCE","NSE:RELIANCE"],["TCS","NSE:TCS"],["INFOSYS","NSE:INFY"],["S&P 500","SP:SPX"],["NASDAQ 100","NASDAQ:NDX"],["GOLD","TVC:GOLD"],["BITCOIN","BINANCE:BTCUSDT"]
-        ].map(([label,symbol])=><button key={symbol} className={chartSymbol===symbol?"symbol-chip selected":"symbol-chip"} onClick={()=>{setChartSymbol(symbol);setChartSymbolDraft(symbol);setChartInputError("");}}>{label}</button>)}
+        ].filter(([label,symbol])=>(label+" "+symbol).toLowerCase().includes(query.toLowerCase())).map(([label,symbol])=><button key={symbol} className={chartSymbol===symbol?"symbol-chip selected":"symbol-chip"} onClick={()=>{setChartSymbol(symbol);setChartSymbolDraft(symbol);setChartInputError("");}}>{label}</button>)}
       </div>
       <div className="market-chart-controls">
         <label>Symbol (EXCHANGE:TICKER)<input value={chartSymbolDraft} onChange={e=>setChartSymbolDraft(e.target.value.toUpperCase())} placeholder="NSE:RELIANCE" /></label>
