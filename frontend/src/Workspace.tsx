@@ -53,11 +53,13 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [candidateValuation, setCandidateValuation] = useState("Not assessed");
   const [candidateLiquidity, setCandidateLiquidity] = useState("Not assessed");
   const [candidateSource, setCandidateSource] = useState("");
+  const [candidateSourceDate, setCandidateSourceDate] = useState("");
   const [candidateRisks, setCandidateRisks] = useState("");
-  const researchComplete = Boolean(candidateName.trim() && isHttpsUrl(candidateSource.trim()) && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed");
+  const researchComplete = Boolean(candidateName.trim() && isHttpsUrl(candidateSource.trim()) && candidateSourceDate && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed");
   const reviewGaps = [
     !candidateName.trim() ? "Name the instrument or opportunity." : "",
     !isHttpsUrl(candidateSource.trim()) ? "Add a primary-source HTTPS link (offer document, factsheet, filing or issuer disclosure)." : "",
+    !candidateSourceDate ? "Record the date of the source document." : "",
     candidateValuation === "Not assessed" ? "Assess valuation using a documented method appropriate to the instrument." : "",
     candidateLiquidity === "Not assessed" ? "Check liquidity, redemption terms and exit constraints." : ""
   ].filter(Boolean);
@@ -116,6 +118,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
           <label>Valuation / pricing review<select value={candidateValuation} onChange={e=>setCandidateValuation(e.target.value)}><option>Not assessed</option><option>Looks expensive — evidence required</option><option>Looks reasonable — evidence required</option><option>Looks cheap — evidence required</option><option>Not applicable / not comparable</option></select></label>
           <label>Liquidity / exit review<select value={candidateLiquidity} onChange={e=>setCandidateLiquidity(e.target.value)}><option>Not assessed</option><option>High liquidity — verify source</option><option>Limited liquidity / lock-in</option><option>Unclear redemption or exit terms</option><option>Not applicable</option></select></label>
           <label>Primary source HTTPS URL<input value={candidateSource} onChange={e=>setCandidateSource(e.target.value)} placeholder="https://…"/></label>
+          <label>Source document date<input type="date" value={candidateSourceDate} onChange={e=>setCandidateSourceDate(e.target.value)}/></label>
           <label>Risks and counterarguments<textarea value={candidateRisks} onChange={e=>setCandidateRisks(e.target.value)} rows={3} placeholder="What could go wrong? What evidence would change your view?"/></label>
         </div>
         <div className="calculator-card">
@@ -123,7 +126,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
           <div className="calc-result"><span>Evidence checklist</span><b>{researchComplete ? "Core fields entered" : "Incomplete"}</b></div>
           <p className="calc-foot">{researchComplete ? "The basic worksheet fields are filled. This is not an approval, risk score or investment recommendation." : "Complete these items before treating the candidate as researched."}</p>
           {reviewGaps.length > 0 && <ul className="review-gaps">{reviewGaps.map(g=><li key={g}>{g}</li>)}</ul>}
-          <div className="review-summary"><b>{candidateName.trim() || "No candidate entered"}</b><span>{candidateType} · {candidateHorizon}</span><span>Valuation: {candidateValuation}</span><span>Liquidity: {candidateLiquidity}</span>{isHttpsUrl(candidateSource.trim()) && <a href={candidateSource.trim()} target="_blank" rel="noreferrer">Open primary source <ExternalLink size={12}/></a>}</div>
+          <div className="review-summary"><b>{candidateName.trim() || "No candidate entered"}</b><span>{candidateType} · {candidateHorizon}</span><span>Valuation: {candidateValuation}</span><span>Liquidity: {candidateLiquidity}</span><span>Source date: {candidateSourceDate || "Not recorded"}</span>{isHttpsUrl(candidateSource.trim()) && <a href={candidateSource.trim()} target="_blank" rel="noreferrer">Open primary source <ExternalLink size={12}/></a>}</div>
           {candidateRisks.trim() && <div className="review-summary"><b>Your risk notes</b><span>{candidateRisks}</span></div>}
           <p className="calc-foot">Never rely on one source. Also review fees, tax, issuer quality, concentration, currency exposure, eligibility, custody, fraud risk and downside scenarios. Save the original document and its date outside this temporary worksheet.</p>
         </div>
