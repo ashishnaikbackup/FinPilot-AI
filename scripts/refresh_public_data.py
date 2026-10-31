@@ -5,11 +5,11 @@ Only public endpoints are called. Failures are recorded; no market quotes are in
 """
 import json
 import urllib.parse
-import xml.etree.ElementTree as ET
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urlparse\nfrom feed_utils import parse_feed
+from urllib.parse import urlparse
+from feed_utils import parse_feed
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "frontend" / "public" / "data"
