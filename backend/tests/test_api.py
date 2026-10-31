@@ -72,4 +72,4 @@ def test_local_ollama_rejects_non_loopback_hosts(monkeypatch):
         _local_ollama_url()
         assert False, "A remote Ollama host must be rejected"
     except RuntimeError as exc:
-        assert "same device" in str(exc)
+        assert "this device" in str(exc)
