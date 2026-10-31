@@ -5,6 +5,7 @@ type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | 
 type NewsItem = { title: string; url: string; domain?: string; seen_at?: string; source_country?: string; source?: string; source_type?: string; published_at?: string | null };
 type MacroObservation = { country_code: string; country: string; indicator_code: string; indicator: string; date: string; value: number | null; unit?: string };
 type ResearchCase = { id: number; name: string; type: string; horizon: string; valuation: string; liquidity: string; source: string; sourceDate: string; bull: string; base: string; bear: string; costs: string; risks: string; savedAt: string };
+type PaperPosition = { id: number; symbol: string; quantity: number; entryPrice: number; markPrice: number; fees: number; updatedAt: string };
 type ProviderStatus = { global_news?: { status?: string; error?: string | null; official_primary_source_count?: number; discovery_index_count?: number; discovery_status?: string; discovery_error?: string | null; official_feeds?: {provider:string;status:string;items?:number;error?:string}[] } };
 
 const lessons = [
@@ -182,6 +183,13 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [assetName, setAssetName] = useState("");
   const [assetAmount, setAssetAmount] = useState("");
   const [assetCategory, setAssetCategory] = useState("Cash & deposits");
+  const [paperPositions, setPaperPositions] = useState<PaperPosition[]>(() => { try { const value = JSON.parse(localStorage.getItem("finpilot-paper-positions") || "[]"); return Array.isArray(value) ? value.filter((p: any) => p && typeof p.symbol === "string" && Number(p.quantity) > 0 && Number(p.entryPrice) > 0 && Number(p.markPrice) >= 0).map((p: any) => ({ id: Number(p.id) || Date.now(), symbol: p.symbol.slice(0,40), quantity: Number(p.quantity), entryPrice: Number(p.entryPrice), markPrice: Number(p.markPrice), fees: Math.max(0,Number(p.fees)||0), updatedAt: typeof p.updatedAt === "string" ? p.updatedAt : "" })) : []; } catch { return []; } });
+  const [paperSymbol, setPaperSymbol] = useState("");
+  const [paperQuantity, setPaperQuantity] = useState("1");
+  const [paperEntry, setPaperEntry] = useState("");
+  const [paperMark, setPaperMark] = useState("");
+  const [paperFees, setPaperFees] = useState("0");
+  const [paperMessage, setPaperMessage] = useState("");
   const [mentorStage, setMentorStage] = useState("Studying / no regular income");
   const [mentorGoal, setMentorGoal] = useState("Build earning capacity");
   const [mentorMessages, setMentorMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
@@ -361,6 +369,35 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     try { localStorage.setItem("finpilot-research-cases", JSON.stringify(next)); } catch { /* storage may be disabled */ }
   }
 
+  function savePaperPosition() {
+    const quantity = Number(paperQuantity), entryPrice = Number(paperEntry), markPrice = Number(paperMark), fees = Number(paperFees);
+    if (!paperSymbol.trim() || !Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(entryPrice) || entryPrice <= 0 || !Number.isFinite(markPrice) || markPrice < 0 || !Number.isFinite(fees) || fees < 0) {
+      setPaperMessage("Enter a symbol, positive quantity and entry price, a non-negative manual mark price and fees.");
+      return;
+    }
+    const next = [...paperPositions, { id: Date.now(), symbol: paperSymbol.trim().toUpperCase().slice(0,40), quantity, entryPrice, markPrice, fees, updatedAt: new Date().toISOString() }].slice(-200);
+    setPaperPositions(next);
+    try { localStorage.setItem("finpilot-paper-positions", JSON.stringify(next)); setPaperMessage("Paper position saved on this device."); } catch { setPaperMessage("Browser storage is unavailable. Export may not be possible."); }
+    setPaperSymbol(""); setPaperQuantity("1"); setPaperEntry(""); setPaperMark(""); setPaperFees("0");
+  }
+  function updatePaperMark(id: number, value: string) {
+    const markPrice = Number(value);
+    if (!Number.isFinite(markPrice) || markPrice < 0) return;
+    const next = paperPositions.map(position => position.id === id ? { ...position, markPrice, updatedAt: new Date().toISOString() } : position);
+    setPaperPositions(next);
+    try { localStorage.setItem("finpilot-paper-positions", JSON.stringify(next)); } catch { setPaperMessage("Could not save the updated mark to browser storage."); }
+  }
+  function removePaperPosition(id: number) {
+    const next = paperPositions.filter(position => position.id !== id);
+    setPaperPositions(next);
+    try { localStorage.setItem("finpilot-paper-positions", JSON.stringify(next)); } catch { /* storage may be disabled */ }
+  }
+  function exportPaperPositions() {
+    const payload = { exported_at: new Date().toISOString(), mode: "manual_price_paper_simulation_only", note: "No orders were placed. Prices are user-entered and are not live or verified.", positions: paperPositions };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a"); link.href = url; link.download = "finpilot-paper-positions.json"; link.click(); URL.revokeObjectURL(url);
+  }
   function saveHolding() {
     if (!assetName.trim() || !(Number(assetAmount) > 0)) return;
     const next = [...holdings, { name: assetName.trim(), amount: Number(assetAmount), category: assetCategory }];
@@ -519,6 +556,13 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   </div>;
 
   if (active === "Portfolio") return <div className="workspace-stack">
+    <div className="panel workspace-panel"><div className="eyebrow">PAPER LAB · NO BROKER CONNECTION</div><h2>Manual-price paper portfolio</h2><p>Practise tracking hypothetical positions without placing orders. You enter both entry and current mark prices manually; FinPilot does not fetch live quotes, calculate tax, or connect to a broker. Results exclude slippage and may not match executable prices.</p>
+      <div className="form-row"><input value={paperSymbol} onChange={e=>setPaperSymbol(e.target.value)} placeholder="Symbol / asset label"/><input type="number" min="0.000001" step="any" value={paperQuantity} onChange={e=>setPaperQuantity(e.target.value)} placeholder="Quantity"/><input type="number" min="0.01" step="any" value={paperEntry} onChange={e=>setPaperEntry(e.target.value)} placeholder="Entry price ₹"/><input type="number" min="0" step="any" value={paperMark} onChange={e=>setPaperMark(e.target.value)} placeholder="Manual mark ₹"/><input type="number" min="0" step="any" value={paperFees} onChange={e=>setPaperFees(e.target.value)} placeholder="Estimated fees ₹"/><button onClick={savePaperPosition}>Add paper position</button></div>
+      {paperMessage && <p className="calc-foot" role="status">{paperMessage}</p>}
+      {paperPositions.length ? <div className="holding-list">{paperPositions.map(position=>{const cost=position.quantity*position.entryPrice;const value=position.quantity*position.markPrice;const pnl=value-cost-position.fees;const pct=cost>0?pnl/cost*100:0;return <div className="research-news-item" key={position.id}><div className="news-meta"><b>{position.symbol}</b><small>{position.quantity} units · Updated {position.updatedAt ? new Date(position.updatedAt).toLocaleString() : "time not recorded"}</small></div><div className="calc-result"><span>Unrealised P/L after entered fees</span><b>{money(pnl)} ({pct.toFixed(2)}%)</b></div><div className="form-row"><label>Update manual mark price ₹<input type="number" min="0" step="any" value={String(position.markPrice)} onChange={e=>updatePaperMark(position.id,e.target.value)}/></label><span className="calc-foot">Entry {money(position.entryPrice)} · Mark {money(position.markPrice)} · Fees {money(position.fees)}</span><button className="text-action" onClick={()=>removePaperPosition(position.id)}>Remove paper position</button></div></div>;})}</div> : <div className="empty-data">No paper positions yet. Start with hypothetical values; no money is used.</div>}
+      <div className="resource-links"><button className="text-action" onClick={exportPaperPositions} disabled={!paperPositions.length}>Export paper portfolio JSON <ArrowUpRight size={13}/></button></div>
+      <p className="calc-foot">Simulation only. No order execution, recommendations, live prices, taxes, slippage, dividends, corporate actions or brokerage-specific charges are included. Paper results do not predict real returns.</p>
+    </div>
     <div className="panel workspace-panel"><div className="eyebrow">DEVICE-LOCAL TRACKER</div><h2>Personal asset notes</h2><p>Entries are stored only in this browser on this device. They are not synced to an account or encrypted by FinPilot; export your own backup. Do not enter account numbers or sensitive identifiers.</p>
       <div className="form-row"><input value={assetName} onChange={e=>setAssetName(e.target.value)} placeholder="Asset label (e.g. Savings account)"/><input type="number" min="0" value={assetAmount} onChange={e=>setAssetAmount(e.target.value)} placeholder="Approx. value ₹"/><select value={assetCategory} onChange={e=>setAssetCategory(e.target.value)}><option>Cash & deposits</option><option>Equity / mutual funds</option><option>Bonds / fixed income</option><option>Gold / commodities</option><option>Property / REITs</option><option>International assets</option><option>Digital assets</option><option>Other</option></select><button onClick={saveHolding}>Add entry</button></div>{saved && <p className="success-note">Entry saved in this browser.</p>}
       <div className="holding-list">{holdings.length ? holdings.map((h,i)=><div className="holding-row" key={i}><span>{h.name} <small>· {h.category}</small></span><b>{money(h.amount)}</b><button onClick={()=>removeHolding(i)} aria-label={"Remove "+h.name}>Remove</button></div>) : <div className="empty-data">No entries yet. You can use this as a manual note tracker.</div>}</div>
