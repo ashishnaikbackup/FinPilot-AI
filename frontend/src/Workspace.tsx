@@ -103,7 +103,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       .then(payload => { if (!cancelled) setMentorProviderStatus(payload.status === "ready" ? "ready" : payload.status === "model_missing" ? "model_missing" : "offline"); })
       .catch(() => { if (!cancelled) setMentorProviderStatus("offline"); });
     return () => { cancelled = true; };
-  }, [active, mentorCheckCount]);;
+  }, [active, mentorCheckCount]);
 
   const researchComplete = Boolean(candidateName.trim() && isHttpsUrl(candidateSource.trim()) && candidateSourceDate && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed" && candidateBull.trim() && candidateBase.trim() && candidateBear.trim() && candidateCosts.trim() && candidateRisks.trim());
   const reviewGaps = [
