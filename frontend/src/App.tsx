@@ -65,6 +65,8 @@ function App() {
       ]);
       if (cancelled) return;
       let successes = 0;
+      let macroLoaded = false;
+      let newsLoaded = false;
       const [statusResult, macroResult, newsResult] = results;
       let loadedStatus: StatusPayload | null = null;
       if (statusResult.status === "fulfilled" && statusResult.value.ok) {
@@ -78,14 +80,16 @@ function App() {
           .filter((item: {date:string;value:number|null}) => item.value !== null)
           .map((item: {date:string;value:number}) => ({date:item.date,value:item.value}));
         setMacroSeries(points);
+        macroLoaded = true;
         successes += 1;
       }
       if (newsResult.status === "fulfilled" && newsResult.value.ok) {
         const news = await newsResult.value.json();
         setNewsItems(news.articles || []);
+        newsLoaded = true;
         successes += 1;
       }
-      const sourcesAvailable = loadedStatus?.india_macro.status === "available" && loadedStatus?.global_news.status === "available";
+      const sourcesAvailable = macroLoaded && newsLoaded && loadedStatus?.india_macro.status === "available" && loadedStatus?.global_news.status === "available";
       setApiState(successes === 0 ? "offline" : sourcesAvailable ? "connected" : "partial");
       setLastRefresh(loadedStatus?.retrieved_at ? new Date(loadedStatus.retrieved_at).toLocaleString("en-IN") : "timestamp unavailable");
     }
