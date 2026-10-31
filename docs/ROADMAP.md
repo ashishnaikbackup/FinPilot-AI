@@ -32,7 +32,8 @@
 - [ ] Add source freshness monitoring and alerts for failed scheduled refreshes
 
 ## Phase 3 — India and global research
-- [x] Add a candidate research worksheet that checks evidence completeness without producing a buy/sell score
+- [x] Add a candidate research worksheet with bull/base/bear scenarios, fees and risk notes
+- [x] Save opportunity research notes locally with JSON export
 - [x] Add an official-source IPO/public-issue headline watchlist (not a complete issue calendar)
 - [ ] Add structured issue comparisons with offer-document dates, valuation, promoter holdings and risk factors
 - [ ] NSE/BSE official filings and corporate actions
