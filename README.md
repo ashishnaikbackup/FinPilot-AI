@@ -57,7 +57,7 @@ The workflow refreshes public data and rebuilds the website approximately hourly
 | Embedded charts / heatmaps | TradingView widgets | External chart and market visualisations; real-time, delayed or end-of-day (market-dependent) availability varies by exchange and widget |
 | FinPilot quote API | Not connected | FinPilot does not ingest, store or redistribute the embedded widget quotes |
 
-See the [Feature Audit](docs/FEATURE_AUDIT.md) for completed, partial and externally blocked requirements. See the [Project Handover](docs/PROJECT_HANDOVER.md) for the delivered scope and release boundaries, [Data Sources](docs/DATA_SOURCES.md) for provider documentation and licensing, and [Open-source Adapter Review](docs/OPEN_SOURCE_ADAPTER_REVIEW.md) for project-by-project reuse and safety decisions.
+See the [Feature Audit](docs/FEATURE_AUDIT.md) for completed, partial and externally blocked requirements. See the [Final Release Checklist](docs/FINAL_RELEASE_CHECKLIST.md) for the release acceptance checks, open maintenance items and explicit scope boundaries. See the [Project Handover](docs/PROJECT_HANDOVER.md) for the delivered scope and release boundaries, [Data Sources](docs/DATA_SOURCES.md) for provider documentation and licensing, and [Open-source Adapter Review](docs/OPEN_SOURCE_ADAPTER_REVIEW.md) for project-by-project reuse and safety decisions.
 
 ## Optional local API
 
