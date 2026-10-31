@@ -58,7 +58,7 @@ for item in news["articles"]:
         raise SystemExit("Every news source URL must use HTTPS and have a hostname")
     if item.get("source_type") == "official_primary_source":
         host = (parsed_url.hostname or "").lower()
-        if not (host == "rbi.org.in" or host.endswith(".rbi.org.in") or host == "pib.gov.in" or host.endswith(".pib.gov.in")):
+        if not any(host == domain or host.endswith("." + domain) for domain in ["rbi.org.in", "pib.gov.in", "sebi.gov.in", "nseindia.com", "federalreserve.gov", "ecb.europa.eu"]):
             raise SystemExit(f"Unexpected domain marked as official primary source: {host}")
 
 print("Public snapshot schema and integrity checks passed.")
