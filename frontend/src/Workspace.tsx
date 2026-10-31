@@ -5,6 +5,8 @@ type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | 
 type NewsItem = { title: string; url: string; domain?: string; seen_at?: string; source_country?: string; source?: string; source_type?: string; published_at?: string | null };
 type MacroObservation = { country_code: string; country: string; indicator_code: string; indicator: string; date: string; value: number | null; unit?: string };
 type ResearchCase = { id: number; name: string; type: string; horizon: string; valuation: string; liquidity: string; source: string; sourceDate: string; bull: string; base: string; bear: string; costs: string; risks: string; savedAt: string };
+type MentorChatMessage = { role: "user" | "assistant"; content: string };
+const LOCAL_API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 type ProviderStatus = { global_news?: { status?: string; error?: string | null; official_primary_source_count?: number; discovery_index_count?: number; discovery_status?: string; discovery_error?: string | null; official_feeds?: {provider:string;status:string;items?:number;error?:string}[] } };
 
 const lessons = [
@@ -58,6 +60,11 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [assetCategory, setAssetCategory] = useState("Cash & deposits");
   const [mentorStage, setMentorStage] = useState("Studying / no regular income");
   const [mentorGoal, setMentorGoal] = useState("Build earning capacity");
+  const [mentorMessages, setMentorMessages] = useState<MentorChatMessage[]>([]);
+  const [mentorDraft, setMentorDraft] = useState("");
+  const [mentorProviderStatus, setMentorProviderStatus] = useState<"checking" | "ready" | "model_missing" | "offline">("checking");
+  const [mentorBusy, setMentorBusy] = useState(false);
+  const [mentorError, setMentorError] = useState("");
   const [saved, setSaved] = useState(false);
   const [candidateName, setCandidateName] = useState("");
   const [candidateType, setCandidateType] = useState("Equity / ETF / fund");
@@ -87,6 +94,15 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       .catch(() => { if (!cancelled) setGlobalMacroStatus("unavailable"); });
     return () => { cancelled = true; };
   }, []);
+  useEffect(() => {
+    let cancelled = false;
+    fetch(LOCAL_API_BASE + "/api/mentor/status")
+      .then(response => { if (!response.ok) throw new Error("Local mentor API unavailable"); return response.json(); })
+      .then(payload => { if (!cancelled) setMentorProviderStatus(payload.status === "ready" ? "ready" : payload.status === "model_missing" ? "model_missing" : "offline"); })
+      .catch(() => { if (!cancelled) setMentorProviderStatus("offline"); });
+    return () => { cancelled = true; };
+  }, []);
+
   const researchComplete = Boolean(candidateName.trim() && isHttpsUrl(candidateSource.trim()) && candidateSourceDate && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed" && candidateBull.trim() && candidateBase.trim() && candidateBear.trim() && candidateCosts.trim() && candidateRisks.trim());
   const reviewGaps = [
     !candidateName.trim() ? "Name the instrument or opportunity." : "",
@@ -118,6 +134,30 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     if (!n) return 0;
     return r === 0 ? p * n : p * ((Math.pow(1 + r, n) - 1) / r);
   }, [sip, years, rate]);
+
+  async function sendMentorMessage() {
+    const content = mentorDraft.trim();
+    if (!content || mentorBusy || mentorProviderStatus !== "ready") return;
+    const history: MentorChatMessage[] = [...mentorMessages, { role: "user", content }].slice(-12);
+    setMentorMessages(history);
+    setMentorDraft("");
+    setMentorBusy(true);
+    setMentorError("");
+    try {
+      const response = await fetch(LOCAL_API_BASE + "/api/mentor/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: history })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(typeof payload.detail === "string" ? payload.detail : "The local mentor could not answer.");
+      setMentorMessages([...history, { role: "assistant", content: payload.answer }].slice(-12));
+    } catch (error) {
+      setMentorError(error instanceof Error ? error.message : "Could not reach your local AI model.");
+    } finally {
+      setMentorBusy(false);
+    }
+  }
 
   function saveResearchCase() {
     if (!researchComplete) return;
@@ -241,6 +281,15 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       <ol className="mentor-steps"><li><b>Know your cash flow.</b><span>Track income, fixed costs, variable costs and any debt obligations.</span></li><li><b>Protect your downside.</b><span>Build a practical emergency reserve before taking market risk.</span></li><li><b>Increase earning capacity.</b><span>Prioritise skills, internships, work experience and reliable income.</span></li><li><b>Learn products before using them.</b><span>Understand risk, liquidity, tax, fees and eligibility.</span></li><li><b>Review periodically.</b><span>Change a plan when facts, goals or circumstances change—not because of market noise.</span></li></ol>
     </div>
     <div className="panel workspace-panel"><div className="eyebrow">GUIDED PLANNER · RULES-BASED, NOT A CONNECTED AI MODEL</div><h2>Choose your current financial stage</h2><div className="form-row"><label>Where are you now?<select value={mentorStage} onChange={e=>setMentorStage(e.target.value)}><option>Studying / no regular income</option><option>Income, but high-interest debt</option><option>Income, no emergency reserve</option><option>Stable income and emergency reserve</option><option>Already investing</option></select></label><label>Main goal<select value={mentorGoal} onChange={e=>setMentorGoal(e.target.value)}><option>Build earning capacity</option><option>Manage debt</option><option>Build emergency savings</option><option>Learn investing</option><option>Review existing portfolio</option></select></label></div><div className="review-summary"><b>Your next-step checklist</b><span>{mentorGuidance}</span><span>Selected goal: {mentorGoal}</span><span>{mentorGoalGuidance[mentorGoal]}</span></div><p className="calc-foot">This is a transparent rules-based guide, not personalised financial advice or a generative AI response. It does not need an account or send your inputs anywhere.</p></div>
+    <div className="panel workspace-panel"><div className="eyebrow">OPTIONAL LOCAL AI · NO PAID API KEY</div><h2>Chat with your local AI mentor</h2><p>This connects to Ollama running on this same device through the local FinPilot API. Prompts are not sent to a hosted AI provider. The model can still make mistakes and cannot verify live prices, breaking news, tax or regulatory updates.</p>
+      <div className="mentor-connection"><span className={mentorProviderStatus === "ready" ? "connection-dot online" : "connection-dot"}></span><b>{mentorProviderStatus === "checking" ? "Checking local model…" : mentorProviderStatus === "ready" ? "Local model connected" : mentorProviderStatus === "model_missing" ? "Ollama is running, but the configured model is missing" : "Local AI is not connected"}</b><small>Model: llama3.2:3b · Local device only</small></div>
+      {mentorProviderStatus !== "ready" && <div className="empty-data">To enable: install Ollama, run <code>ollama pull llama3.2:3b</code>, then start the FinPilot FastAPI service on this device. See the Local AI Mentor setup guide in the repository. The public website alone does not host an AI model.</div>}
+      <div className="mentor-chat-window">{mentorMessages.length ? mentorMessages.map((message,index)=><div className={"mentor-message "+message.role} key={index}><b>{message.role === "user" ? "You" : "FinPilot · local AI"}</b><p>{message.content}</p></div>) : <div className="empty-data">Try asking: “Explain the difference between an FD and a government T-bill in simple terms.”</div>}</div>
+      <textarea rows={3} value={mentorDraft} onChange={e=>setMentorDraft(e.target.value)} placeholder="Ask a financial education or research question…" aria-label="Message the local AI mentor"/>
+      {mentorError && <p className="error-note">{mentorError}</p>}
+      <div className="resource-links"><button onClick={sendMentorMessage} disabled={mentorBusy || !mentorDraft.trim() || mentorProviderStatus !== "ready"}>{mentorBusy ? "Thinking…" : "Send to local AI"} <ArrowUpRight size={13}/></button></div>
+      <p className="calc-foot">Do not enter account numbers, passwords, OTPs, private keys or identity documents. This is educational output, not regulated financial advice or a trade signal.</p>
+    </div>
     <div className="panel workspace-panel"><h2>Risk guardrails</h2><div className="module-grid">{["No guaranteed-return claims","No leverage or derivatives","No automatic trading","No broker credentials stored","No unverified buy/sell signals","Capital preservation first"].map(x=><div className="module-tile" key={x}><ShieldCheck size={16}/><b>{x}</b></div>)}</div></div>
   </div>;
 
