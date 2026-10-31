@@ -126,7 +126,7 @@ async def search_global_news(query: str, days: int = 3, limit: int = 15) -> dict
         "domain": item.get("domain"),
         "source_country": item.get("sourcecountry"),
         "language": item.get("language"),
-        "published_at": item.get("seendate"),
+        "seen_at": item.get("seendate"),
         "image": item.get("socialimage"),
     } for item in articles]
     return {
