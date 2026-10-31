@@ -6,12 +6,12 @@
 - [x] Architecture, safety and setup documentation
 - [x] CI workflow for frontend build and backend tests
 
-## Phase 2 — Public data foundation (in progress)
+## Phase 2 — Public data foundation (in progress; external market widgets added)
 - [x] World Bank India GDP public indicator adapter
 - [x] Six-country World Bank macro comparison for GDP growth, inflation, unemployment and GDP
 - [x] GDELT global news discovery adapter (unverified discovery, not fact-checking)
 - [x] Static JSON snapshot generator with provider errors and retrieval timestamps
-- [x] GitHub Actions scheduled refresh and GitHub Pages deployment (no hosted backend required)
+- [x] GitHub Actions hourly scheduled refresh and GitHub Pages deployment (schedule may be delayed; no hosted backend required)
 - [x] Honest no-market-feed status; no fabricated prices
 - [x] RBI press-release and notification RSS feeds
 - [x] PIB official press-release RSS feed
@@ -23,12 +23,12 @@
 - [x] Snapshot schema validation before Pages deployment
 - [x] Last-known-good snapshot cache and stale-data labelling on upstream outages
 - [x] Weekly Dependabot proposals for npm, pip and GitHub Actions
-- [ ] Verify the published site and scheduled snapshots in GitHub Pages
+- [x] Verify the GitHub Pages deployment workflow and built asset paths\n- [x] Add TradingView embedded charts, global stock/crypto heatmaps and economic calendar\n- [x] Add editable symbol/timeframe controls and India/global market screener links\n- [x] Increase typography, form control sizing and responsive market workspace usability
 - [ ] Add RBI DBIE table explorer with units, periods, revisions and provenance
 - [x] Show scheduled source items and official-feed health in the News Intelligence workspace
 - [ ] Add cross-source event clustering, independent corroboration and claim-level evidence
-- [ ] Select a market-data provider with explicit public website-display rights
-- [ ] Add live/delayed/EOD quote adapter only after provider entitlement is confirmed
+- [ ] Select a direct market-data provider with explicit public website-display rights
+- [ ] Add first-party live/delayed/EOD quote adapter only after provider entitlement is confirmed (TradingView embeds are external widgets, not this adapter)
 - [ ] Add source freshness monitoring and alerts for failed scheduled refreshes
 
 ## Phase 3 — India and global research
