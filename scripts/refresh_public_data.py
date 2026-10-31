@@ -30,7 +30,7 @@ def write(name, payload):
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def fetch_rss(url, provider, allowed_domains, limit=12):
+def fetch_rss(url, provider, allowed_domains, country="India", limit=8):
     request = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/rss+xml, application/xml, text/xml"})
     with urllib.request.urlopen(request, timeout=25) as response:
         root = ET.fromstring(response.read())
@@ -51,7 +51,7 @@ def fetch_rss(url, provider, allowed_domains, limit=12):
             "source_type": "official_primary_source",
             "published_at": (item.findtext("pubDate") or item.findtext("date") or "").strip() or None,
             "seen_at": NOW,
-            "source_country": "India",
+            "source_country": country,
         })
     return normalized
 
@@ -92,9 +92,15 @@ except Exception as exc:
 
 # Official Indian primary-source updates. Feed availability is checked independently.
 official_feeds = [
-    ("RBI Press Releases", "https://www.rbi.org.in/pressreleases_rss.xml", ["rbi.org.in"]),
-    ("RBI Notifications", "https://www.rbi.org.in/notifications_rss.xml", ["rbi.org.in"]),
-    ("Press Information Bureau", "https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=1", ["pib.gov.in"]),
+    ("RBI Press Releases", "https://www.rbi.org.in/pressreleases_rss.xml", ["rbi.org.in"], "India"),
+    ("RBI Notifications", "https://www.rbi.org.in/notifications_rss.xml", ["rbi.org.in"], "India"),
+    ("SEBI Press Releases, Circulars and Orders", "https://www.sebi.gov.in/sebirss.xml", ["sebi.gov.in"], "India"),
+    ("NSE Announcements", "https://nsearchives.nseindia.com/content/RSS/Online_announcements.xml", ["nseindia.com"], "India"),
+    ("NSE Corporate Actions", "https://nsearchives.nseindia.com/content/RSS/Corporate_action.xml", ["nseindia.com"], "India"),
+    ("NSE Board Meetings", "https://nsearchives.nseindia.com/content/RSS/Board_Meetings.xml", ["nseindia.com"], "India"),
+    ("Press Information Bureau", "https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=1", ["pib.gov.in"], "India"),
+    ("US Federal Reserve Monetary Policy", "https://www.federalreserve.gov/feeds/press_monetary.xml", ["federalreserve.gov"], "United States"),
+    ("European Central Bank Press Releases", "https://www.ecb.europa.eu/rss/press.html", ["ecb.europa.eu"], "European Union"),
 ]
 official_articles = []
 official_errors = []
