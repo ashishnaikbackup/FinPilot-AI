@@ -5,8 +5,6 @@ type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | 
 type NewsItem = { title: string; url: string; domain?: string; seen_at?: string; source_country?: string; source?: string; source_type?: string; published_at?: string | null };
 type MacroObservation = { country_code: string; country: string; indicator_code: string; indicator: string; date: string; value: number | null; unit?: string };
 type ResearchCase = { id: number; name: string; type: string; horizon: string; valuation: string; liquidity: string; source: string; sourceDate: string; bull: string; base: string; bear: string; costs: string; risks: string; savedAt: string };
-type MentorChatMessage = { role: "user" | "assistant"; content: string };
-const LOCAL_API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 type ProviderStatus = { global_news?: { status?: string; error?: string | null; official_primary_source_count?: number; discovery_index_count?: number; discovery_status?: string; discovery_error?: string | null; official_feeds?: {provider:string;status:string;items?:number;error?:string}[] } };
 
 const lessons = [
@@ -60,12 +58,8 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [assetCategory, setAssetCategory] = useState("Cash & deposits");
   const [mentorStage, setMentorStage] = useState("Studying / no regular income");
   const [mentorGoal, setMentorGoal] = useState("Build earning capacity");
-  const [mentorMessages, setMentorMessages] = useState<MentorChatMessage[]>([]);
+  const [mentorMessages, setMentorMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [mentorDraft, setMentorDraft] = useState("");
-  const [mentorProviderStatus, setMentorProviderStatus] = useState<"checking" | "ready" | "model_missing" | "offline">("checking");
-  const [mentorCheckCount, setMentorCheckCount] = useState(0);
-  const [mentorBusy, setMentorBusy] = useState(false);
-  const [mentorError, setMentorError] = useState("");
   const [saved, setSaved] = useState(false);
   const [candidateName, setCandidateName] = useState("");
   const [candidateType, setCandidateType] = useState("Equity / ETF / fund");
@@ -95,16 +89,6 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       .catch(() => { if (!cancelled) setGlobalMacroStatus("unavailable"); });
     return () => { cancelled = true; };
   }, []);
-  useEffect(() => {
-    if (active !== "AI Mentor") return;
-    let cancelled = false;
-    fetch(LOCAL_API_BASE + "/api/mentor/status")
-      .then(response => { if (!response.ok) throw new Error("Local mentor API unavailable"); return response.json(); })
-      .then(payload => { if (!cancelled) setMentorProviderStatus(payload.status === "ready" ? "ready" : payload.status === "model_missing" ? "model_missing" : "offline"); })
-      .catch(() => { if (!cancelled) setMentorProviderStatus("offline"); });
-    return () => { cancelled = true; };
-  }, [active, mentorCheckCount]);
-
   const researchComplete = Boolean(candidateName.trim() && isHttpsUrl(candidateSource.trim()) && candidateSourceDate && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed" && candidateBull.trim() && candidateBase.trim() && candidateBear.trim() && candidateCosts.trim() && candidateRisks.trim());
   const reviewGaps = [
     !candidateName.trim() ? "Name the instrument or opportunity." : "",
@@ -137,30 +121,29 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     return r === 0 ? p * n : p * ((Math.pow(1 + r, n) - 1) / r);
   }, [sip, years, rate]);
 
-  async function sendMentorMessage() {
+  function sendMentorMessage() {
     const content = mentorDraft.trim();
-    if (!content || mentorBusy || mentorProviderStatus !== "ready") return;
-    const userMessage: MentorChatMessage = { role: "user", content };
-    const history = [...mentorMessages, userMessage].slice(-12);
-    setMentorMessages(history);
+    if (!content) return;
+    const q = content.toLowerCase();
+    let answer = "I can help with cash flow, emergency savings, debt, investing basics, Indian and global assets, IPO checks, risk, scams, taxes and career planning. Try asking about one of those topics. This is a rules-based learning guide, not a generative AI model or personalised investment advice.";
+    if (/\b(no money|zero|0|student|no income|unemployed|starting from|start investing)\b/.test(q)) answer = "If you currently have no investable surplus, do not force an SIP or borrow to invest. First focus on completing your studies, building employable skills, finding reliable income, tracking essential expenses and avoiding high-interest debt. Start an emergency reserve when income begins. You can learn markets with paper examples without risking money.";
+    else if (/\b(emergency|reserve|savings|cash buffer)\b/.test(q)) answer = "An emergency reserve is money kept accessible for essential expenses and unexpected events. Estimate essential monthly costs, choose a realistic target (often several months, adjusted to job stability and family responsibilities), and build it gradually in an appropriate low-risk, liquid account. Check deposit insurance, access rules and fees; do not put emergency money into volatile assets.";
+    else if (/\b(debt|loan|credit card|emi|borrow)\b/.test(q)) answer = "List each debt, outstanding balance, effective interest rate, minimum payment and due date. Keep essential bills current and prioritise expensive debt. Avoid taking new loans to invest or trying to recover losses through trading. Compare prepayment charges and maintain a small cash buffer.";
+    else if (/\b(sip|mutual fund|index fund|etf)\b/.test(q)) answer = "A SIP is a way to invest a fixed amount periodically; it is not an asset or a return guarantee. Before choosing a mutual fund or ETF, compare its benchmark, expense ratio, tracking difference, portfolio holdings, concentration, liquidity, exit load, tax treatment and risk. Equity funds can fall substantially. If you have no surplus or emergency reserve, keep the contribution at ₹0 for now.";
+    else if (/\b(fd|fixed deposit|t-bill|treasury bill|bond|g-sec|government securit)\b/.test(q)) answer = "An FD is a bank deposit with a stated interest rate and tenure, subject to the bank's terms and deposit-insurance limits. A T-bill is a short-term government security issued at a discount and redeemed at face value; longer government bonds can fluctuate in market price when yields change. Compare yield to maturity, tax, minimum investment, liquidity, reinvestment risk and early-exit rules. Verify current terms on official RBI/bank sources.";
+    else if (/\b(stock|share|equity|nifty|sensex|valuation)\b/.test(q)) answer = "A share represents ownership in a company. Research business quality, revenue and cash-flow durability, debt, governance, competitive position, valuation assumptions, sector risks and liquidity. Compare bull/base/bear scenarios and identify what evidence would disprove your thesis. A good company can still be a poor investment at an excessive price. This site does not currently provide licensed live quotes or buy/sell signals.";
+    else if (/\b(gold|silver|commodity)\b/.test(q)) answer = "Gold and silver can diversify some portfolios but prices can be volatile and they do not generate business cash flow. Compare the instrument (physical metal, ETF, fund or other route), spreads, making/storage costs, expense ratio, tracking difference, liquidity, tax and regulatory eligibility. Avoid treating recent price rises as a guarantee.";
+    else if (/\b(ipo|drhp|rhp|public issue)\b/.test(q)) answer = "For an IPO, read the latest DRHP/RHP and exchange/issuer notices. Check the business model, audited financials, debt, promoter and related-party disclosures, litigation, use of proceeds, dilution, valuation versus listed peers, anchor/institutional demand where disclosed, lock-ins and risk factors. Compare a bull/base/bear case. Subscription demand or grey-market premiums are not proof of value; verify dates and details from official sources.";
+    else if (/\b(crypto|bitcoin|digital asset)\b/.test(q)) answer = "Crypto assets can be extremely volatile and may involve custody, fraud, liquidity, platform, regulatory and tax risks. Do not borrow, use leverage or risk emergency money. Verify current Indian tax and legal treatment from official sources and understand that exchange availability does not equal regulatory protection. FinPilot does not connect to wallets or execute trades.";
+    else if (/\b(reit|invit|real estate|property)\b/.test(q)) answer = "Property and listed REITs/InvITs have different liquidity, leverage, valuation, cash-flow and concentration risks. For direct property, include stamp duty, registration, maintenance, vacancy, financing, title and exit costs. For listed trusts, review portfolio quality, occupancy, debt, distribution history, fees and market-price volatility. Do not compare headline rental yield with a risk-free deposit rate without adjusting for costs and risk.";
+    else if (/\b(global|international|us stock|foreign|overseas|dollar)\b/.test(q)) answer = "Cross-border investing adds currency, market-hours, custody, platform, tax, remittance and regulatory risks. For an India resident, verify current RBI/FEMA/LRS rules, tax reporting, permitted routes, fees and provider eligibility before transferring money. Use official RBI and tax sources; do not assume a foreign app or product is automatically accessible.";
+    else if (/\b(tax|capital gain|itr|income tax)\b/.test(q)) answer = "Tax depends on instrument type, holding period, transaction date, residency and current law. Keep contract notes, statements, dividend/interest records and expense details. Verify current rules on the Income Tax Department portal or consult a qualified tax professional. FinPilot's educational material is not tax advice.";
+    else if (/\b(job|career|internship|income|salary|goa|government|railway|bank exam)\b/.test(q)) answer = "Treat income growth as a core part of financial planning. Build demonstrable skills and projects, prepare a focused CV, apply consistently and verify vacancies, eligibility, age limits, fees and deadlines on official employer or recruitment portals. For Goa and India-wide roles, use NCS, NATS, Employment News, GPSC, Goa Government, RBI, SEBI, IBPS, RRB, SSC and UPSC official sites. Never pay an unofficial agent for a job.";
+    else if (/\b(scam|fraud|telegram|guaranteed|double money|tip|signal)\b/.test(q)) answer = "Red flags include guaranteed returns, urgency, secret strategies, unregistered advisers, pressure to move chats to Telegram/WhatsApp, requests for OTPs or remote access, and payments to personal accounts. Verify intermediaries and warnings on SEBI/RBI official sites. Never share passwords, OTPs, card details, private keys or screen access.";
+    else if (/\b(risk|diversif|portfolio|allocation|loss|crash)\b/.test(q)) answer = "Review risk at the whole-portfolio level: asset allocation, concentration, volatility, drawdowns, liquidity needs, time horizon, currency exposure, fees and taxes. Diversification can reduce some company-specific risk but cannot eliminate market losses. Write down a rebalancing rule in advance and avoid reacting to headlines.";
+    const reply = { role: "assistant" as const, content: answer };
+    setMentorMessages(items => [...items, { role: "user", content }, reply].slice(-12));
     setMentorDraft("");
-    setMentorBusy(true);
-    setMentorError("");
-    try {
-      const response = await fetch(LOCAL_API_BASE + "/api/mentor/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history })
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(typeof payload.detail === "string" ? payload.detail : "The local mentor could not answer.");
-      const assistantMessage: MentorChatMessage = { role: "assistant", content: payload.answer };
-      setMentorMessages([...history, assistantMessage].slice(-12));
-    } catch (error) {
-      setMentorError(error instanceof Error ? error.message : "Could not reach your local AI model.");
-    } finally {
-      setMentorBusy(false);
-    }
   }
 
   function saveResearchCase() {
@@ -285,14 +268,12 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       <ol className="mentor-steps"><li><b>Know your cash flow.</b><span>Track income, fixed costs, variable costs and any debt obligations.</span></li><li><b>Protect your downside.</b><span>Build a practical emergency reserve before taking market risk.</span></li><li><b>Increase earning capacity.</b><span>Prioritise skills, internships, work experience and reliable income.</span></li><li><b>Learn products before using them.</b><span>Understand risk, liquidity, tax, fees and eligibility.</span></li><li><b>Review periodically.</b><span>Change a plan when facts, goals or circumstances change—not because of market noise.</span></li></ol>
     </div>
     <div className="panel workspace-panel"><div className="eyebrow">GUIDED PLANNER · RULES-BASED, NOT A CONNECTED AI MODEL</div><h2>Choose your current financial stage</h2><div className="form-row"><label>Where are you now?<select value={mentorStage} onChange={e=>setMentorStage(e.target.value)}><option>Studying / no regular income</option><option>Income, but high-interest debt</option><option>Income, no emergency reserve</option><option>Stable income and emergency reserve</option><option>Already investing</option></select></label><label>Main goal<select value={mentorGoal} onChange={e=>setMentorGoal(e.target.value)}><option>Build earning capacity</option><option>Manage debt</option><option>Build emergency savings</option><option>Learn investing</option><option>Review existing portfolio</option></select></label></div><div className="review-summary"><b>Your next-step checklist</b><span>{mentorGuidance}</span><span>Selected goal: {mentorGoal}</span><span>{mentorGoalGuidance[mentorGoal]}</span></div><p className="calc-foot">This is a transparent rules-based guide, not personalised financial advice or a generative AI response. It does not need an account or send your inputs anywhere.</p></div>
-    <div className="panel workspace-panel"><div className="eyebrow">OPTIONAL LOCAL AI · NO PAID API KEY</div><h2>Chat with your local AI mentor</h2><p>This connects to Ollama running on this same device through the local FinPilot API. Prompts are not sent to a hosted AI provider. The model can still make mistakes and cannot verify live prices, breaking news, tax or regulatory updates.</p>
-      <div className="mentor-connection"><span className={mentorProviderStatus === "ready" ? "connection-dot online" : "connection-dot"}></span><b>{mentorProviderStatus === "checking" ? "Checking local model…" : mentorProviderStatus === "ready" ? "Local model connected" : mentorProviderStatus === "model_missing" ? "Ollama is running, but the configured model is missing" : "Local AI is not connected"}</b><small>Model: llama3.2:3b · Local device only</small></div>
-      {mentorProviderStatus !== "ready" && <div className="empty-data">To enable: install Ollama, run <code>ollama pull llama3.2:3b</code>, then start the FinPilot FastAPI service on this device. See the <a href="https://github.com/ashishnaikbackup/FinPilot-AI/blob/main/docs/LOCAL_AI_MENTOR.md" target="_blank" rel="noreferrer">Local AI Mentor setup guide <ExternalLink size={11}/></a>. The public website alone does not host an AI model.</div>}
-      <div className="mentor-chat-window">{mentorMessages.length ? mentorMessages.map((message,index)=><div className={"mentor-message "+message.role} key={index}><b>{message.role === "user" ? "You" : "FinPilot · local AI"}</b><p>{message.content}</p></div>) : <div className="empty-data">Try asking: “Explain the difference between an FD and a government T-bill in simple terms.”</div>}</div>
-      <textarea rows={3} value={mentorDraft} onChange={e=>setMentorDraft(e.target.value)} placeholder="Ask a financial education or research question…" aria-label="Message the local AI mentor"/>
-      {mentorError && <p className="error-note">{mentorError}</p>}
-      <div className="resource-links"><button className="text-action" onClick={()=>{setMentorProviderStatus("checking");setMentorCheckCount(count=>count+1)}}>Check local connection</button><button onClick={sendMentorMessage} disabled={mentorBusy || !mentorDraft.trim() || mentorProviderStatus !== "ready"}>{mentorBusy ? "Thinking…" : "Send to local AI"} <ArrowUpRight size={13}/></button></div>
-      <p className="calc-foot">Do not enter account numbers, passwords, OTPs, private keys or identity documents. This is educational output, not regulated financial advice or a trade signal.</p>
+    <div className="panel workspace-panel"><div className="eyebrow">FINPILOT LEARNING ASSISTANT · GITHUB PAGES READY</div><h2>Ask a financial learning question</h2><p>This guided assistant runs entirely in your browser. It uses reviewed topic rules and educational explanations—no Ollama, local setup, API key, external AI provider or personal-data upload. It is not a generative AI model and cannot verify live market facts.</p>
+      <div className="mentor-connection"><span className="connection-dot online"></span><b>Ready · browser-based learning assistant</b><small>No account or server connection required</small></div>
+      <div className="mentor-chat-window">{mentorMessages.length ? mentorMessages.map((message,index)=><div className={"mentor-message "+message.role} key={index}><b>{message.role === "user" ? "You" : "FinPilot · learning guide"}</b><p>{message.content}</p></div>) : <div className="empty-data">Try: “I have ₹0 to invest. What should I do first?” or “Explain FD vs T-bill.”</div>}</div>
+      <textarea rows={3} value={mentorDraft} onChange={e=>setMentorDraft(e.target.value)} placeholder="Ask about savings, debt, SIPs, stocks, bonds, gold, IPOs, risk, tax or careers…" aria-label="Ask FinPilot learning assistant"/>
+      <div className="resource-links"><button onClick={sendMentorMessage} disabled={!mentorDraft.trim()}>Ask FinPilot <ArrowUpRight size={13}/></button><button className="text-action" onClick={()=>setMentorMessages([])}>Clear chat</button></div>
+      <p className="calc-foot">Answers are selected from built-in educational rules, not generated by an LLM. They are general information, not personalised investment, legal or tax advice. Check current facts with official sources before acting.</p>
     </div>
     <div className="panel workspace-panel"><h2>Risk guardrails</h2><div className="module-grid">{["No guaranteed-return claims","No leverage or derivatives","No automatic trading","No broker credentials stored","No unverified buy/sell signals","Capital preservation first"].map(x=><div className="module-tile" key={x}><ShieldCheck size={16}/><b>{x}</b></div>)}</div></div>
   </div>;
