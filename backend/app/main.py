@@ -1,6 +1,9 @@
 from datetime import datetime, timezone
 
 import httpx
+from typing import Literal
+
+from pydantic import BaseModel, Field
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -20,7 +23,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
     allow_credentials=False,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
