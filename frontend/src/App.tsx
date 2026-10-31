@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Activity, ArrowDownRight, ArrowUpRight, Bell, BookOpen, BriefcaseBusiness,
+  Activity, ArrowUpRight, Bell, BookOpen, BriefcaseBusiness,
   CalendarDays, ChevronDown, CircleHelp, Compass, Globe2, Landmark, LayoutDashboard,
-  Menu, Newspaper, Search, ShieldCheck, SlidersHorizontal, Sparkles, TrendingUp,
+  Menu, Newspaper, Search, ShieldCheck, Sparkles, TrendingUp,
   Wallet, X
 } from "lucide-react";
 import {
@@ -21,18 +21,21 @@ const navItems: { label: Section; icon: typeof LayoutDashboard }[] = [
   { label: "Career & Income", icon: BriefcaseBusiness }
 ];
 
-const trendData = [
-  { day: "Mon", india: 48, global: 36 }, { day: "Tue", india: 53, global: 41 },
-  { day: "Wed", india: 49, global: 44 }, { day: "Thu", india: 61, global: 48 },
-  { day: "Fri", india: 57, global: 45 }, { day: "Sat", india: 68, global: 53 },
-  { day: "Sun", india: 72, global: 59 }
-];
-
+type MacroPoint = { date: string; value: number };
+type NewsItem = { title: string; url: string; domain: string; published_at: string; source_country: string };
+type StatusPayload = {
+  market_quotes: { status: string; message: string; official_sources: {name:string;url:string}[] };
+  india_macro: { status: string; freshness: string; provider: string };
+  global_macro: { status: string; freshness: string; provider: string };
+  global_news: { status: string; freshness: string; provider: string; caveat: string };
+  us_filings: { status: string; provider: string };
+};
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000").replace(/\\/$/, "");
 const markets = [
-  { name: "NIFTY 50", area: "India · Equity index", value: "—", change: "Connect data source", up: true },
-  { name: "SENSEX", area: "India · Equity index", value: "—", change: "Connect data source", up: true },
-  { name: "S&P 500", area: "United States · Equity index", value: "—", change: "Connect data source", up: true },
-  { name: "NASDAQ 100", area: "United States · Equity index", value: "—", change: "Connect data source", up: true }
+  { name: "NIFTY 50", area: "India · NSE index", value: "—", change: "Licensed quote feed required" },
+  { name: "SENSEX", area: "India · BSE index", value: "—", change: "Licensed quote feed required" },
+  { name: "S&P 500", area: "United States · Equity index", value: "—", change: "Quote provider not configured" },
+  { name: "NASDAQ 100", area: "United States · Equity index", value: "—", change: "Quote provider not configured" }
 ];
 const opportunities = [
   { type: "IPO WATCH", title: "Upcoming & open issues", text: "Review offer documents, valuation, risks and dates before applying.", tag: "Research queue" },
@@ -50,6 +53,40 @@ function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [showNotice, setShowNotice] = useState(true);
+  const [apiState, setApiState] = useState<"loading" | "connected" | "offline">("loading");
+  const [providerStatus, setProviderStatus] = useState<StatusPayload | null>(null);
+  const [macroSeries, setMacroSeries] = useState<MacroPoint[]>([]);
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [lastRefresh, setLastRefresh] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadIntelligence() {
+      try {
+        const [statusRes, macroRes, newsRes] = await Promise.all([
+          fetch(API_BASE + "/api/data/status"),
+          fetch(API_BASE + "/api/data/global/world-bank?country=IND&indicator=NY.GDP.MKTP.CD&per_page=12"),
+          fetch(API_BASE + "/api/news/global?days=3&limit=8")
+        ]);
+        if (!statusRes.ok || !macroRes.ok || !newsRes.ok) throw new Error("A public data source is unavailable");
+        const [status, macro, news] = await Promise.all([statusRes.json(), macroRes.json(), newsRes.json()]);
+        if (cancelled) return;
+        setProviderStatus(status);
+        const points = (macro.observations || [])
+          .filter((item: {date:string;value:number|null}) => item.value !== null)
+          .map((item: {date:string;value:number}) => ({date:item.date,value:item.value}))
+          .reverse();
+        setMacroSeries(points);
+        setNewsItems(news.articles || []);
+        setApiState("connected");
+        setLastRefresh(new Date().toLocaleTimeString("en-IN"));
+      } catch {
+        if (!cancelled) setApiState("offline");
+      }
+    }
+    loadIntelligence();
+    return () => { cancelled = true; };
+  }, []);
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     return hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -77,7 +114,7 @@ function App() {
       <div className="page-content">
         <section className="welcome-row"><div><div className="eyebrow"><span className="pulse"/> YOUR FINANCIAL COMMAND CENTRE</div><h1>{greeting}. <span>Let's build your financial edge.</span></h1><p>Understand the world. Research opportunities. Make better-informed decisions.</p></div><button className="date-pill"><CalendarDays size={15}/> {new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date())}</button></section>
 
-        {showNotice && <div className="demo-notice"><div className="notice-icon"><CircleHelp size={18}/></div><div><b>Research workspace is being set up</b><p>Figures and charts on this screen are illustrative placeholders, not live prices or investment advice. Data feeds will be added with source and timestamp labels.</p></div><button onClick={() => setShowNotice(false)} aria-label="Dismiss notice"><X size={16}/></button></div>}
+        {showNotice && <div className="demo-notice"><div className="notice-icon"><CircleHelp size={18}/></div><div><b>{apiState === "connected" ? "Public data connections active" : apiState === "loading" ? "Connecting to public data sources" : "Backend connection unavailable"}</b><p>{apiState === "connected" ? "Macroeconomic observations and news discovery are loaded from their named providers. Exchange prices still require a licensed market-data feed." : apiState === "loading" ? "FinPilot is checking the API, macroeconomic sources and global news discovery." : "Start the FastAPI backend locally or deploy it and set VITE_API_BASE_URL. No market prices or headlines are invented when a source is unavailable."}</p></div><button onClick={() => setShowNotice(false)} aria-label="Dismiss notice"><X size={16}/></button></div>}
 
         {active !== "Overview" && <div className="section-banner"><div className="section-icon"><Sparkles size={19}/></div><div><b>{active}</b><p>This module is part of the FinPilot roadmap. The first release establishes its interface and data foundations.</p></div><span className="status-chip">PHASE 1 FOUNDATION</span></div>}
 
@@ -91,8 +128,8 @@ function App() {
         <section className="content-grid">
           <div className="panel market-panel">
             <div className="panel-heading"><div><div className="eyebrow">MARKET PULSE</div><h2>Global market watch</h2></div><button className="subtle-button" onClick={() => setActive("Markets")}>Explore markets <ArrowUpRight size={14}/></button></div>
-            <div className="chart-legend"><span><i className="legend-india"/> Illustrative trend A</span><span><i className="legend-global"/> Illustrative trend B</span><em>DEMO INDEX · NOT MARKET DATA</em></div>
-            <div className="chart-wrap"><ResponsiveContainer width="100%" height="100%"><AreaChart data={trendData} margin={{top:12,right:4,left:-20,bottom:0}}><defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6d7cff" stopOpacity={0.28}/><stop offset="100%" stopColor="#6d7cff" stopOpacity={0}/></linearGradient><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#39c6b0" stopOpacity={0.18}/><stop offset="100%" stopColor="#39c6b0" stopOpacity={0}/></linearGradient></defs><CartesianGrid stroke="#222b40" vertical={false}/><XAxis dataKey="day" tick={{fill:"#77839c",fontSize:11}} axisLine={false} tickLine={false}/><YAxis tick={{fill:"#77839c",fontSize:11}} axisLine={false} tickLine={false}/><Tooltip contentStyle={{background:"#111a2c",border:"1px solid #2b3852",borderRadius:12,color:"#fff"}}/><Area type="monotone" dataKey="india" stroke="#8490ff" strokeWidth={2.5} fill="url(#a)"/><Area type="monotone" dataKey="global" stroke="#42c8b2" strokeWidth={2.5} fill="url(#b)"/></AreaChart></ResponsiveContainer></div>
+            <div className="chart-legend"><span><i className="legend-india"/> India GDP · current US$</span><em>{providerStatus?.global_macro.provider || "World Bank"} · annual observations</em></div>
+            <div className="chart-wrap">{macroSeries.length ? <ResponsiveContainer width="100%" height="100%"><AreaChart data={macroSeries} margin={{top:12,right:4,left:-20,bottom:0}}><defs><linearGradient id="macro" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#8490ff" stopOpacity={0.28}/><stop offset="100%" stopColor="#8490ff" stopOpacity={0}/></linearGradient></defs><CartesianGrid stroke="#222b40" vertical={false}/><XAxis dataKey="date" tick={{fill:"#77839c",fontSize:10}} axisLine={false} tickLine={false}/><YAxis tick={{fill:"#77839c",fontSize:10}} axisLine={false} tickLine={false} tickFormatter={(v:number) => (v/1e12).toFixed(1)+"T"}/><Tooltip formatter={(v:number) => "$"+(v/1e12).toFixed(2)+" trillion"} contentStyle={{background:"#111a2c",border:"1px solid #2b3852",borderRadius:12,color:"#fff"}}/><Area type="monotone" dataKey="value" name="GDP" stroke="#8490ff" strokeWidth={2.5} fill="url(#macro)"/></AreaChart></ResponsiveContainer> : <div className="empty-data">{apiState === "offline" ? "Waiting for backend connection." : "Loading World Bank observations…"}</div>}</div>
             <div className="market-strip">{filteredMarkets.map(m => <div className="market-mini" key={m.name}><div><b>{m.name}</b><span>{m.area}</span></div><div className="market-value">{m.value}<small>{m.change}</small></div></div>)}</div>
           </div>
 
@@ -101,11 +138,11 @@ function App() {
 
         <section className="lower-grid">
           <div className="panel"><div className="panel-heading"><div><div className="eyebrow">RESEARCH RADAR</div><h2>Explore opportunities</h2></div><button className="subtle-button" onClick={() => setActive("Opportunities")}>View all <ArrowUpRight size={14}/></button></div><div className="opportunity-list">{opportunities.map(o => <div className="opportunity" key={o.title}><div className="opportunity-icon"><Landmark size={18}/></div><div className="opportunity-copy"><small>{o.type}</small><b>{o.title}</b><p>{o.text}</p></div><span className="tag">{o.tag}</span></div>)}</div></div>
-          <div className="panel"><div className="panel-heading"><div><div className="eyebrow">WORLD MONITOR</div><h2>Intelligence to watch</h2></div><button className="subtle-button" onClick={() => setActive("News Intelligence")}>Open feed <ArrowUpRight size={14}/></button></div><div className="news-list">{news.map(n => <div className="news-item" key={n.title}><div className="news-meta"><span>{n.category}</span><small>{n.time}</small></div><b>{n.title}</b><p>{n.desc}</p></div>)}</div></div>
+          <div className="panel"><div className="panel-heading"><div><div className="eyebrow">WORLD MONITOR</div><h2>Intelligence to watch</h2></div><button className="subtle-button" onClick={() => setActive("News Intelligence")}>Open feed <ArrowUpRight size={14}/></button></div><div className="news-list">{newsItems.length ? newsItems.map((n,i) => <div className="news-item" key={n.url || i}><div className="news-meta"><span>{n.domain || "NEWS DISCOVERY"}</span><small>{n.published_at || "Publisher timestamp unavailable"}</small></div><a className="news-link" href={n.url} target="_blank" rel="noreferrer">{n.title}</a><p>Country: {n.source_country || "Not specified"} · Discovery result; verify the original report before acting.</p></div>) : <div className="empty-data">{apiState === "offline" ? "News feed unavailable until the backend is connected." : "Loading recent coverage…"}</div>}</div></div>
         </section>
 
         <section className="footer-grid"><div className="foot-card"><div className="foot-icon"><BookOpen/></div><div><b>Learn the language of money</b><p>Plain-English explainers, from bonds and ETFs to inflation and valuation.</p><button onClick={() => setActive("Learning Centre")}>Go to learning centre <ArrowUpRight size={13}/></button></div></div><div className="foot-card"><div className="foot-icon"><BriefcaseBusiness/></div><div><b>Grow your earning power</b><p>Build skills, explore career paths and find legitimate income opportunities.</p><button onClick={() => setActive("Career & Income")}>Explore career workspace <ArrowUpRight size={13}/></button></div></div></section>
-        <footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Market data not connected</span></footer>
+        <div className="data-footnote"><b>Data integrity</b><span>API: {apiState} {lastRefresh ? "· refreshed " + lastRefresh : ""}</span><span>Exchange quotes: {providerStatus?.market_quotes.status || "checking"}</span><span>News: discovery only, not verified facts</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
       </div>
     </main>
   </div>;
