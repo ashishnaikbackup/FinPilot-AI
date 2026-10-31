@@ -87,17 +87,18 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       .catch(() => { if (!cancelled) setGlobalMacroStatus("unavailable"); });
     return () => { cancelled = true; };
   }, []);
-  const researchComplete = Boolean(candidateName.trim() && isHttpsUrl(candidateSource.trim()) && candidateSourceDate && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed" && candidateBull.trim() && candidateBase.trim() && candidateBear.trim() && candidateCosts.trim());
+  const researchComplete = Boolean(candidateName.trim() && isHttpsUrl(candidateSource.trim()) && candidateSourceDate && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed" && candidateBull.trim() && candidateBase.trim() && candidateBear.trim() && candidateCosts.trim() && candidateRisks.trim());
   const reviewGaps = [
     !candidateName.trim() ? "Name the instrument or opportunity." : "",
-    !isHttpsUrl(candidateSource.trim()) ? "Add a primary-source HTTPS link (offer document, factsheet, filing or issuer disclosure)." : "",
+    !isHttpsUrl(candidateSource.trim()) ? "Add an HTTPS link to the original offer document, factsheet, filing or issuer disclosure." : "",
     !candidateSourceDate ? "Record the date of the source document." : "",
     candidateValuation === "Not assessed" ? "Assess valuation using a documented method appropriate to the instrument." : "",
     candidateLiquidity === "Not assessed" ? "Check liquidity, redemption terms and exit constraints." : "",
     !candidateBull.trim() ? "Write a bull case with evidence and assumptions." : "",
     !candidateBase.trim() ? "Write a base case with evidence and assumptions." : "",
     !candidateBear.trim() ? "Write a bear case and downside risks." : "",
-    !candidateCosts.trim() ? "Record fees, taxes and other costs to verify." : ""
+    !candidateCosts.trim() ? "Record fees, taxes and other costs to verify." : "",
+    !candidateRisks.trim() ? "Record independent counterarguments and the evidence that could invalidate your view." : ""
   ].filter(Boolean);
 
   const ipoItems = useMemo(() => newsItems.filter(item => item.source_type === "official_primary_source" && /(ipo|public issue|offer document|drhp|rhp|issue summary|initial public)/i.test(item.title + " " + (item.source || ""))).slice(0, 10), [newsItems]);
@@ -210,11 +211,11 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
         <div className="calculator-card">
           <div className="tool-heading"><ShieldCheck size={17}/><b>Review status</b></div>
           <div className="calc-result"><span>Evidence checklist</span><b>{researchComplete ? "Core fields entered" : "Incomplete"}</b></div>
-          <p className="calc-foot">{researchComplete ? "The basic worksheet fields are filled. This is not an approval, risk score or investment recommendation." : "Complete these items before treating the candidate as researched."}</p>
+          <p className="calc-foot">{researchComplete ? "The basic worksheet fields are filled. HTTPS format is checked, but the website does not verify that the source is official. This is not an approval, risk score or investment recommendation." : "Complete these items before treating the candidate as researched."}</p>
           {reviewGaps.length > 0 && <ul className="review-gaps">{reviewGaps.map(g=><li key={g}>{g}</li>)}</ul>}
           <div className="review-summary"><b>{candidateName.trim() || "No candidate entered"}</b><span>{candidateType} · {candidateHorizon}</span><span>Valuation: {candidateValuation}</span><span>Liquidity: {candidateLiquidity}</span><span>Source date: {candidateSourceDate || "Not recorded"}</span><span>Bull case: {candidateBull || "Not recorded"}</span><span>Base case: {candidateBase || "Not recorded"}</span><span>Bear case: {candidateBear || "Not recorded"}</span><span>Fees/tax: {candidateCosts || "Not recorded"}</span>{isHttpsUrl(candidateSource.trim()) && <a href={candidateSource.trim()} target="_blank" rel="noreferrer">Open primary source <ExternalLink size={12}/></a>}</div>
           {candidateRisks.trim() && <div className="review-summary"><b>Your risk notes</b><span>{candidateRisks}</span></div>}
-          <p className="calc-foot">Never rely on one source. Also review fees, tax, issuer quality, concentration, currency exposure, eligibility, custody, fraud risk and downside scenarios. Save the original document and its date outside this temporary worksheet.</p>
+          <p className="calc-foot">Never rely on one source. HTTPS format alone does not prove a website is official. Independently verify the issuer or regulator domain, document, fees, tax, concentration, currency exposure, eligibility, custody, fraud risk and downside scenarios.</p>
           <div className="resource-links"><button className="text-action" onClick={saveResearchCase} disabled={!researchComplete}>Save this research note locally <ArrowUpRight size={13}/></button>{researchSaved && <span className="success-note">Saved in this browser.</span>}</div>
           <p className="calc-foot">Saved notes remain only in this browser on this device. They are not encrypted or synced. Export a private backup if you need to keep them.</p>
         </div>
