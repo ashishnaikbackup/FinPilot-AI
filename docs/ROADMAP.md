@@ -43,7 +43,8 @@
 - [ ] REITs/InvITs, commodities and legally accessible international investments
 
 ## Phase 4 — Personal finance mentor
-- [ ] Connect a real AI model through a secure server-side provider; do not expose API keys in the browser
+- [x] Add optional local Ollama model connector with loopback-only backend and no paid API key
+- [ ] Connect a hosted AI model only after secure server-side provider and budget approval
 - [ ] Add source-grounded answers, citations, uncertainty labels and a risk-review step
 - [x] Cash-flow, emergency reserve and SIP illustration calculators (educational, not forecasts)
 - [x] Rules-based financial-stage and goal planner with transparent limitations
