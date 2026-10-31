@@ -50,17 +50,17 @@ def test_local_mentor_rejects_empty_chat():
     assert response.status_code == 422
 
 
-def test_pages_origin_is_allowed_for_local_api():
+def test_local_frontend_origin_is_allowed_for_api():
     response = client.options(
         "/api/mentor/chat",
         headers={
-            "Origin": "https://ashishnaikbackup.github.io",
+            "Origin": "http://localhost:5173",
             "Access-Control-Request-Method": "POST",
             "Access-Control-Request-Headers": "content-type",
         },
     )
     assert response.status_code == 200
-    assert response.headers["access-control-allow-origin"] == "https://ashishnaikbackup.github.io"
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
 
 
 
