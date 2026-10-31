@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { ArrowUpRight, Calculator, ShieldCheck, Wallet, BriefcaseBusiness, ExternalLink } from "lucide-react";
 
 type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Portfolio" | "Learning Centre" | "Career & Income";
+type NewsItem = { title: string; url: string; domain?: string; seen_at?: string; source_country?: string; source?: string; source_type?: string; published_at?: string | null };
+type ProviderStatus = { global_news?: { official_primary_source_count?: number; discovery_index_count?: number; official_feeds?: {provider:string;status:string;items?:number;error?:string}[] } };
 
 const lessons = [
   ["1", "Money foundations", "Income, expenses, cash flow, emergency funds and inflation."],
@@ -24,7 +26,7 @@ function money(value: number) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 }
 
-export default function Workspace({ active, query }: { active: Section; query: string }) {
+export default function Workspace({ active, query, newsItems = [], providerStatus }: { active: Section; query: string; newsItems?: NewsItem[]; providerStatus?: ProviderStatus | null }) {
   const [monthlyIncome, setMonthlyIncome] = useState("0");
   const [monthlyExpenses, setMonthlyExpenses] = useState("0");
   const [sip, setSip] = useState("1000");
@@ -36,6 +38,20 @@ export default function Workspace({ active, query }: { active: Section; query: s
   const [assetName, setAssetName] = useState("");
   const [assetAmount, setAssetAmount] = useState("");
   const [saved, setSaved] = useState(false);
+  const [candidateName, setCandidateName] = useState("");
+  const [candidateType, setCandidateType] = useState("Equity / ETF / fund");
+  const [candidateHorizon, setCandidateHorizon] = useState("3–5 years");
+  const [candidateValuation, setCandidateValuation] = useState("Not assessed");
+  const [candidateLiquidity, setCandidateLiquidity] = useState("Not assessed");
+  const [candidateSource, setCandidateSource] = useState("");
+  const [candidateRisks, setCandidateRisks] = useState("");
+  const researchComplete = Boolean(candidateName.trim() && candidateSource.trim().startsWith("https://") && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed");
+  const reviewGaps = [
+    !candidateName.trim() ? "Name the instrument or opportunity." : "",
+    !candidateSource.trim().startsWith("https://") ? "Add a primary-source HTTPS link (offer document, factsheet, filing or issuer disclosure)." : "",
+    candidateValuation === "Not assessed" ? "Assess valuation using a documented method appropriate to the instrument." : "",
+    candidateLiquidity === "Not assessed" ? "Check liquidity, redemption terms and exit constraints." : ""
+  ].filter(Boolean);
 
   const monthlySurplus = Number(monthlyIncome) - Number(monthlyExpenses);
   const projected = useMemo(() => {
@@ -54,6 +70,18 @@ export default function Workspace({ active, query }: { active: Section; query: s
     setAssetName(""); setAssetAmount(""); setSaved(true);
     window.setTimeout(() => setSaved(false), 2200);
   }
+  function exportHoldings() {
+    const payload = { exported_at: new Date().toISOString(), note: "User-entered local asset notes; values are not verified.", holdings };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = "finpilot-local-asset-notes.json"; link.click();
+    URL.revokeObjectURL(url);
+  }
+  function clearHoldings() {
+    setHoldings([]);
+    try { localStorage.removeItem("finpilot-holdings"); } catch { /* storage may be disabled */ }
+  }
   function removeHolding(index: number) {
     const next = holdings.filter((_, i) => i !== index);
     setHoldings(next);
@@ -69,15 +97,39 @@ export default function Workspace({ active, query }: { active: Section; query: s
   </div>;
 
   if (active === "Opportunities") return <div className="workspace-stack">
-    <div className="panel workspace-panel"><div className="eyebrow">RESEARCH CHECKLIST</div><h2>Evaluate an opportunity before considering it</h2><p>These are research categories, not current recommendations or verified open offers. Each candidate needs a dated primary source and an eligibility check.</p>
-      <div className="checklist-grid">{[["IPO / public issue","DRHP/RHP, price band, dates, use of proceeds, promoter holdings, valuation, risks and official registrar."],["Mutual funds / ETFs","SID/KIM, expense ratio, benchmark, tracking difference, holdings, overlap and exit load."],["Bonds / T-bills / deposits","Issuer, yield-to-maturity, duration, credit risk, liquidity, tax and reinvestment risk."],["Gold / REITs / InvITs","Instrument structure, costs, cash flows, concentration, valuation and liquidity."],["International assets","FEMA/LRS route, broker eligibility, FX costs, withholding tax, local tax and custody."],["Digital assets","Regulatory, custody, counterparty, fraud, volatility and tax risks; no trading enabled."]].map(([title,desc])=><div className="check-tile" key={title}><ShieldCheck size={17}/><div><b>{title}</b><p>{desc}</p></div></div>)}</div>
+    <div className="panel workspace-panel"><div className="eyebrow">RESEARCH WORKBENCH · NOT A BUY SIGNAL</div><h2>Build an evidence-backed candidate review</h2><p>Use this worksheet to organise a candidate. It does not calculate expected returns, rank assets or recommend a transaction. Enter only public instrument details; no personal financial information is needed.</p>
+      <div className="calculator-grid">
+        <div className="calculator-card">
+          <div className="tool-heading"><ShieldCheck size={17}/><b>Candidate details</b></div>
+          <label>Instrument / opportunity<input value={candidateName} onChange={e=>setCandidateName(e.target.value)} placeholder="e.g. Company / fund / bond name"/></label>
+          <label>Instrument type<select value={candidateType} onChange={e=>setCandidateType(e.target.value)}><option>Equity / ETF / fund</option><option>IPO / public issue</option><option>Government security / bond</option><option>Deposit</option><option>Gold / commodity</option><option>REIT / InvIT</option><option>International asset</option><option>Digital asset</option></select></label>
+          <label>Intended time horizon<select value={candidateHorizon} onChange={e=>setCandidateHorizon(e.target.value)}><option>Under 1 year</option><option>1–3 years</option><option>3–5 years</option><option>5–10 years</option><option>Over 10 years</option><option>Not decided</option></select></label>
+          <label>Valuation / pricing review<select value={candidateValuation} onChange={e=>setCandidateValuation(e.target.value)}><option>Not assessed</option><option>Looks expensive — evidence required</option><option>Looks reasonable — evidence required</option><option>Looks cheap — evidence required</option><option>Not applicable / not comparable</option></select></label>
+          <label>Liquidity / exit review<select value={candidateLiquidity} onChange={e=>setCandidateLiquidity(e.target.value)}><option>Not assessed</option><option>High liquidity — verify source</option><option>Limited liquidity / lock-in</option><option>Unclear redemption or exit terms</option><option>Not applicable</option></select></label>
+          <label>Primary source HTTPS URL<input value={candidateSource} onChange={e=>setCandidateSource(e.target.value)} placeholder="https://…"/></label>
+          <label>Risks and counterarguments<textarea value={candidateRisks} onChange={e=>setCandidateRisks(e.target.value)} rows={3} placeholder="What could go wrong? What evidence would change your view?"/></label>
+        </div>
+        <div className="calculator-card">
+          <div className="tool-heading"><ShieldCheck size={17}/><b>Review status</b></div>
+          <div className="calc-result"><span>Evidence checklist</span><b>{researchComplete ? "Core fields entered" : "Incomplete"}</b></div>
+          <p className="calc-foot">{researchComplete ? "The basic worksheet fields are filled. This is not an approval, risk score or investment recommendation." : "Complete these items before treating the candidate as researched."}</p>
+          {reviewGaps.length > 0 && <ul className="review-gaps">{reviewGaps.map(g=><li key={g}>{g}</li>)}</ul>}
+          <div className="review-summary"><b>{candidateName.trim() || "No candidate entered"}</b><span>{candidateType} · {candidateHorizon}</span><span>Valuation: {candidateValuation}</span><span>Liquidity: {candidateLiquidity}</span>{candidateSource.startsWith("https://") && <a href={candidateSource} target="_blank" rel="noreferrer">Open primary source <ExternalLink size={12}/></a>}</div>
+          <p className="calc-foot">Never rely on one source. Also review fees, tax, issuer quality, concentration, currency exposure, eligibility, custody, fraud risk and downside scenarios. Save the original document and its date outside this temporary worksheet.</p>
+        </div>
+      </div>
     </div>
-    <div className="panel workspace-panel"><h2>Decision standard</h2><p>Every future research report should show a bull/base/bear case, evidence and source dates, valuation assumptions, fees, taxes, liquidity, downside scenarios, counterarguments and a clear “insufficient evidence” outcome when needed.</p></div>
+    <div className="panel workspace-panel"><h2>Coverage checklist by asset class</h2><div className="checklist-grid">{[["IPO / public issue","DRHP/RHP, price band, dates, use of proceeds, promoter holdings, valuation, risks and official registrar."],["Mutual funds / ETFs","SID/KIM, expense ratio, benchmark, tracking difference, holdings, overlap and exit load."],["Bonds / T-bills / deposits","Issuer, yield-to-maturity, duration, credit risk, liquidity, tax and reinvestment risk."],["Gold / REITs / InvITs","Instrument structure, costs, cash flows, concentration, valuation and liquidity."],["International assets","FEMA/LRS route, broker eligibility, FX costs, withholding tax, local tax and custody."],["Digital assets","Regulatory, custody, counterparty, fraud, volatility and tax risks; no trading enabled."]].map(([title,desc])=><div className="check-tile" key={title}><ShieldCheck size={17}/><div><b>{title}</b><p>{desc}</p></div></div>)}</div></div>
+    <div className="panel workspace-panel"><h2>Decision standard</h2><p>Every future research report should show bull/base/bear scenarios, dated evidence, valuation assumptions, fees, taxes, liquidity, downside scenarios, counterarguments and an “insufficient evidence” outcome when needed.</p></div>
   </div>;
 
   if (active === "News Intelligence") return <div className="workspace-stack">
-    <div className="panel workspace-panel"><div className="eyebrow">GLOBAL EVENT MONITOR</div><h2>Discovery is not verification</h2><p>Current headlines are collected from GDELT as a discovery index. Before relying on a claim, confirm it against the original government release, regulator filing, central-bank statement or company disclosure, then seek independent corroboration.</p>
-      <div className="module-grid">{[["India policy","RBI, SEBI, Ministry of Finance, MOSPI"],["Global macro","Federal Reserve, ECB, IMF, World Bank"],["Companies","NSE/BSE filings, SEC EDGAR, issuer investor relations"],["Geopolitics","Government statements, sanctions notices, official documents"]].map(([a,b])=><div className="module-tile" key={a}><b>{a}</b><span>{b}</span></div>)}</div>
+    <div className="panel workspace-panel"><div className="eyebrow">GLOBAL EVENT MONITOR</div><h2>Official releases and global discovery</h2><p>Official RBI/PIB releases link to primary sources. GDELT items are a discovery index, not fact-checked. Check the original document, date and independent corroboration before relying on any claim.</p>
+      <div className="module-grid">{(providerStatus?.global_news?.official_feeds || []).map(feed=><div className="module-tile" key={feed.provider}><b>{feed.provider}</b><span>{feed.status}{feed.items !== undefined ? " · "+feed.items+" items" : ""}{feed.error ? " · "+feed.error : ""}</span></div>)}</div>
+      <div className="resource-links"><a href="https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx" target="_blank" rel="noreferrer">RBI press releases <ExternalLink size={13}/></a><a href="https://www.pib.gov.in/" target="_blank" rel="noreferrer">Press Information Bureau <ExternalLink size={13}/></a><a href="https://www.federalreserve.gov/newsevents/pressreleases.htm" target="_blank" rel="noreferrer">Federal Reserve <ExternalLink size={13}/></a><a href="https://www.ecb.europa.eu/press/html/index.en.html" target="_blank" rel="noreferrer">European Central Bank <ExternalLink size={13}/></a><a href="https://www.imf.org/en/News" target="_blank" rel="noreferrer">IMF News <ExternalLink size={13}/></a></div>
+    </div>
+    <div className="panel workspace-panel"><div className="eyebrow">LATEST SNAPSHOT</div><h2>Recent source items</h2>
+      {newsItems.length ? <div className="research-news-list">{newsItems.map((item,index)=><article className="research-news-item" key={item.url || index}><div className="news-meta"><span>{item.source || item.domain || "Source"}</span><small>{item.published_at ? "Published "+item.published_at : "Indexed "+(item.seen_at || "time unavailable")}</small></div><a href={item.url} target="_blank" rel="noreferrer">{item.title}</a><p>{item.source_type === "official_primary_source" ? "Official primary-source release. Open the source document and check its date." : "Unverified discovery result. Check the original publisher and independent sources."}</p></article>)}</div> : <div className="empty-data">No news items are available in the latest public snapshot.</div>}
     </div>
   </div>;
 
@@ -93,6 +145,8 @@ export default function Workspace({ active, query }: { active: Section; query: s
       <div className="form-row"><input value={assetName} onChange={e=>setAssetName(e.target.value)} placeholder="Asset label (e.g. Savings account)"/><input type="number" min="0" value={assetAmount} onChange={e=>setAssetAmount(e.target.value)} placeholder="Approx. value ₹"/><button onClick={saveHolding}>Add entry</button></div>{saved && <p className="success-note">Entry saved in this browser.</p>}
       <div className="holding-list">{holdings.length ? holdings.map((h,i)=><div className="holding-row" key={i}><span>{h.name}</span><b>{money(h.amount)}</b><button onClick={()=>removeHolding(i)} aria-label={"Remove "+h.name}>Remove</button></div>) : <div className="empty-data">No entries yet. You can use this as a manual note tracker.</div>}</div>
       <div className="total-row"><span>Recorded total (not verified net worth)</span><b>{money(holdings.reduce((s,h)=>s+h.amount,0))}</b></div>
+      <div className="resource-links"><button className="text-action" onClick={exportHoldings} disabled={!holdings.length}>Export backup JSON <ArrowUpRight size={13}/></button><button className="text-action" onClick={clearHoldings} disabled={!holdings.length}>Clear local entries</button></div>
+      <p className="calc-foot">Export a backup before clearing browser data. The export is a plain JSON file; keep it private and do not upload it to a public repository.</p>
     </div>
   </div>;
 
