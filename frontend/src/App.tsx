@@ -113,11 +113,11 @@ function App() {
       <header className="topbar">
         <button className="menu-button" onClick={() => setMobileOpen(true)} aria-label="Open menu"><Menu/></button>
         <div className="breadcrumbs">Workspace <span>/</span> <b>{active}</b></div>
-        <div className="top-actions"><div className="search-box"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search markets..." /></div><button className="icon-button" aria-label="Notifications"><Bell size={18}/><i/></button><div className="top-avatar">FP</div></div>
+        <div className="top-actions"><div className="search-box"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder={active === "Overview" || active === "Markets" ? "Search markets..." : "Search disabled here"} disabled={active !== "Overview" && active !== "Markets"} /></div><a className="icon-button" href="https://github.com/ashishnaikbackup/FinPilot-AI/actions" target="_blank" rel="noreferrer" aria-label="Open update history" title="Open data refresh and software update history"><Bell size={18}/><i/></a><div className="top-avatar">FP</div></div>
       </header>
 
       <div className="page-content">
-        <section className="welcome-row"><div><div className="eyebrow"><span className="pulse"/> YOUR FINANCIAL COMMAND CENTRE</div><h1>{greeting}. <span>Let's build your financial edge.</span></h1><p>Understand the world. Research opportunities. Make better-informed decisions.</p></div><button className="date-pill"><CalendarDays size={15}/> {new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date())}</button></section>
+        <section className="welcome-row"><div><div className="eyebrow"><span className="pulse"/> YOUR FINANCIAL COMMAND CENTRE</div><h1>{greeting}. <span>Let's build your financial edge.</span></h1><p>Understand the world. Research opportunities. Make better-informed decisions.</p></div><div className="date-pill"><CalendarDays size={15}/> {new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date())}</div></section>
 
         {showNotice && <div className="demo-notice"><div className="notice-icon"><CircleHelp size={18}/></div><div><b>{apiState === "connected" ? "Public data snapshots available" : apiState === "partial" ? "Some public data sources are unavailable" : apiState === "loading" ? "Loading public data snapshots" : "Public data snapshots unavailable"}</b><p>{apiState === "connected" ? "The latest scheduled public-source snapshots are loaded. Exchange prices still require a licensed market-data feed." : apiState === "partial" ? "At least one source did not refresh successfully. Check source status and timestamps; missing values are not filled with guesses." : apiState === "loading" ? "Loading the latest snapshots refreshed by GitHub Actions." : "No public data snapshots were loaded. Check the scheduled refresh workflow. No market prices or headlines are invented when a source is unavailable."}</p></div><button onClick={() => setShowNotice(false)} aria-label="Dismiss notice"><X size={16}/></button></div>}
 
@@ -137,7 +137,7 @@ function App() {
             <div className="market-strip">{filteredMarkets.map(m => <div className="market-mini" key={m.name}><div><b>{m.name}</b><span>{m.area}</span></div><div className="market-value">{m.value}<small>{m.change}</small></div></div>)}</div>
           </div>
 
-          <div className="panel mentor-panel"><div className="mentor-orb"><Sparkles size={22}/></div><div className="eyebrow">YOUR AI FINANCIAL MENTOR</div><h2>Build the foundation before the portfolio.</h2><p>Your first milestone isn't picking a stock. It's building earning power, understanding risk and creating a financial safety net.</p><div className="mentor-checks"><div><ShieldCheck size={15}/> Protect capital first</div><div><BookOpen size={15}/> Learn before investing</div><div><Compass size={15}/> Research, don't chase</div></div><button className="primary-button" onClick={() => setActive("AI Mentor")}>Open mentor workspace <ArrowUpRight size={15}/></button></div>
+          <div className="panel mentor-panel"><div className="mentor-orb"><Sparkles size={22}/></div><div className="eyebrow">YOUR FINANCIAL MENTOR</div><h2>Build the foundation before the portfolio.</h2><p>Your first milestone isn't picking a stock. It's building earning power, understanding risk and creating a financial safety net.</p><div className="mentor-checks"><div><ShieldCheck size={15}/> Protect capital first</div><div><BookOpen size={15}/> Learn before investing</div><div><Compass size={15}/> Research, don't chase</div></div><button className="primary-button" onClick={() => setActive("AI Mentor")}>Open mentor workspace <ArrowUpRight size={15}/></button></div>
         </section>
 
         <section className="lower-grid">
@@ -147,7 +147,7 @@ function App() {
 
         <section className="footer-grid"><div className="foot-card"><div className="foot-icon"><BookOpen/></div><div><b>Learn the language of money</b><p>Plain-English explainers, from bonds and ETFs to inflation and valuation.</p><button onClick={() => setActive("Learning Centre")}>Go to learning centre <ArrowUpRight size={13}/></button></div></div><div className="foot-card"><div className="foot-icon"><BriefcaseBusiness/></div><div><b>Grow your earning power</b><p>Build skills, explore career paths and find legitimate income opportunities.</p><button onClick={() => setActive("Career & Income")}>Explore career workspace <ArrowUpRight size={13}/></button></div></div></section>
         </>}
-        {active !== "Overview" && <Workspace active={active}/>}
+        {active !== "Overview" && <Workspace active={active} query={query}/>}
         <div className="data-footnote"><b>Data integrity</b><span>Public data: {apiState} {lastRefresh ? "· snapshot " + lastRefresh : ""}</span><span>India GDP: {providerStatus?.india_macro.status || "checking"}</span><span>Exchange quotes: {providerStatus?.market_quotes.status || "checking"}</span><span>News: {providerStatus?.global_news.status || "checking"} · discovery only</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
       </div>
     </main>
