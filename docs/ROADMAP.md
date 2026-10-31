@@ -47,6 +47,9 @@
 - [ ] Add generative AI only if a secure hosted inference option, privacy terms and budget are explicitly approved
 - [ ] Add source-grounded answers, citations, uncertainty labels and a risk-review step
 - [x] Cash-flow, emergency reserve and SIP illustration calculators (educational, not forecasts)
+- [x] Inflation-aware goal funding planner with a 0% return savings baseline
+- [x] Fixed-rate debt payoff estimator with non-amortising-payment warning
+- [x] Portfolio concentration flags and local JSON backup restore
 - [x] Rules-based financial-stage and goal planner with transparent limitations
 - [x] Browser-local asset tracker with asset-class allocation, privacy warning and JSON backup/clear controls
 - [x] Beginner learning path and official career-resource links
