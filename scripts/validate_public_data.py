@@ -43,6 +43,15 @@ if len(news["articles"]) > 100:
 if status.get("market_quotes", {}).get("status") != "not_connected":
     raise SystemExit("Market quotes must remain explicitly disconnected until licensed data is configured")
 
+official_count = sum(1 for item in news["articles"] if item.get("source_type") == "official_primary_source")
+discovery_count = sum(1 for item in news["articles"] if item.get("source_type") == "discovery_unverified")
+if news.get("official_primary_source_count", official_count) != official_count:
+    raise SystemExit("Official-source count does not match news items")
+if news.get("discovery_index_count", discovery_count) != discovery_count:
+    raise SystemExit("Discovery count does not match news items")
+if status.get("global_news", {}).get("official_primary_source_count", official_count) != official_count:
+    raise SystemExit("Health snapshot official-source count does not match news items")
+
 for observation in macro["observations"]:
     if not isinstance(observation.get("date"), str) or not observation["date"].isdigit():
         raise SystemExit("macro observation has an invalid period")
