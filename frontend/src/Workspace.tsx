@@ -4,6 +4,7 @@ import { ArrowUpRight, Calculator, ShieldCheck, Wallet, BriefcaseBusiness, Exter
 type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Portfolio" | "Learning Centre" | "Career & Income";
 type NewsItem = { title: string; url: string; domain?: string; seen_at?: string; source_country?: string; source?: string; source_type?: string; published_at?: string | null };
 type MacroObservation = { country_code: string; country: string; indicator_code: string; indicator: string; date: string; value: number | null; unit?: string };
+type ResearchCase = { id: number; name: string; type: string; horizon: string; valuation: string; liquidity: string; source: string; sourceDate: string; bull: string; base: string; bear: string; costs: string; risks: string; savedAt: string };
 type ProviderStatus = { global_news?: { status?: string; error?: string | null; official_primary_source_count?: number; discovery_index_count?: number; discovery_status?: string; discovery_error?: string | null; official_feeds?: {provider:string;status:string;items?:number;error?:string}[] } };
 
 const lessons = [
@@ -70,6 +71,8 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [candidateBase, setCandidateBase] = useState("");
   const [candidateBear, setCandidateBear] = useState("");
   const [candidateCosts, setCandidateCosts] = useState("");
+  const [researchCases, setResearchCases] = useState<ResearchCase[]>(() => { try { const value = JSON.parse(localStorage.getItem("finpilot-research-cases") || "[]"); return Array.isArray(value) ? value.filter((item: any) => item && typeof item.name === "string" && typeof item.source === "string") : []; } catch { return []; } });
+  const [researchSaved, setResearchSaved] = useState(false);
   const [globalMacro, setGlobalMacro] = useState<MacroObservation[]>([]);
   const [globalMacroStatus, setGlobalMacroStatus] = useState<"loading" | "available" | "stale" | "unavailable">("loading");
   const [globalMacroFreshness, setGlobalMacroFreshness] = useState("not yet loaded");
@@ -114,6 +117,33 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     if (!n) return 0;
     return r === 0 ? p * n : p * ((Math.pow(1 + r, n) - 1) / r);
   }, [sip, years, rate]);
+
+  function saveResearchCase() {
+    if (!researchComplete) return;
+    const item: ResearchCase = {
+      id: Date.now(), name: candidateName.trim(), type: candidateType, horizon: candidateHorizon,
+      valuation: candidateValuation, liquidity: candidateLiquidity, source: candidateSource.trim(),
+      sourceDate: candidateSourceDate, bull: candidateBull.trim(), base: candidateBase.trim(),
+      bear: candidateBear.trim(), costs: candidateCosts.trim(), risks: candidateRisks.trim(),
+      savedAt: new Date().toISOString()
+    };
+    const next = [item, ...researchCases].slice(0, 50);
+    setResearchCases(next);
+    try { localStorage.setItem("finpilot-research-cases", JSON.stringify(next)); setResearchSaved(true); } catch { setResearchSaved(false); }
+  }
+  function exportResearchCases() {
+    const payload = { exported_at: new Date().toISOString(), note: "User-created research notes. Not investment advice or recommendations.", cases: researchCases };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = "finpilot-research-notes.json"; link.click();
+    URL.revokeObjectURL(url);
+  }
+  function removeResearchCase(id: number) {
+    const next = researchCases.filter(item => item.id !== id);
+    setResearchCases(next);
+    try { localStorage.setItem("finpilot-research-cases", JSON.stringify(next)); } catch { /* storage may be disabled */ }
+  }
 
   function saveHolding() {
     if (!assetName.trim() || !(Number(assetAmount) > 0)) return;
@@ -185,9 +215,12 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
           <div className="review-summary"><b>{candidateName.trim() || "No candidate entered"}</b><span>{candidateType} · {candidateHorizon}</span><span>Valuation: {candidateValuation}</span><span>Liquidity: {candidateLiquidity}</span><span>Source date: {candidateSourceDate || "Not recorded"}</span><span>Bull case: {candidateBull || "Not recorded"}</span><span>Base case: {candidateBase || "Not recorded"}</span><span>Bear case: {candidateBear || "Not recorded"}</span><span>Fees/tax: {candidateCosts || "Not recorded"}</span>{isHttpsUrl(candidateSource.trim()) && <a href={candidateSource.trim()} target="_blank" rel="noreferrer">Open primary source <ExternalLink size={12}/></a>}</div>
           {candidateRisks.trim() && <div className="review-summary"><b>Your risk notes</b><span>{candidateRisks}</span></div>}
           <p className="calc-foot">Never rely on one source. Also review fees, tax, issuer quality, concentration, currency exposure, eligibility, custody, fraud risk and downside scenarios. Save the original document and its date outside this temporary worksheet.</p>
+          <div className="resource-links"><button className="text-action" onClick={saveResearchCase} disabled={!researchComplete}>Save this research note locally <ArrowUpRight size={13}/></button>{researchSaved && <span className="success-note">Saved in this browser.</span>}</div>
+          <p className="calc-foot">Saved notes remain only in this browser on this device. They are not encrypted or synced. Export a private backup if you need to keep them.</p>
         </div>
       </div>
     </div>
+    <div className="panel workspace-panel"><h2>Saved research notes</h2><p>{researchCases.length} of 50 locally saved research notes. These are your own research records, not recommendations.</p><div className="resource-links"><button className="text-action" onClick={exportResearchCases} disabled={!researchCases.length}>Export research backup JSON <ArrowUpRight size={13}/></button></div>{researchCases.length ? <div className="holding-list">{researchCases.map(item=><div className="holding-row" key={item.id}><span><b>{item.name}</b><small> · {item.type} · {item.horizon} · saved {new Date(item.savedAt).toLocaleDateString()}</small><br/><a href={item.source} target="_blank" rel="noreferrer">Primary source <ExternalLink size={11}/></a></span><button onClick={()=>removeResearchCase(item.id)} aria-label={"Delete research note "+item.name}>Delete</button></div>)}</div> : <div className="empty-data">No saved notes yet. Complete the evidence checklist and save a candidate review.</div>}<p className="calc-foot">Local browser storage is not a secure vault. Do not store private account data, passwords or confidential documents here.</p></div>
     <div className="panel workspace-panel"><h2>Coverage checklist by asset class</h2><div className="checklist-grid">{[["IPO / public issue","DRHP/RHP, price band, dates, use of proceeds, promoter holdings, valuation, risks and official registrar."],["Mutual funds / ETFs","SID/KIM, expense ratio, benchmark, tracking difference, holdings, overlap and exit load."],["Bonds / T-bills / deposits","Issuer, yield-to-maturity, duration, credit risk, liquidity, tax and reinvestment risk."],["Gold / REITs / InvITs","Instrument structure, costs, cash flows, concentration, valuation and liquidity."],["International assets","FEMA/LRS route, broker eligibility, FX costs, withholding tax, local tax and custody."],["Digital assets","Regulatory, custody, counterparty, fraud, volatility and tax risks; no trading enabled."]].map(([title,desc])=><div className="check-tile" key={title}><ShieldCheck size={17}/><div><b>{title}</b><p>{desc}</p></div></div>)}</div></div>
     <div className="panel workspace-panel"><h2>Decision standard</h2><p>Every future research report should show bull/base/bear scenarios, dated evidence, valuation assumptions, fees, taxes, liquidity, downside scenarios, counterarguments and an “insufficient evidence” outcome when needed.</p></div>
   </div>;
