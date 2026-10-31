@@ -73,7 +73,7 @@ except Exception as exc:
 # Global macro snapshot: annual World Bank indicators, not market prices.
 global_countries = "IND;USA;CHN;GBR;DEU;JPN"
 global_indicators = "NY.GDP.MKTP.KD.ZG;FP.CPI.TOTL.ZG;SL.UEM.TOTL.ZS;NY.GDP.MKTP.CD"
-global_macro_url = f"https://api.worldbank.org/v2/country/{global_countries}/indicator/{global_indicators}?format=json&per_page=500"
+global_macro_url = f"https://api.worldbank.org/v2/country/{global_countries}/indicator/{global_indicators}?format=json&per_page=1000&source=2"
 global_indicator_names = {
     "NY.GDP.MKTP.KD.ZG": "GDP growth (annual %)",
     "FP.CPI.TOTL.ZG": "Inflation, consumer prices (annual %)",
@@ -81,8 +81,13 @@ global_indicator_names = {
     "NY.GDP.MKTP.CD": "GDP (current US$)",
 }
 try:
-    payload = fetch_json(global_macro_url)
-    rows = payload[1] if isinstance(payload, list) and len(payload) > 1 and isinstance(payload[1], list) else []
+    payload = fetch_json(global_macro_url + "&page=1")
+    rows = list(payload[1]) if isinstance(payload, list) and len(payload) > 1 and isinstance(payload[1], list) else []
+    pages = int((payload[0] or {}).get("pages", 1)) if isinstance(payload, list) and payload and isinstance(payload[0], dict) else 1
+    for page in range(2, min(pages, 10) + 1):
+        next_payload = fetch_json(global_macro_url + f"&page={page}")
+        if isinstance(next_payload, list) and len(next_payload) > 1 and isinstance(next_payload[1], list):
+            rows.extend(next_payload[1])
     global_observations = [{
         "country_code": row.get("countryiso3code"),
         "country": (row.get("country") or {}).get("value"),
