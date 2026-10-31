@@ -47,7 +47,8 @@ The workflow refreshes public data and rebuilds the website approximately every 
 |---|---|---|
 | India GDP | World Bank Indicators API, `NY.GDP.MKTP.CD` | Annual macroeconomic observation in current US dollars; subject to revision, not a live indicator |
 | Official India updates | RBI, SEBI and PIB RSS feeds; NSE announcements, corporate actions and board meetings RSS | Primary-source links; feed timestamps and original documents should be checked |
-| Global official releases | Federal Reserve monetary-policy RSS and ECB press-release RSS | Primary-source releases, subject to feed availability |\n| Global news discovery | GDELT DOC API | Rolling discovery index; not fact-checked and not necessarily the publisher's publication time |
+| Global official releases | Federal Reserve monetary-policy RSS and ECB press-release RSS | Primary-source releases, subject to feed availability |
+| Global news discovery | GDELT DOC API | Rolling discovery index; not fact-checked and not necessarily the publisher's publication time |
 | Exchange prices | Not connected | No NIFTY, SENSEX, US index or asset prices are displayed as current until licensing permits it |
 
 See [Data Sources](docs/DATA_SOURCES.md) for official provider documentation and licensing boundaries.
