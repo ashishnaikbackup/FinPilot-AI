@@ -43,6 +43,34 @@ def health():
     }
 
 
+class MentorMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=3000)
+
+
+class MentorRequest(BaseModel):
+    messages: list[MentorMessage] = Field(min_length=1, max_length=12)
+
+
+@app.get("/api/mentor/status")
+async def mentor_status():
+    from .mentor import local_model_status
+    return await local_model_status()
+
+
+@app.post("/api/mentor/chat")
+async def mentor_chat(request: MentorRequest):
+    if request.messages[-1].role != "user":
+        raise HTTPException(status_code=422, detail="The final chat message must be from the user.")
+    from .mentor import local_mentor_reply
+    try:
+        return await local_mentor_reply([item.model_dump() for item in request.messages])
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail="The local model service returned an error. Check Ollama and the selected model.") from exc
+
+
 @app.get("/api/data/status")
 def data_status():
     return provider_status()
