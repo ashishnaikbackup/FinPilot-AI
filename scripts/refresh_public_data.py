@@ -85,9 +85,9 @@ official_feeds = [
 official_articles = []
 official_errors = []
 official_feed_status = []
-for provider, feed_url, domains in official_feeds:
+for provider, feed_url, domains, country in official_feeds:
     try:
-        items = fetch_rss(feed_url, provider, domains)
+        items = fetch_rss(feed_url, provider, domains, country)
         official_articles.extend(items)
         official_feed_status.append({"provider": provider, "source_url": feed_url, "status": "available" if items else "empty", "items": len(items)})
     except Exception as exc:
