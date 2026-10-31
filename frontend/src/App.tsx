@@ -55,6 +55,12 @@ function App() {
   const [lastRefresh, setLastRefresh] = useState("");
 
   useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") setMobileOpen(false); };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     async function loadIntelligence() {
       try {
@@ -108,26 +114,26 @@ function App() {
 
   return <div className="app-shell">
     <aside className={`sidebar ${mobileOpen ? "open" : ""}`}>
-      <div className="brand"><div className="brand-mark"><Activity size={21}/></div><div><b>finpilot<span>.ai</span></b><small>FINANCIAL INTELLIGENCE</small></div><button className="mobile-close" onClick={() => setMobileOpen(false)} aria-label="Close menu"><X size={18}/></button></div>
+      <div className="brand"><div className="brand-mark"><Activity size={21}/></div><div><b>finpilot<span>.ai</span></b><small>FINANCIAL INTELLIGENCE</small></div><button className="mobile-close" type="button" onClick={() => setMobileOpen(false)} aria-label="Close menu"><X size={18}/></button></div>
       <div className="workspace-label">WORKSPACE</div>
-      <nav>{navItems.map(({label, icon: Icon}) => <button key={label} className={`nav-link ${active === label ? "active" : ""}`} onClick={() => {setActive(label); setMobileOpen(false);}}><Icon size={18}/><span>{label}</span>{label === "News Intelligence" && <i className="nav-dot"/>}</button>)}</nav>
+      <nav aria-label="Workspace sections">{navItems.map(({label, icon: Icon}) => <button key={label} type="button" aria-current={active === label ? "page" : undefined} className={`nav-link ${active === label ? "active" : ""}`} onClick={() => {setActive(label); setMobileOpen(false);}}><Icon size={18} aria-hidden="true"/><span>{label}</span>{label === "News Intelligence" && <i className="nav-dot" aria-hidden="true"/>}</button>)}</nav>
       <div className="sidebar-bottom">
         <div className="security-note"><ShieldCheck size={17}/><div><b>Research-first mode</b><span>No live trades enabled</span></div></div>
         <div className="profile"><div className="avatar">FP</div><div><b>Personal workspace</b><span>India · INR</span></div><ChevronDown size={15}/></div>
       </div>
     </aside>
 
-    <main className="main-area">
+    <main id="main-content" className="main-area" tabIndex={-1}>
       <header className="topbar">
-        <button className="menu-button" onClick={() => setMobileOpen(true)} aria-label="Open menu"><Menu/></button>
+        <button className="menu-button" type="button" onClick={() => setMobileOpen(true)} aria-label="Open menu" aria-expanded={mobileOpen} aria-controls="workspace-navigation"><Menu/></button>
         <div className="breadcrumbs">Workspace <span>/</span> <b>{active}</b></div>
-        <div className="top-actions"><div className="search-box"><Search size={16}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder={active === "Overview" || active === "Markets" ? "Search markets..." : "Search disabled here"} disabled={active !== "Overview" && active !== "Markets"} /></div><a className="icon-button" href="https://github.com/ashishnaikbackup/FinPilot-AI/actions" target="_blank" rel="noreferrer" aria-label="Open update history" title="Open data refresh and software update history"><Bell size={18}/><i/></a><div className="top-avatar">FP</div></div>
+        <div className="top-actions"><div className="search-box"><Search size={16} aria-hidden="true"/><input aria-label="Search markets" value={query} onChange={e => setQuery(e.target.value)} placeholder={active === "Overview" || active === "Markets" ? "Search markets..." : "Search disabled here"} disabled={active !== "Overview" && active !== "Markets"} /></div><a className="icon-button" href="https://github.com/ashishnaikbackup/FinPilot-AI/actions" target="_blank" rel="noreferrer" aria-label="Open update history" title="Open data refresh and software update history"><Bell size={18}/><i/></a><div className="top-avatar">FP</div></div>
       </header>
 
       <div className="page-content">
         <section className="welcome-row"><div><div className="eyebrow"><span className="pulse"/> YOUR FINANCIAL COMMAND CENTRE</div><h1>{greeting}. <span>Let's build your financial edge.</span></h1><p>Understand the world. Research opportunities. Make better-informed decisions.</p></div><div className="date-pill"><CalendarDays size={15}/> {new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date())}</div></section>
 
-        {showNotice && <div className="demo-notice"><div className="notice-icon"><CircleHelp size={18}/></div><div><b>{apiState === "connected" ? "Public data snapshots available" : apiState === "partial" ? "Some public data sources are unavailable" : apiState === "loading" ? "Loading public data snapshots" : "Public data snapshots unavailable"}</b><p>{apiState === "connected" ? "The latest scheduled public-source snapshots are loaded. Exchange prices still require a licensed market-data feed." : apiState === "partial" ? "At least one source did not refresh successfully. Check source status and timestamps; missing values are not filled with guesses." : apiState === "loading" ? "Loading the latest snapshots refreshed by GitHub Actions." : "No public data snapshots were loaded. Check the scheduled refresh workflow. No market prices or headlines are invented when a source is unavailable."}</p></div><button onClick={() => setShowNotice(false)} aria-label="Dismiss notice"><X size={16}/></button></div>}
+        {showNotice && <div className="demo-notice" role="status" aria-live="polite"><div className="notice-icon"><CircleHelp size={18}/></div><div><b>{apiState === "connected" ? "Public data snapshots available" : apiState === "partial" ? "Some public data sources are unavailable" : apiState === "loading" ? "Loading public data snapshots" : "Public data snapshots unavailable"}</b><p>{apiState === "connected" ? "The latest scheduled public-source snapshots are loaded. Exchange prices still require a licensed market-data feed." : apiState === "partial" ? "At least one source did not refresh successfully. Check source status and timestamps; missing values are not filled with guesses." : apiState === "loading" ? "Loading the latest snapshots refreshed by GitHub Actions." : "No public data snapshots were loaded. Check the scheduled refresh workflow. No market prices or headlines are invented when a source is unavailable."}</p></div><button onClick={() => setShowNotice(false)} aria-label="Dismiss notice"><X size={16}/></button></div>}
 
         {active === "Overview" && <>
         <section className="stat-grid">
