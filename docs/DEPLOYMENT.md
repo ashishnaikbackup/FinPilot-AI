@@ -15,7 +15,7 @@ The workflow `.github/workflows/pages.yml` runs the Python script `scripts/refre
 - World Bank India annual GDP observations.
 - GDELT global news discovery results.
 
-It writes JSON snapshots into the frontend build output and deploys them with the static site. A scheduled run is configured approximately every six hours. GitHub may delay scheduled runs; always read the timestamp in the snapshot.
+It writes JSON snapshots into the frontend build output and deploys them with the static site. In addition to World Bank and GDELT, it checks RBI press-release/notification RSS and the official PIB press-release RSS. A validation step checks timestamps, schema, source URLs and the no-fabricated-quotes invariant before deployment. A scheduled run is configured approximately every six hours. Dependabot checks npm, pip and GitHub Actions dependencies weekly and opens update pull requests; updates are not silently merged. GitHub may delay scheduled runs; always read the timestamp in the snapshot.
 
 No server, Render account, API key or paid hosting is needed for these public snapshots. The public dashboard is static, so it cannot safely store private personal finance data or server-side secrets.
 
