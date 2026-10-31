@@ -91,7 +91,7 @@ function TradingViewEmbed({ tag, script, attributes, height = 420, label }: {
     };
   }, [tag, script, attributeKey, height]);
   return <div className="tv-widget-shell">
-    <div ref={host} className="tv-widget-host" style={{ minHeight: height }} aria-label={label}/>
+    <div ref={host} className="tv-widget-host" style={{ minHeight: height }} aria-label={label} aria-live="polite"><div className="tv-widget-loading">Loading {label}…</div></div>
     {failed && <div className="tv-widget-fallback">The market widget could not load. Check your connection or <a href="https://www.tradingview.com/widget/" target="_blank" rel="noreferrer">open TradingView widgets</a>.</div>}
   </div>;
 }
