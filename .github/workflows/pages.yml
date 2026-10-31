@@ -48,6 +48,34 @@ jobs:
         run: python scripts/refresh_public_data.py
       - name: Validate public data snapshots
         run: python scripts/validate_public_data.py
+      - name: Write public data health summary
+        run: |
+          python - <<'PY'
+          import json, pathlib, os
+          data = pathlib.Path("frontend/public/data")
+          status = json.loads((data / "status.json").read_text())
+          news = json.loads((data / "news-global.json").read_text())
+          lines = [
+              "## FinPilot public data refresh",
+              f"- Refresh attempt: {status.get('retrieved_at', 'unknown')}",
+              f"- India GDP: {status.get('india_macro', {}).get('status', 'unknown')}",
+              f"- Global macro: {status.get('global_macro', {}).get('status', 'unknown')} ({status.get('global_macro', {}).get('observation_count', 0)} observations)",
+              f"- News: {status.get('global_news', {}).get('status', 'unknown')} ({len(news.get('articles', []))} items)",
+              f"- Official-source items: {news.get('official_primary_source_count', 0)}",
+              f"- GDELT discovery items: {news.get('discovery_index_count', 0)}",
+              f"- Market quotes: {status.get('market_quotes', {}).get('status', 'unknown')}",
+              "",
+              "### Provider warnings",
+          ]
+          for item in status.get('global_news', {}).get('official_feed_errors', []):
+              lines.append(f"- {item.get('provider')}: {item.get('error')}")
+          for key in ('india_macro', 'global_macro', 'global_news'):
+              error = status.get(key, {}).get('error')
+              if error:
+                  lines.append(f"- {key}: {error}")
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
+              summary.write("\\n".join(lines) + "\\n")
+          PY
       - name: Cache refreshed public snapshots
         uses: actions/cache/save@v4
         if: success()
