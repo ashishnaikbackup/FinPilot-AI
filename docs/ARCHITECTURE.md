@@ -5,7 +5,8 @@ FinPilot is a research, education and personal finance workspace. Phase 1 does n
 
 ## System layout
 - **Frontend:** React + TypeScript + Vite. Presentation components consume typed API/data-provider contracts.
-- **Backend:** FastAPI. Provider keys, scheduled ingestion and future authentication stay server-side. An optional local Ollama adapter is restricted to loopback and is intended for local development only; it does not create a hosted AI service.
+- **Backend:** FastAPI provider adapters are retained for development and future secured features; the published GitHub Pages application does not depend on a hosted backend.
+- **Mentor:** The deployed site uses a transparent browser-based rules engine and curated educational responses. It does not call a hosted LLM, run a local model or transmit chat prompts.
 - **Storage (later phase):** PostgreSQL for authenticated user records and normalized market/news metadata. SQLite is acceptable for local experiments only.
 - **Jobs (later phase):** scheduled ingestion with retry, rate-limit handling, freshness monitoring and audit records.
 
@@ -39,9 +40,8 @@ Before presenting an instrument or route as accessible, verify current SEBI, RBI
 
 ## Security baseline
 - Secrets only in server environment variables.
-- The optional local AI mentor only connects to Ollama on 127.0.0.1/localhost; it must never accept an arbitrary remote model URL.
-- Local AI prompts are not persisted by FinPilot; model output is unverified and cannot be treated as current market research.
 - Never put provider secrets in VITE_ variables or browser bundles.
+- The browser-based mentor is not generative AI; its answers are predefined topic guidance and must not be represented as live research.
 - Use HTTPS, authentication, authorization, input validation and audit logs before adding personal financial records.
 - Start with read-only integrations; require explicit human review for any external action.
 - No unattended live trading, leverage or derivatives in initial phases.
