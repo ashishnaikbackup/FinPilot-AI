@@ -6,11 +6,11 @@ This document records the initial public-source integrations. Provider availabil
 
 | Area | Source | API / access | Freshness and limits |
 |---|---|---|---|
-| Indian macroeconomics | RBI Database on Indian Economy (DBIE) | Public read-only JSON API, no key | Periodic dataset loads, not a live market feed. Tables have different frequencies and units. |
+| Indian macroeconomics | RBI Database on Indian Economy (DBIE) | Public read-only JSON API, no key | Backend/local adapter only; not currently included in the static public snapshot. Periodic dataset loads, not a live market feed. Tables have different frequencies and units. |
 | Global macroeconomics | World Bank Indicators API | Public API | Indicator-specific; many observations are annual or quarterly and may be revised. |
 | Official Indian updates | RBI RSS (press releases and notifications), PIB press-release RSS | Public RSS feeds | Original government/regulator releases; the feed is an index, and consequential claims should be checked in the linked document. |
 | Global news discovery | GDELT DOC | Public API | Discovery/coverage aggregation. Not a truth-verification service and not a substitute for primary documents. |
-| US listed-company filings | SEC EDGAR submissions API | Public JSON API; descriptive User-Agent required | Filing updates are disseminated through SEC systems; respect SEC fair-access rules. |
+| US listed-company filings | SEC EDGAR submissions API | Public JSON API; descriptive User-Agent required | Backend/local adapter only; not currently included in the static public snapshot. Filing updates are disseminated through SEC systems; respect SEC fair-access rules. |
 
 ## Market prices: intentionally not faked
 
