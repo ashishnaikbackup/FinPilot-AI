@@ -9,12 +9,12 @@ FinPilot is being built to help a beginner understand markets, economics, person
 ## Current release
 
 - Responsive React + TypeScript dashboard.
-- Public data snapshots for India's annual GDP indicator (World Bank), RBI, SEBI and NSE updates, PIB releases, and Federal Reserve/ECB updates, plus GDELT global news discovery.
+- Public data snapshots for India's annual GDP indicator and six-country macro comparison (World Bank), RBI, SEBI and NSE updates, PIB releases, and Federal Reserve/ECB updates, plus GDELT global news discovery.
 - Scheduled refresh and static hosting using GitHub Actions + GitHub Pages. **No Render or paid backend hosting required for the current public dashboard.**
 - Explicit source, retrieval time, freshness and caveat labels; official RBI/SEBI/NSE/PIB/Federal Reserve/ECB items are distinguished from unverified GDELT discovery.
-- Working planning modules: cash-flow and emergency-reserve check, illustrative SIP calculator, beginner learning path, official career links, a browser-local asset tracker with JSON backup, and an evidence-completeness research worksheet.
+- Working planning modules: cash-flow and emergency-reserve check, illustrative SIP calculator, beginner learning path, official career links, a browser-local asset tracker with category allocation and JSON backup, and an evidence-completeness research worksheet.
 - News Intelligence displays scheduled regulator, exchange and central-bank source items alongside GDELT discovery, with per-feed health when available.
-- The AI Mentor is currently a guided educational framework, not a connected LLM or personalized regulated advisory service. Career pages are official portal links, not a live job feed.
+- The AI Mentor includes a transparent rules-based financial-stage and goal planner; it is not a connected LLM or personalized regulated advisory service. Career pages are official portal links, not a live job feed.
 - Exchange quotes remain blank until an appropriately licensed market-data provider is configured.
 - FastAPI adapters remain available for local development and future server-side features; the deployed static site does not depend on them.
 
@@ -48,6 +48,7 @@ The workflow refreshes public data and rebuilds the website approximately every 
 | India GDP | World Bank Indicators API, `NY.GDP.MKTP.CD` | Annual macroeconomic observation in current US dollars; subject to revision, not a live indicator |
 | Official India updates | RBI, SEBI and PIB RSS feeds; NSE announcements, corporate actions and board meetings RSS | Primary-source links; feed timestamps and original documents should be checked |
 | Global official releases | Federal Reserve monetary-policy RSS and ECB press-release RSS | Primary-source releases, subject to feed availability |
+| Global macro comparison | World Bank Indicators API | Annual GDP growth, inflation, unemployment and nominal GDP for India, US, China, UK, Germany and Japan; latest years vary. |
 | Global news discovery | GDELT DOC API | Rolling discovery index; not fact-checked and not necessarily the publisher's publication time |
 | Exchange prices | Not connected | No NIFTY, SENSEX, US index or asset prices are displayed as current until licensing permits it |
 
