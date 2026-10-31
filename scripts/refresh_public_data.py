@@ -116,7 +116,7 @@ try:
         "language": item.get("language"),
     } for item in articles if item.get("title") and item.get("url") and urlparse(item.get("url", "")).scheme == "https" and urlparse(item.get("url", "")).hostname]
     write("news-global.json", {
-        "provider": "RBI + PIB official RSS and GDELT discovery", "source_url": gdelt_url,
+        "provider": "Official RBI/SEBI/NSE/PIB/Fed/ECB RSS and GDELT discovery", "source_url": gdelt_url,
         "retrieved_at": NOW, "freshness": "rolling_3_day_discovery_index",
         "verification": "mixed_official_primary_source_and_unverified_discovery", "articles": official_articles + normalized,
         "official_primary_source_count": len(official_articles),
@@ -131,7 +131,7 @@ except Exception as exc:
     news_ok = False
     news_error = str(exc)[:300]
     write("news-global.json", {
-        "provider": "RBI + PIB official RSS and GDELT discovery", "source_url": gdelt_url,
+        "provider": "Official RBI/SEBI/NSE/PIB/Fed/ECB RSS and GDELT discovery", "source_url": gdelt_url,
         "retrieved_at": NOW, "freshness": "feed_dependent",
         "verification": "official_primary_source_items_plus_unavailable_discovery", "articles": official_articles, "official_primary_source_count": len(official_articles), "discovery_index_count": 0, "official_feed_errors": official_errors, "official_feeds": official_feed_status, "error": news_error,
     })
@@ -148,9 +148,9 @@ status = {
     },
     "global_news": {
         "status": "available" if (news_ok or bool(official_articles)) else "unavailable",
-        "provider": "RBI + PIB official RSS and GDELT discovery",
+        "provider": "Official RBI/SEBI/NSE/PIB/Fed/ECB RSS and GDELT discovery",
         "freshness": "feed_dependent; GDELT rolling 3 days",
-        "caveat": "RBI/PIB items link to primary releases. GDELT items are discovery only and not fact-checked; seen_at is not publisher publication time.",
+        "caveat": "RBI/SEBI/NSE/PIB/Federal Reserve/ECB items link to primary releases. GDELT items are discovery only and not fact-checked; seen_at is not publisher publication time.",
         "official_primary_source_count": len(official_articles),
         "discovery_index_count": len(normalized) if news_ok else 0,
         "official_feed_errors": official_errors,
