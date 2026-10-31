@@ -29,9 +29,9 @@ FinPilot's public GitHub Pages site is static and does not host a generative AI 
    uvicorn app.main:app --host 127.0.0.1 --port 8000
    ~~~
 
-5. Open the deployed FinPilot site or local frontend and visit **AI Mentor**. The connection indicator checks http://127.0.0.1:8000/api/mentor/status.
+5. In a third terminal, run the frontend locally:\n\n   ~~~bash\n   cd FinPilot-AI/frontend\n   npm install\n   npm run dev\n   ~~~\n\n6. Open http://localhost:5173 and visit **AI Mentor**. The connection indicator checks http://127.0.0.1:8000/api/mentor/status.
 
-The default CORS allowlist contains only the local Vite origin and the FinPilot GitHub Pages origin. If you fork the repository or use a different domain, set FRONTEND_ORIGINS in backend/.env to the exact trusted frontend origins. Keep the API bound to 127.0.0.1; do not expose it to the public internet.
+For local AI chat, run the frontend locally at http://localhost:5173. The API CORS allowlist intentionally permits only that local development origin by default. If you use a different local frontend origin, set FRONTEND_ORIGINS in backend/.env to that exact trusted origin. Keep the API bound to 127.0.0.1; do not expose it to the public internet. The public GitHub Pages site remains a static dashboard and does not itself host or proxy the model.
 
 ## Privacy and limitations
 
@@ -52,6 +52,6 @@ Configuration lives in backend/.env.example:
 
 - OLLAMA_BASE_URL=http://127.0.0.1:11434
 - OLLAMA_MODEL=llama3.2:3b
-- FRONTEND_ORIGINS=http://localhost:5173,https://ashishnaikbackup.github.io
+- FRONTEND_ORIGINS=http://localhost:5173
 
 For safety, FinPilot refuses non-loopback Ollama URLs. This feature is optional; the rest of the public dashboard works without it.
