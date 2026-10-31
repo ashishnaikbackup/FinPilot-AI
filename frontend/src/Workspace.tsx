@@ -50,6 +50,15 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [sip, setSip] = useState("0");
   const [years, setYears] = useState("10");
   const [rate, setRate] = useState("10");
+  const [goalName, setGoalName] = useState("Education / major purchase");
+  const [goalTarget, setGoalTarget] = useState("500000");
+  const [goalCurrent, setGoalCurrent] = useState("0");
+  const [goalYears, setGoalYears] = useState("5");
+  const [goalInflation, setGoalInflation] = useState("5");
+  const [goalReturn, setGoalReturn] = useState("0");
+  const [debtBalance, setDebtBalance] = useState("100000");
+  const [debtRate, setDebtRate] = useState("14");
+  const [debtPayment, setDebtPayment] = useState("5000");
   const [holdings, setHoldings] = useState<{ name: string; amount: number; category: string }[]>(() => {
     try { const parsed = JSON.parse(localStorage.getItem("finpilot-holdings") || "[]"); return Array.isArray(parsed) ? parsed.filter((item: any) => item && typeof item.name === "string" && Number.isFinite(Number(item.amount)) && Number(item.amount) >= 0).map((item: any) => ({ name: item.name, amount: Number(item.amount), category: typeof item.category === "string" ? item.category : "Other" })) : []; } catch { return []; }
   });
@@ -107,6 +116,40 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const macroCountryHistory = useMemo(() => globalMacro.filter(item => item.country_code === macroCountry && item.indicator_code === macroIndicator && item.value !== null).sort((a,b) => Number(a.date)-Number(b.date)), [globalMacro, macroCountry, macroIndicator]);
   const macroCountryLatest = useMemo(() => globalMacro.filter(item => item.indicator_code === macroIndicator && item.value !== null).reduce((latest, item) => { const current = latest.get(item.country_code); if (!current || Number(item.date) > Number(current.date)) latest.set(item.country_code, item); return latest; }, new Map<string, MacroObservation>()), [globalMacro, macroIndicator]);
   const holdingTotal = holdings.reduce((sum, item) => sum + item.amount, 0);
+  const topHoldingShare = holdingTotal > 0 ? Math.max(...holdings.map(item => item.amount)) / holdingTotal * 100 : 0;
+  const categoryShares = Array.from(holdings.reduce((map, item) => map.set(item.category, (map.get(item.category) || 0) + item.amount), new Map<string, number>()).entries()).map(([category, amount]) => ({ category, amount, share: holdingTotal > 0 ? amount / holdingTotal * 100 : 0 })).sort((a,b) => b.share-a.share);
+  const goalProjection = useMemo(() => {
+    const target = Math.max(0, Number(goalTarget) || 0);
+    const current = Math.max(0, Number(goalCurrent) || 0);
+    const months = Math.min(600, Math.max(0, Number(goalYears) || 0) * 12);
+    const inflation = Math.min(30, Math.max(0, Number(goalInflation) || 0)) / 100;
+    const annualReturn = Math.min(30, Math.max(0, Number(goalReturn) || 0)) / 100;
+    const futureTarget = target * Math.pow(1 + inflation, months / 12);
+    const gapAtZero = Math.max(0, futureTarget - current);
+    const zeroReturnMonthly = months > 0 ? gapAtZero / months : 0;
+    const monthlyRate = Math.pow(1 + annualReturn, 1 / 12) - 1;
+    const futureCurrent = current * Math.pow(1 + monthlyRate, months);
+    const monthlyAtAssumption = months > 0 ? (monthlyRate === 0 ? Math.max(0, futureTarget - futureCurrent) / months : Math.max(0, futureTarget - futureCurrent) * monthlyRate / (Math.pow(1 + monthlyRate, months) - 1)) : 0;
+    return { futureTarget, zeroReturnMonthly, monthlyAtAssumption, months };
+  }, [goalTarget, goalCurrent, goalYears, goalInflation, goalReturn]);
+  const debtProjection = useMemo(() => {
+    let balance = Math.max(0, Number(debtBalance) || 0);
+    const payment = Math.max(0, Number(debtPayment) || 0);
+    const monthlyRate = Math.min(100, Math.max(0, Number(debtRate) || 0)) / 1200;
+    if (!balance) return { months: 0, interest: 0, totalPaid: 0, status: "No outstanding balance" };
+    if (!payment) return { months: 0, interest: 0, totalPaid: 0, status: "Enter a monthly payment" };
+    if (monthlyRate > 0 && payment <= balance * monthlyRate) return { months: 0, interest: 0, totalPaid: 0, status: "Payment does not cover monthly interest" };
+    let months = 0, interest = 0, totalPaid = 0;
+    while (balance > 0.01 && months < 1200) {
+      const charge = balance * monthlyRate;
+      const paid = Math.min(balance + charge, payment);
+      interest += charge;
+      totalPaid += paid;
+      balance = Math.max(0, balance + charge - paid);
+      months += 1;
+    }
+    return { months, interest, totalPaid, status: months >= 1200 ? "More than 100 years" : "Illustrative payoff estimate" };
+  }, [debtBalance, debtRate, debtPayment]);
   const allocation = holdings.reduce((map, item) => { map.set(item.category, (map.get(item.category) || 0) + item.amount); return map; }, new Map<string, number>());
   const mentorGuidance = mentorStage === "Studying / no regular income" ? "Prioritise completing your course, building employable skills and securing reliable income. Keep the investing contribution at zero if you have no surplus. Learn with simulations only." : mentorStage === "Income, but high-interest debt" ? "List every debt, interest rate, minimum payment and due date. Protect essentials, avoid new borrowing and compare repayment options. Do not take market risk to try to recover debt." : mentorStage === "Income, no emergency reserve" ? "Track essential monthly costs and build a cash reserve in an accessible, low-risk place. Choose a realistic monthly amount after debt payments and irregular costs." : mentorStage === "Stable income and emergency reserve" ? "Define goals and time horizons, then learn about diversified, low-cost products. Compare fees, tax, liquidity and downside risk before making any decision." : "Review allocation, concentration, fees, taxes and liquidity. Rebalance only against a written plan, not short-term headlines.";
   const mentorGoalGuidance: Record<string, string> = { "Build earning capacity": "Choose one employable skill track, build two demonstrable projects, apply consistently to verified internships or entry roles, and track applications weekly.", "Manage debt": "Write down each balance, effective interest rate, minimum payment and due date. Prioritise expensive debt while keeping essentials current; avoid borrowing to invest.", "Build emergency savings": "Estimate essential monthly costs, choose a realistic reserve horizon and build it gradually in an accessible, low-risk account.", "Learn investing": "Start with diversification, index construction, fund costs, tracking difference, volatility, liquidity and tax. Use paper examples before risking money.", "Review existing portfolio": "Record each holding, asset class, costs, tax impact, concentration and exit restrictions. Compare the current mix with your goals before changing it." };
