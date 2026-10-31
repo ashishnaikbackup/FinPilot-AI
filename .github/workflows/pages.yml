@@ -74,7 +74,7 @@ jobs:
               if error:
                   lines.append(f"- {key}: {error}")
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
-              summary.write("\\n".join(lines) + "\\n")
+              summary.write("\n".join(lines) + "\n")
           PY
       - name: Cache refreshed public snapshots
         uses: actions/cache/save@v4
