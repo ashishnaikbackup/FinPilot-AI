@@ -4,11 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0b1020" />
-    <meta name="description" content="FinPilot AI — your personal financial intelligence and wealth-building mentor." />
-    <title>FinPilot AI — Financial Intelligence</title>
+    <title>FinPilot AI — deployment setup</title>
+    <style>
+      *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#0b1020;color:#edf1fa;font:16px/1.6 system-ui,sans-serif}
+      main{max-width:620px;padding:30px;border:1px solid #354467;border-radius:18px;background:#141e32}
+      .eyebrow{color:#9daaff;font-size:12px;letter-spacing:2px;font-weight:700}h1{font-size:28px;line-height:1.2}p{color:#a0aec8}
+      a{color:#b9c1ff}li{margin:8px 0}code{color:#dce4ff}
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <main>
+      <div class="eyebrow">FINPILOT AI</div>
+      <h1>GitHub Pages is using the wrong publishing source.</h1>
+      <p>The actual FinPilot application is built from <code>frontend/</code> and published as a GitHub Actions artifact. This root-level page is a safety notice so a branch-based Pages configuration does not silently show a blank screen.</p>
+      <ol>
+        <li>Open this repository's <a href="https://github.com/ashishnaikbackup/FinPilot-AI/settings/pages">Settings → Pages</a>.</li>
+        <li>Under <b>Build and deployment</b>, set <b>Source</b> to <b>GitHub Actions</b> (not “Deploy from a branch”).</li>
+        <li>Open <a href="https://github.com/ashishnaikbackup/FinPilot-AI/actions/workflows/pages.yml">Deploy FinPilot AI frontend</a> and wait for a successful run.</li>
+        <li>Reload <a href="https://ashishnaikbackup.github.io/FinPilot-AI/">the FinPilot website</a>.</li>
+      </ol>
+      <p>The app does not require Ollama, a local server, an API key or a paid service.</p>
+    </main>
   </body>
 </html>
