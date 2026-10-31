@@ -19,11 +19,13 @@ It is **not** a live institutional terminal, a generative-AI adviser, a broker-c
 - Cash-flow, emergency-reserve, SIP illustration, inflation-aware goal and debt-payoff calculators.
 - Rules-based educational mentor and beginner learning resources.
 - Browser-local asset tracker, allocation/concentration checks, research worksheet and JSON backup/restore.
+- Manual-price paper portfolio simulator with editable user-entered marks, fee-aware illustrative P/L, local storage and JSON export.
+- Heuristic news-event grouping with publisher-domain diversity, official-source counts and topic-channel prompts; not verified event attribution or impact analysis.
 - Official career and recruitment resource directory.
 - GitHub Actions CI, public-data validation, scheduled refresh and GitHub Pages deployment.
 - Accessibility, responsive layout, reduced-motion support, keyboard focus, page metadata and crash fallback improvements.
 
-The 31 October 2026 project review recorded successful frontend/backend/public-data CI checks and a successful Pages build/deployment. Scheduled GitHub jobs can be delayed; always rely on the displayed source retrieval timestamps rather than assuming hourly freshness.
+The 31 October 2026 project review recorded successful frontend/backend/public-data CI checks and a successful Pages build/deployment for the then-current release. The later 31 October paper-portfolio and news-grouping commits do not yet have a confirmed CI/build result in this handover. Scheduled GitHub jobs can be delayed; always rely on the displayed source retrieval timestamps rather than assuming hourly freshness.
 
 ## Final manual acceptance checks
 
@@ -33,6 +35,7 @@ The 31 October 2026 project review recorded successful frontend/backend/public-d
 - [ ] Test calculator inputs and zero-return goal baseline.
 - [ ] Test local portfolio/research save, JSON export and restore in the same browser.
 - [ ] Test paper portfolio creation, manual mark updates, fee-aware P/L and JSON export; verify no order execution or live quote claim.
+- [ ] Test heuristic news grouping with repeated headlines, unrelated headlines and malformed/empty source metadata; confirm caveats remain visible.
 - [ ] Confirm privacy warnings are visible before entering personal data.
 - [ ] Confirm no API keys, passwords, broker credentials or private financial records are committed.
 - [ ] Check GitHub Actions for the latest green CI and Pages deployment.
