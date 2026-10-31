@@ -56,27 +56,34 @@ function App() {
   useEffect(() => {
     let cancelled = false;
     async function loadIntelligence() {
-      try {
-        const [statusRes, macroRes, newsRes] = await Promise.all([
-          fetch(API_BASE + "/api/data/status"),
-          fetch(API_BASE + "/api/data/global/world-bank?country=IND&indicator=NY.GDP.MKTP.CD&per_page=12"),
-          fetch(API_BASE + "/api/news/global?days=3&limit=8")
-        ]);
-        if (!statusRes.ok || !macroRes.ok || !newsRes.ok) throw new Error("A public data source is unavailable");
-        const [status, macro, news] = await Promise.all([statusRes.json(), macroRes.json(), newsRes.json()]);
-        if (cancelled) return;
-        setProviderStatus(status);
+      const results = await Promise.allSettled([
+        fetch(API_BASE + "/api/data/status"),
+        fetch(API_BASE + "/api/data/global/world-bank?country=IND&indicator=NY.GDP.MKTP.CD&per_page=12"),
+        fetch(API_BASE + "/api/news/global?days=3&limit=8")
+      ]);
+      if (cancelled) return;
+      let successes = 0;
+      const [statusResult, macroResult, newsResult] = results;
+      if (statusResult.status === "fulfilled" && statusResult.value.ok) {
+        setProviderStatus(await statusResult.value.json());
+        successes += 1;
+      }
+      if (macroResult.status === "fulfilled" && macroResult.value.ok) {
+        const macro = await macroResult.value.json();
         const points = (macro.observations || [])
           .filter((item: {date:string;value:number|null}) => item.value !== null)
           .map((item: {date:string;value:number}) => ({date:item.date,value:item.value}))
           .reverse();
         setMacroSeries(points);
-        setNewsItems(news.articles || []);
-        setApiState("connected");
-        setLastRefresh(new Date().toLocaleTimeString("en-IN"));
-      } catch {
-        if (!cancelled) setApiState("offline");
+        successes += 1;
       }
+      if (newsResult.status === "fulfilled" && newsResult.value.ok) {
+        const news = await newsResult.value.json();
+        setNewsItems(news.articles || []);
+        successes += 1;
+      }
+      setApiState(successes > 0 ? "connected" : "offline");
+      setLastRefresh(new Date().toLocaleTimeString("en-IN"));
     }
     loadIntelligence();
     return () => { cancelled = true; };
@@ -115,13 +122,13 @@ function App() {
         <section className="stat-grid">
           <StatCard icon={<Wallet/>} label="Investable capital" value="₹0.00" hint="Starting point · no pressure to invest" tone="blue"/>
           <StatCard icon={<TrendingUp/>} label="Portfolio value" value="Not connected" hint="Add assets when you have them" tone="violet"/>
-          <StatCard icon={<Globe2/>} label="Markets tracked" value="4 watchlist indices" hint="Live feed not connected" tone="cyan"/>
+          <StatCard icon={<Globe2/>} label="Markets tracked" value="4 indices" hint="Quote feed not connected" tone="cyan"/>
           <StatCard icon={<ShieldCheck/>} label="Risk posture" value="Capital first" hint="No leverage · no auto-trading" tone="green"/>
         </section>
 
         <section className="content-grid">
           <div className="panel market-panel">
-            <div className="panel-heading"><div><div className="eyebrow">MARKET PULSE</div><h2>Global market watch</h2></div><button className="subtle-button" onClick={() => setActive("Markets")}>Explore markets <ArrowUpRight size={14}/></button></div>
+            <div className="panel-heading"><div><div className="eyebrow">MARKET PULSE</div><h2>India economic snapshot</h2></div><button className="subtle-button" onClick={() => setActive("Markets")}>Explore markets <ArrowUpRight size={14}/></button></div>
             <div className="chart-legend"><span><i className="legend-india"/> India GDP · current US$</span><em>{providerStatus?.global_macro.provider || "World Bank"} · annual observations</em></div>
             <div className="chart-wrap">{macroSeries.length ? <ResponsiveContainer width="100%" height="100%"><AreaChart data={macroSeries} margin={{top:12,right:4,left:-20,bottom:0}}><defs><linearGradient id="macro" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#8490ff" stopOpacity={0.28}/><stop offset="100%" stopColor="#8490ff" stopOpacity={0}/></linearGradient></defs><CartesianGrid stroke="#222b40" vertical={false}/><XAxis dataKey="date" tick={{fill:"#77839c",fontSize:10}} axisLine={false} tickLine={false}/><YAxis tick={{fill:"#77839c",fontSize:10}} axisLine={false} tickLine={false} tickFormatter={(v:number) => (v/1e12).toFixed(1)+"T"}/><Tooltip formatter={(v) => "$"+(Number(v)/1e12).toFixed(2)+" trillion"} contentStyle={{background:"#111a2c",border:"1px solid #2b3852",borderRadius:12,color:"#fff"}}/><Area type="monotone" dataKey="value" name="GDP" stroke="#8490ff" strokeWidth={2.5} fill="url(#macro)"/></AreaChart></ResponsiveContainer> : <div className="empty-data">{apiState === "offline" ? "Waiting for backend connection." : "Loading World Bank observations…"}</div>}</div>
             <div className="market-strip">{filteredMarkets.map(m => <div className="market-mini" key={m.name}><div><b>{m.name}</b><span>{m.area}</span></div><div className="market-value">{m.value}<small>{m.change}</small></div></div>)}</div>
@@ -136,7 +143,7 @@ function App() {
         </section>
 
         <section className="footer-grid"><div className="foot-card"><div className="foot-icon"><BookOpen/></div><div><b>Learn the language of money</b><p>Plain-English explainers, from bonds and ETFs to inflation and valuation.</p><button onClick={() => setActive("Learning Centre")}>Go to learning centre <ArrowUpRight size={13}/></button></div></div><div className="foot-card"><div className="foot-icon"><BriefcaseBusiness/></div><div><b>Grow your earning power</b><p>Build skills, explore career paths and find legitimate income opportunities.</p><button onClick={() => setActive("Career & Income")}>Explore career workspace <ArrowUpRight size={13}/></button></div></div></section>
-        <div className="data-footnote"><b>Data integrity</b><span>API: {apiState} {lastRefresh ? "· refreshed " + lastRefresh : ""}</span><span>Exchange quotes: {providerStatus?.market_quotes.status || "checking"}</span><span>News: discovery only, not verified facts</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
+        <div className="data-footnote"><b>Data integrity</b><span>API: {apiState} {lastRefresh ? "· refreshed " + lastRefresh : ""}</span><span>India macro: {providerStatus?.india_macro.status || "checking"}</span><span>Exchange quotes: {providerStatus?.market_quotes.status || "checking"}</span><span>News: discovery only, not verified facts</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
       </div>
     </main>
   </div>;
