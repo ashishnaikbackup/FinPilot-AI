@@ -42,12 +42,6 @@ const opportunities = [
   { type: "FIXED INCOME", title: "Bonds & government securities", text: "Compare yield-to-maturity, duration, credit quality and liquidity.", tag: "Compare carefully" },
   { type: "FUNDS & ETFs", title: "Diversified investment options", text: "Compare costs, benchmark, tracking error and portfolio overlap.", tag: "Learn first" }
 ];
-const news = [
-  { category: "CENTRAL BANKS", title: "Track RBI, Federal Reserve and other policy decisions", desc: "Rate decisions can influence borrowing costs, bonds, currencies and equity valuations.", time: "Monitoring topic" },
-  { category: "GEOPOLITICS", title: "Follow conflicts, sanctions and global supply chains", desc: "FinPilot will connect confirmed events to potential sector and asset impacts.", time: "Monitoring topic" },
-  { category: "CORPORATE", title: "Watch earnings, disclosures and company risk signals", desc: "Use exchange filings and issuer disclosures as primary evidence.", time: "Monitoring topic" }
-];
-
 function App() {
   const [active, setActive] = useState<Section>("Overview");
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -129,7 +123,7 @@ function App() {
           <div className="panel market-panel">
             <div className="panel-heading"><div><div className="eyebrow">MARKET PULSE</div><h2>Global market watch</h2></div><button className="subtle-button" onClick={() => setActive("Markets")}>Explore markets <ArrowUpRight size={14}/></button></div>
             <div className="chart-legend"><span><i className="legend-india"/> India GDP · current US$</span><em>{providerStatus?.global_macro.provider || "World Bank"} · annual observations</em></div>
-            <div className="chart-wrap">{macroSeries.length ? <ResponsiveContainer width="100%" height="100%"><AreaChart data={macroSeries} margin={{top:12,right:4,left:-20,bottom:0}}><defs><linearGradient id="macro" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#8490ff" stopOpacity={0.28}/><stop offset="100%" stopColor="#8490ff" stopOpacity={0}/></linearGradient></defs><CartesianGrid stroke="#222b40" vertical={false}/><XAxis dataKey="date" tick={{fill:"#77839c",fontSize:10}} axisLine={false} tickLine={false}/><YAxis tick={{fill:"#77839c",fontSize:10}} axisLine={false} tickLine={false} tickFormatter={(v:number) => (v/1e12).toFixed(1)+"T"}/><Tooltip formatter={(v:number) => "$"+(v/1e12).toFixed(2)+" trillion"} contentStyle={{background:"#111a2c",border:"1px solid #2b3852",borderRadius:12,color:"#fff"}}/><Area type="monotone" dataKey="value" name="GDP" stroke="#8490ff" strokeWidth={2.5} fill="url(#macro)"/></AreaChart></ResponsiveContainer> : <div className="empty-data">{apiState === "offline" ? "Waiting for backend connection." : "Loading World Bank observations…"}</div>}</div>
+            <div className="chart-wrap">{macroSeries.length ? <ResponsiveContainer width="100%" height="100%"><AreaChart data={macroSeries} margin={{top:12,right:4,left:-20,bottom:0}}><defs><linearGradient id="macro" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#8490ff" stopOpacity={0.28}/><stop offset="100%" stopColor="#8490ff" stopOpacity={0}/></linearGradient></defs><CartesianGrid stroke="#222b40" vertical={false}/><XAxis dataKey="date" tick={{fill:"#77839c",fontSize:10}} axisLine={false} tickLine={false}/><YAxis tick={{fill:"#77839c",fontSize:10}} axisLine={false} tickLine={false} tickFormatter={(v:number) => (v/1e12).toFixed(1)+"T"}/><Tooltip formatter={(v) => "$"+(Number(v)/1e12).toFixed(2)+" trillion"} contentStyle={{background:"#111a2c",border:"1px solid #2b3852",borderRadius:12,color:"#fff"}}/><Area type="monotone" dataKey="value" name="GDP" stroke="#8490ff" strokeWidth={2.5} fill="url(#macro)"/></AreaChart></ResponsiveContainer> : <div className="empty-data">{apiState === "offline" ? "Waiting for backend connection." : "Loading World Bank observations…"}</div>}</div>
             <div className="market-strip">{filteredMarkets.map(m => <div className="market-mini" key={m.name}><div><b>{m.name}</b><span>{m.area}</span></div><div className="market-value">{m.value}<small>{m.change}</small></div></div>)}</div>
           </div>
 
