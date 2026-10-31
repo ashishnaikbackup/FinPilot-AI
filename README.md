@@ -9,7 +9,7 @@ FinPilot is being built to help a beginner understand markets, economics, person
 ## Current release
 
 - Responsive React + TypeScript dashboard.
-- Public data snapshots for India's annual GDP indicator (World Bank), RBI press releases/notifications and PIB releases, plus GDELT global news discovery.
+- Public data snapshots for India's annual GDP indicator (World Bank), RBI, SEBI and NSE updates, PIB releases, and Federal Reserve/ECB updates, plus GDELT global news discovery.
 - Scheduled refresh and static hosting using GitHub Actions + GitHub Pages. **No Render or paid backend hosting required for the current public dashboard.**
 - Explicit source, retrieval time, freshness and caveat labels; official RBI/PIB items are distinguished from unverified GDELT discovery.
 - Working planning modules: cash-flow check, illustrative SIP calculator, beginner learning path, official career links, a browser-local asset tracker with JSON backup, and an evidence-completeness research worksheet.
@@ -46,8 +46,8 @@ The workflow refreshes public data and rebuilds the website approximately every 
 | Data | Source | What it means |
 |---|---|---|
 | India GDP | World Bank Indicators API, `NY.GDP.MKTP.CD` | Annual macroeconomic observation in current US dollars; subject to revision, not a live indicator |
-| Official India updates | RBI RSS (press releases and notifications), PIB press-release RSS | Primary-source links; feed timestamps and original documents should be checked |
-| Global news discovery | GDELT DOC API | Rolling discovery index; not fact-checked and not necessarily the publisher's publication time |
+| Official India updates | RBI, SEBI and PIB RSS feeds; NSE announcements, corporate actions and board meetings RSS | Primary-source links; feed timestamps and original documents should be checked |
+| Global official releases | Federal Reserve monetary-policy RSS and ECB press-release RSS | Primary-source releases, subject to feed availability |\n| Global news discovery | GDELT DOC API | Rolling discovery index; not fact-checked and not necessarily the publisher's publication time |
 | Exchange prices | Not connected | No NIFTY, SENSEX, US index or asset prices are displayed as current until licensing permits it |
 
 See [Data Sources](docs/DATA_SOURCES.md) for official provider documentation and licensing boundaries.
