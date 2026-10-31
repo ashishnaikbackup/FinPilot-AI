@@ -20,6 +20,7 @@
 - [x] Federal Reserve and ECB official press-release feeds
 - [x] Distinguish official primary-source releases from GDELT discovery items
 - [x] Snapshot schema validation before Pages deployment
+- [x] Last-known-good snapshot cache and stale-data labelling on upstream outages
 - [x] Weekly Dependabot proposals for npm, pip and GitHub Actions
 - [ ] Verify the published site and scheduled snapshots in GitHub Pages
 - [ ] Add RBI DBIE table explorer with units, periods, revisions and provenance
