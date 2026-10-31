@@ -22,7 +22,7 @@ The frontend received a focused usability and accessibility pass:
 - Made the application crash fallback announce itself to assistive technology, with a labelled error heading and reload action.
 - Preserved the existing external market-widget disclosure and did not add a fake quote feed.
 
-This is a source-level implementation pass. Automated CI/build and real-device/browser checks must pass before calling the release fully verified. Embedded TradingView content remains third-party and can fail independently of the FinPilot app.
+This is a source-level implementation pass. Automated CI/build and real-device/browser checks must pass before calling the release fully verified. The paper portfolio and heuristic news-grouping additions are also source-level changes; their manual acceptance checks remain outstanding. Embedded TradingView content remains third-party and can fail independently of the FinPilot app.
 
 ## Requirement matrix
 
@@ -39,7 +39,8 @@ This is a source-level implementation pass. Automated CI/build and real-device/b
 | Global economic calendar | Available via embed | TradingView calendar widget; provider coverage and timestamps are external. |
 | India macro and global economic data | Partial | World Bank annual observations for six countries; RBI DBIE search adapter exists in optional backend but is not connected to public Pages UI. |
 | Official news and regulator updates | Available | RBI, SEBI, NSE, BSE, PIB, Federal Reserve and ECB RSS plus GDELT discovery. Feed availability varies. |
-| News event grouping and market channels | Partial, added 31 Oct 2026 | News Intelligence now groups similar headlines heuristically, shows distinct publisher domains and official-source item counts, and offers topic-based channels to monitor. This does not verify event identity, source independence, truth or price impact. |\n| Verified news and event impact analysis | Not complete | Claim-level evidence extraction, genuine independent corroboration, source-grounded impact analysis and forecast scorecards still require deeper validation and sources. |
+| News event grouping and market channels | Partial, added 31 Oct 2026 | News Intelligence now groups similar headlines heuristically, shows distinct publisher domains and official-source item counts, and offers topic-based channels to monitor. This does not verify event identity, source independence, truth or price impact. |
+| Verified news and event impact analysis | Not complete | Claim-level evidence extraction, genuine independent corroboration, source-grounded impact analysis and forecast scorecards still require deeper validation and sources. |
 | IPO tracking | Partial | Official-source headline watchlist and research worksheet; not a complete dated IPO calendar or automated DRHP/RHP financial comparison. |
 | Mutual funds, ETFs, bonds, T-bills, deposits, REITs/InvITs, property and international assets | Partial | Education and manual research framework exist; complete instrument databases, comparable live yields/fees and jurisdiction checks are not connected. |
 | Cash flow and emergency fund planning | Available | Local calculators with assumptions and caveats. |
