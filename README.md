@@ -56,7 +56,7 @@ The workflow refreshes public data and rebuilds the website approximately every 
 | Global news discovery | GDELT DOC API | Rolling discovery index; not fact-checked and not necessarily the publisher's publication time |
 | Exchange prices | Not connected | No NIFTY, SENSEX, US index or asset prices are displayed as current until licensing permits it |
 
-See [Data Sources](docs/DATA_SOURCES.md) for official provider documentation and licensing boundaries, and [Open-source Adapter Review](docs/OPEN_SOURCE_ADAPTER_REVIEW.md) for project-by-project reuse and safety decisions.
+See the [Project Handover](docs/PROJECT_HANDOVER.md) for the delivered scope and release boundaries, [Data Sources](docs/DATA_SOURCES.md) for provider documentation and licensing, and [Open-source Adapter Review](docs/OPEN_SOURCE_ADAPTER_REVIEW.md) for project-by-project reuse and safety decisions.
 
 ## Optional local API
 
