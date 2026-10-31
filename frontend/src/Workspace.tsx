@@ -24,7 +24,7 @@ function money(value: number) {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 }
 
-export default function Workspace({ active }: { active: Section }) {
+export default function Workspace({ active, query }: { active: Section; query: string }) {
   const [monthlyIncome, setMonthlyIncome] = useState("0");
   const [monthlyExpenses, setMonthlyExpenses] = useState("0");
   const [sip, setSip] = useState("1000");
@@ -62,7 +62,7 @@ export default function Workspace({ active }: { active: Section }) {
 
   if (active === "Markets") return <div className="workspace-stack">
     <div className="panel workspace-panel"><div className="eyebrow">MARKET COVERAGE</div><h2>Market data, without pretending</h2><p>FinPilot currently tracks the market universe conceptually, but has no licensed live or delayed exchange quote feed. No index value is fabricated.</p>
-      <div className="module-grid">{["NIFTY 50 · NSE", "SENSEX · BSE", "S&P 500 · US", "NASDAQ 100 · US", "Gold & silver", "Global rates & FX"].map(x => <div className="module-tile" key={x}><b>{x}</b><span>Quote feed not connected</span></div>)}</div>
+      <div className="module-grid">{["NIFTY 50 · NSE", "SENSEX · BSE", "S&P 500 · US", "NASDAQ 100 · US", "Gold & silver", "Global rates & FX"].filter(x => x.toLowerCase().includes(query.toLowerCase())).map(x => <div className="module-tile" key={x}><b>{x}</b><span>Quote feed not connected</span></div>)}</div>
     </div>
     <div className="panel workspace-panel"><h2>Primary market information</h2><p>Use exchange and regulator sources for official notices, market status and disclosures. Always check the document date and data entitlement.</p><div className="resource-links"><a href="https://www.nseindia.com/" target="_blank" rel="noreferrer">NSE India <ExternalLink size={13}/></a><a href="https://www.bseindia.com/" target="_blank" rel="noreferrer">BSE India <ExternalLink size={13}/></a><a href="https://www.sebi.gov.in/" target="_blank" rel="noreferrer">SEBI <ExternalLink size={13}/></a><a href="https://www.rbi.org.in/" target="_blank" rel="noreferrer">RBI <ExternalLink size={13}/></a><a href="https://www.sec.gov/edgar/search/" target="_blank" rel="noreferrer">SEC EDGAR <ExternalLink size={13}/></a></div></div>
   </div>;
