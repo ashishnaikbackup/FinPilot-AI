@@ -32,6 +32,8 @@
 - [ ] REITs/InvITs, commodities and legally accessible international investments
 
 ## Phase 4 — Personal finance mentor
+- [ ] Connect a real AI model through a secure server-side provider; do not expose API keys in the browser
+- [ ] Add source-grounded answers, citations, uncertainty labels and a risk-review step
 - [x] Cash-flow and SIP illustration calculators (educational, not forecasts)
 - [x] Browser-local manual asset notes with privacy warning
 - [x] Beginner learning path and official career-resource links
