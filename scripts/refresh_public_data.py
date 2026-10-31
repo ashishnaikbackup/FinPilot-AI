@@ -245,7 +245,7 @@ except Exception as exc:
 
 status = {
     "retrieved_at": NOW,
-    "refresh_interval": "approximately every 6 hours (GitHub Actions schedule; may be delayed)",
+    "refresh_interval": "approximately hourly (GitHub Actions schedule; may be delayed)",
     "global_macro": {
         "status": "available" if global_macro_ok else ("stale" if global_observations else "unavailable"),
         "provider": "World Bank Indicators API",
