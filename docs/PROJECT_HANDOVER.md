@@ -35,6 +35,7 @@
 - Research notes saved in browser storage with JSON export.
 - Manual asset tracker with category allocation, concentration flags, JSON export and restore.
 - Manual-price paper portfolio simulator with editable user-entered marks, fee-aware illustrative P/L and JSON export; no broker, live quote or order connection.
+- Heuristic headline grouping, publisher-domain diversity counts, official-source counts and topic-channel prompts; not source verification or measured market impact.
 - Local-only storage is not encrypted, synced or a secure vault.
 
 ### Career and income
