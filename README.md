@@ -41,7 +41,25 @@ uvicorn app.main:app --reload --port 8000
 ```
 API health: http://localhost:8000/api/health
 
-The frontend currently uses local demo data. No external market-data API keys are needed to run it.
+The dashboard now calls the backend for public-source macroeconomic observations and global news discovery. If the backend is offline, the UI shows a connection warning rather than fabricated prices or headlines.
+
+## Public data API
+
+Run the backend and open http://localhost:8000/docs for interactive API documentation.
+
+- GET /api/data/status — provider availability and quote-feed status.
+- GET /api/data/india/dbie/search?q=inflation — RBI DBIE public data catalogue search.
+- GET /api/data/global/world-bank?country=IND&indicator=NY.GDP.MKTP.CD — World Bank macro indicator observations.
+- GET /api/news/global?days=3&limit=8 — GDELT news discovery results; not verified facts.
+- GET /api/data/us/sec/0000320193 — SEC company filing history (requires backend SEC_USER_AGENT).
+
+The frontend currently plots annual World Bank GDP observations, not intraday market prices. The market quote tiles intentionally show no value until an exchange-data provider with appropriate website-display rights is configured.
+
+## Environment
+
+Copy backend/.env.example to backend/.env and set a descriptive SEC User-Agent with a contact email. Copy frontend/.env.example to frontend/.env and set VITE_API_BASE_URL to the backend origin. Never put secret API keys in VITE variables.
+
+See docs/DATA_SOURCES.md for provider limitations and official links.
 
 ## Deployment
 
