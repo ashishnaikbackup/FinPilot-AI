@@ -130,7 +130,7 @@ try:
         "official_primary_source_count": len(official_articles),
         "discovery_index_count": len(normalized),
         "official_feed_errors": official_errors,
-        "error": None,
+        "error": None if normalized else "GDELT returned no articles",
     })
     news_ok = bool(normalized)
     news_error = None if news_ok else "GDELT returned no articles"
