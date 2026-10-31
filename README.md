@@ -12,9 +12,9 @@ FinPilot is being built to help a beginner understand markets, economics, person
 - Public data snapshots for India's annual GDP indicator and six-country macro comparison (World Bank), RBI, SEBI, NSE and BSE updates, PIB releases, and Federal Reserve/ECB updates, plus GDELT global news discovery.
 - Scheduled refresh and static hosting using GitHub Actions + GitHub Pages. **No Render or paid backend hosting required for the current public dashboard.**
 - Explicit source, retrieval time, freshness and caveat labels; official RBI/SEBI/NSE/BSE/PIB/Federal Reserve/ECB items are distinguished from unverified GDELT discovery.
-- Working planning modules: cash-flow and emergency-reserve check, illustrative SIP calculator, beginner learning path, official career links, a browser-local asset tracker with category allocation and JSON backup, and an evidence-completeness research worksheet, and an official-source IPO/public-issue headline watchlist.
+- Working planning modules: cash-flow and emergency-reserve check, illustrative SIP calculator, beginner learning path, official career links, a browser-local asset tracker with category allocation and JSON backup, and a research worksheet with locally saved bull/base/bear notes and JSON export.
 - News Intelligence displays scheduled regulator, exchange and central-bank source items alongside GDELT discovery, with per-feed health when available.
-- The AI Mentor includes a transparent rules-based financial-stage and goal planner; it is not a connected LLM or personalized regulated advisory service. Career pages are official portal links, not a live job feed.
+- The Opportunities workspace includes an official-source IPO/public-issue headline watchlist (not a complete issue calendar). The AI Mentor includes a transparent rules-based financial-stage and goal planner; it is not a connected LLM or personalized regulated advisory service. Career pages are official portal links, not a live job feed.
 - Exchange quotes remain blank until an appropriately licensed market-data provider is configured.
 - FastAPI adapters remain available for local development and future server-side features; the deployed static site does not depend on them.
 
