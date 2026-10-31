@@ -8,7 +8,7 @@ No local installation is required to use the public website.
 
 FinPilot now has a more usable multi-asset market workspace with externally hosted TradingView charts, heatmaps and an economic calendar. Public macro/news snapshots refresh on an hourly GitHub Actions schedule (subject to GitHub scheduling delays). Personal-finance calculators, browser-local portfolio/research tools, learning guidance and career-resource links remain available.
 
-This is **not** a complete institutional financial terminal. The most important outstanding requirement is a direct, properly licensed, first-party quote service that covers every required exchange and instrument. TradingView embeds display current market information where their exchange coverage permits, but quote speed can be real-time, delayed or end-of-day depending on market and entitlement. FinPilot does not receive those quotes as structured data.
+This is **not** a complete institutional financial terminal. The most important outstanding requirement is a direct, properly licensed, first-party quote service that covers every required exchange and instrument. TradingView embeds display current market information where their exchange coverage permits, but quote speed can be real-time, delayed or end-of-day (market-dependent) depending on market and entitlement. FinPilot does not receive those quotes as structured data.
 
 ## Requirement matrix
 
