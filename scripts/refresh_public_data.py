@@ -6,6 +6,7 @@ Only public endpoints are called. Failures are recorded; no market quotes are in
 import json
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
@@ -157,15 +158,26 @@ official_feeds = [
 official_articles = []
 official_errors = []
 official_feed_status = []
-for provider, feed_url, domains, country in official_feeds:
+
+
+def fetch_official_feed(feed):
+    provider, feed_url, domains, country = feed
     try:
-        items = fetch_rss(feed_url, provider, domains, country)
-        official_articles.extend(items)
-        official_feed_status.append({"provider": provider, "source_url": feed_url, "status": "available" if items else "empty", "items": len(items)})
+        return provider, feed_url, fetch_rss(feed_url, provider, domains, country), None
     except Exception as exc:
-        error = str(exc)[:240]
-        official_errors.append({"provider": provider, "error": error})
-        official_feed_status.append({"provider": provider, "source_url": feed_url, "status": "unavailable", "error": error})
+        return provider, feed_url, [], str(exc)[:240]
+
+
+# Fetch independent feeds concurrently to keep scheduled refreshes within a
+# predictable window. executor.map preserves the declared source order.
+with ThreadPoolExecutor(max_workers=6) as executor:
+    for provider, feed_url, items, error in executor.map(fetch_official_feed, official_feeds):
+        if error:
+            official_errors.append({"provider": provider, "error": error})
+            official_feed_status.append({"provider": provider, "source_url": feed_url, "status": "unavailable", "error": error})
+        else:
+            official_articles.extend(items)
+            official_feed_status.append({"provider": provider, "source_url": feed_url, "status": "available" if items else "empty", "items": len(items)})
 
 # GDELT is a discovery index. Its seendate is the index/seen time, not necessarily publisher time.
 normalized = []
