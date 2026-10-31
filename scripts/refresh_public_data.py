@@ -210,14 +210,19 @@ except Exception as exc:
     except Exception:
         previous_news = {}
     previous_articles = previous_news.get("articles", []) if isinstance(previous_news.get("articles"), list) else []
-    official_articles = [item for item in previous_articles if item.get("source_type") == "official_primary_source"]
+    current_official_articles = official_articles
+    previous_official_articles = [item for item in previous_articles if item.get("source_type") == "official_primary_source"]
+    if not current_official_articles:
+        official_articles = previous_official_articles
     normalized = [item for item in previous_articles if item.get("source_type") == "discovery_unverified"]
+    retained_articles = official_articles + normalized
     write("news-global.json", {
         "provider": "Official RBI/SEBI/NSE/PIB/Fed/ECB RSS and GDELT discovery", "source_url": gdelt_url,
-        "retrieved_at": previous_news.get("retrieved_at", NOW) if previous_articles else NOW,
-        "last_attempt_at": NOW, "freshness": "stale_last_known_good" if previous_articles else "unavailable",
-        "verification": "previously_collected_official_sources_and_unverified_discovery",
-        "articles": previous_articles, "official_primary_source_count": len(official_articles),
+        "retrieved_at": NOW if current_official_articles else (previous_news.get("retrieved_at", NOW) if previous_articles else NOW),
+        "last_attempt_at": NOW,
+        "freshness": "partial_stale_discovery" if current_official_articles else ("stale_last_known_good" if previous_articles else "unavailable"),
+        "verification": "official_primary_sources_plus_stale_or_unavailable_discovery",
+        "articles": retained_articles, "official_primary_source_count": len(official_articles),
         "discovery_index_count": len(normalized),
         "discovery_status": "stale" if normalized else "unavailable",
         "discovery_error": news_error, "official_feed_errors": official_errors,
@@ -243,7 +248,7 @@ status = {
         "error": macro_error,
     },
     "global_news": {
-        "status": "stale" if news_stale else ("available" if (news_ok or bool(official_articles)) else "unavailable"),
+        "status": "partial" if news_stale and official_articles else ("stale" if news_stale else ("available" if (news_ok or bool(official_articles)) else "unavailable")),
         "provider": "Official RBI/SEBI/NSE/PIB/Fed/ECB RSS and GDELT discovery",
         "freshness": "feed_dependent; GDELT rolling 3 days",
         "caveat": "RBI/SEBI/NSE/PIB/Federal Reserve/ECB items link to primary releases. GDELT items are discovery only and not fact-checked; seen_at is not publisher publication time.",
