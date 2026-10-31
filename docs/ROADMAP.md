@@ -29,7 +29,8 @@
 - [x] Increase typography, form control sizing and responsive market workspace usability
 - [ ] Add RBI DBIE table explorer with units, periods, revisions and provenance
 - [x] Show scheduled source items and official-feed health in the News Intelligence workspace
-- [x] Add heuristic headline grouping, publisher-domain diversity counts and topic-based market-channel prompts in News Intelligence (grouping is not verification or proof of independent reporting)\n- [ ] Add source-grounded claim extraction, independent corroboration and claim-level evidence
+- [x] Add heuristic headline grouping, publisher-domain diversity counts and topic-based market-channel prompts in News Intelligence (grouping is not verification or proof of independent reporting)
+- [ ] Add source-grounded claim extraction, independent corroboration and claim-level evidence
 - [ ] Select a direct market-data provider with explicit public website-display rights
 - [ ] Add first-party live/delayed/EOD quote adapter only after provider entitlement is confirmed (TradingView embeds are external widgets, not this adapter)
 - [ ] Add source freshness monitoring and alerts for failed scheduled refreshes
