@@ -2,23 +2,22 @@
 
 ## Phase 1 — Foundation
 - [x] Responsive React + TypeScript dashboard
-- [x] FastAPI backend and health endpoint
+- [x] FastAPI development API
 - [x] Architecture, safety and setup documentation
 - [x] CI workflow for frontend build and backend tests
 
 ## Phase 2 — Public data foundation (in progress)
-- [x] RBI DBIE public read-only search adapter
-- [x] World Bank macro indicator adapter
+- [x] World Bank India GDP public indicator adapter
 - [x] GDELT global news discovery adapter (unverified discovery, not fact-checking)
-- [x] SEC EDGAR company-submissions adapter (descriptive User-Agent required)
-- [x] Provider status endpoint and honest no-market-feed status
-- [x] Dashboard macro chart and news discovery connection
-- [ ] Configure SEC_USER_AGENT with a real monitored contact
-- [ ] Run CI and fix any integration failures
-- [ ] Add RBI DBIE table explorer with units, periods and provenance
-- [ ] Add primary-source event verification and news clustering
-- [ ] Select a market-data provider with explicit website-display rights
-- [ ] Add a live/delayed/EOD quote adapter only after provider entitlement is confirmed
+- [x] Static JSON snapshot generator with provider errors and retrieval timestamps
+- [x] GitHub Actions scheduled refresh and GitHub Pages deployment (no hosted backend required)
+- [x] Honest no-market-feed status; no fabricated prices
+- [ ] Run the new Pages workflow and verify the published site and generated snapshots
+- [ ] Add RBI DBIE table explorer with units, periods, revisions and provenance
+- [ ] Add primary-source event verification, news clustering and corroboration
+- [ ] Select a market-data provider with explicit public website-display rights
+- [ ] Add live/delayed/EOD quote adapter only after provider entitlement is confirmed
+- [ ] Add source freshness monitoring and alerts for failed scheduled refreshes
 
 ## Phase 3 — India and global research
 - [ ] NSE/BSE official filings and corporate actions
