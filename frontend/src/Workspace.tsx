@@ -142,7 +142,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     else if (/\b(scam|fraud|telegram|guaranteed|double money|tip|signal)\b/.test(q)) answer = "Red flags include guaranteed returns, urgency, secret strategies, unregistered advisers, pressure to move chats to Telegram/WhatsApp, requests for OTPs or remote access, and payments to personal accounts. Verify intermediaries and warnings on SEBI/RBI official sites. Never share passwords, OTPs, card details, private keys or screen access.";
     else if (/\b(risk|diversif|portfolio|allocation|loss|crash)\b/.test(q)) answer = "Review risk at the whole-portfolio level: asset allocation, concentration, volatility, drawdowns, liquidity needs, time horizon, currency exposure, fees and taxes. Diversification can reduce some company-specific risk but cannot eliminate market losses. Write down a rebalancing rule in advance and avoid reacting to headlines.";
     const reply = { role: "assistant" as const, content: answer };
-    setMentorMessages(items => [...items, { role: "user", content }, reply].slice(-12));
+    setMentorMessages(items => [...items, { role: "user" as const, content }, reply].slice(-12));
     setMentorDraft("");
   }
 
