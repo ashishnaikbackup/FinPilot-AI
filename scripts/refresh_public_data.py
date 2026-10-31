@@ -67,7 +67,7 @@ except Exception as exc:
 # GDELT is a discovery index. Its seendate is the index/seen time, not necessarily publisher time.
 query = '("India economy" OR "global markets" OR "central bank" OR geopolitics)'
 gdelt_url = "https://api.gdeltproject.org/api/v2/doc/doc?" + urllib.parse.urlencode({
-    "query": query, "mode": "ArtList", "format": "json", "sort": "DateDesc",
+    "query": "India economy OR global markets OR central bank OR geopolitics", "mode": "ArtList", "format": "json", "sort": "DateDesc",
     "timespan": "3d", "maxrecords": "12",
 })
 try:
@@ -127,4 +127,4 @@ status = {
     },
 }
 write("status.json", status)
-print(json.dumps({"macro_ok": macro_ok, "news_ok": news_ok, "output": str(OUT)}))
+print(json.dumps({"macro_ok": macro_ok, "macro_error": macro_error, "news_ok": news_ok, "news_error": news_error, "output": str(OUT)}))
