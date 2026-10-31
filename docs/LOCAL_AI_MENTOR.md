@@ -29,7 +29,15 @@ FinPilot's public GitHub Pages site is static and does not host a generative AI 
    uvicorn app.main:app --host 127.0.0.1 --port 8000
    ~~~
 
-5. In a third terminal, run the frontend locally:\n\n   ~~~bash\n   cd FinPilot-AI/frontend\n   npm install\n   npm run dev\n   ~~~\n\n6. Open http://localhost:5173 and visit **AI Mentor**. The connection indicator checks http://127.0.0.1:8000/api/mentor/status.
+5. In a third terminal, run the frontend locally:
+
+   ~~~bash
+   cd FinPilot-AI/frontend
+   npm install
+   npm run dev
+   ~~~
+
+6. Open http://localhost:5173 and visit **AI Mentor**. The connection indicator checks http://127.0.0.1:8000/api/mentor/status.
 
 For local AI chat, run the frontend locally at http://localhost:5173. The API CORS allowlist intentionally permits only that local development origin by default. If you use a different local frontend origin, set FRONTEND_ORIGINS in backend/.env to that exact trusted origin. Keep the API bound to 127.0.0.1; do not expose it to the public internet. The public GitHub Pages site remains a static dashboard and does not itself host or proxy the model.
 
