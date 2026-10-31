@@ -61,3 +61,15 @@ def test_pages_origin_is_allowed_for_local_api():
     )
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "https://ashishnaikbackup.github.io"
+
+
+
+def test_local_ollama_rejects_non_loopback_hosts(monkeypatch):
+    from app.config import settings
+    from app.mentor import _local_ollama_url
+    monkeypatch.setattr(settings, "ollama_base_url", "https://example.com")
+    try:
+        _local_ollama_url()
+        assert False, "A remote Ollama host must be rejected"
+    except RuntimeError as exc:
+        assert "same device" in str(exc)
