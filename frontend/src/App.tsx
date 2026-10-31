@@ -29,7 +29,7 @@ type StatusPayload = {
   refresh_interval: string;
   market_quotes: { status: string; message: string; freshness: string };
   india_macro: { status: string; freshness: string; provider: string; message: string; error?: string | null };
-  global_news: { status: string; freshness: string; provider: string; caveat: string; official_primary_source_count?: number; discovery_index_count?: number; official_feeds?: {provider:string;status:string;items?:number;error?:string}[]; error?: string | null };
+  global_news: { status: string; freshness: string; provider: string; caveat: string; official_primary_source_count?: number; discovery_index_count?: number; discovery_status?: string; discovery_error?: string | null; official_feeds?: {provider:string;status:string;items?:number;error?:string}[]; error?: string | null };
   sec_filings: { status: string; provider: string; message: string };
 };
 const markets = [
