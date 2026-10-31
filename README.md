@@ -1,36 +1,57 @@
 # FinPilot AI
 
-**Your personal AI financial intelligence and wealth-building mentor.**
+**An India-first, global financial intelligence and wealth-building workspace.**
 
-FinPilot AI is an India-first, global financial research and learning workspace. It is being built in careful phases: start with a useful dashboard and reliable foundations, then add verified market data, research workflows, news intelligence, portfolio tools and paper trading.
+FinPilot is being built to help a beginner understand markets, economics, personal finance, opportunities, risks and career/income pathways. The product is research-first: it does not promise returns, generate automatic buy/sell orders or execute trades.
 
-> **Important:** This project is an educational and research tool, not a SEBI-registered investment advisory service. It does not provide guaranteed returns, execute trades, or replace professional financial, tax or legal advice. Demo figures are illustrative only.
+> **Important:** Educational and research use only. FinPilot is not a SEBI-registered investment adviser and does not replace professional financial, tax or legal advice. No guaranteed returns.
 
-## Phase 1 — Foundation
+## Current release
 
-- Responsive web dashboard built with React, TypeScript and Vite.
-- Python FastAPI backend with a health endpoint.
-- Market overview, opportunity watchlist, news intelligence and personal finance widgets using clearly-labelled demo data.
-- India-first / global-ready information architecture.
-- Beginner-friendly financial mentor principles.
-- Safe configuration: secrets belong on the server, never in browser code.
-- No live trading, broker credentials, leverage or investment recommendations in this phase.
+- Responsive React + TypeScript dashboard.
+- Public data snapshots for India's annual GDP indicator (World Bank) and global news discovery (GDELT).
+- Scheduled refresh and static hosting using GitHub Actions + GitHub Pages. **No Render or paid backend hosting required for the current public dashboard.**
+- Explicit source, retrieval time, freshness and caveat labels.
+- Exchange quotes remain blank until an appropriately licensed market-data provider is configured.
+- FastAPI adapters remain available for local development and future server-side features; the deployed static site does not depend on them.
 
 ## Run locally
 
-### Requirements
-- Node.js 20+
-- Python 3.11+
+Requirements: Node.js 20+, Python 3.11+.
 
-### Frontend
 ```bash
+python scripts/refresh_public_data.py
 cd frontend
 npm install
 npm run dev
 ```
-Open the local URL printed by Vite (normally http://localhost:5173).
 
-### Backend
+The script writes public-source snapshots to `frontend/public/data/`. If a provider is unavailable, it records the error and emits an empty dataset rather than inventing values.
+
+## Publish for free with GitHub Pages
+
+1. Open this repository's **Settings → Pages**.
+2. Under **Build and deployment**, select **GitHub Actions** as the source.
+3. Open **Actions → Deploy FinPilot AI frontend** and run the workflow once (or push a change under `frontend/`).
+4. When the workflow succeeds, the site is published at:
+   https://ashishnaikbackup.github.io/FinPilot-AI/
+
+The workflow refreshes public data and rebuilds the website approximately every six hours. GitHub scheduled jobs can be delayed, so the UI must always show the snapshot's actual retrieval time. This is periodic data, not a guaranteed real-time service.
+
+## Public data and freshness
+
+| Data | Source | What it means |
+|---|---|---|
+| India GDP | World Bank Indicators API, `NY.GDP.MKTP.CD` | Annual macroeconomic observation in current US dollars; subject to revision, not a live indicator |
+| Global news | GDELT DOC API | Rolling discovery index; not fact-checked and not necessarily the publisher's publication time |
+| Exchange prices | Not connected | No NIFTY, SENSEX, US index or asset prices are displayed as current until licensing permits it |
+
+See [Data Sources](docs/DATA_SOURCES.md) for official provider documentation and licensing boundaries.
+
+## Optional local API
+
+The FastAPI backend is retained for development and future server-side features:
+
 ```bash
 cd backend
 python -m venv .venv
@@ -39,71 +60,38 @@ python -m venv .venv
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
-API health: http://localhost:8000/api/health
 
-The dashboard now calls the backend for public-source macroeconomic observations and global news discovery. If the backend is offline, the UI shows a connection warning rather than fabricated prices or headlines.
+API docs: http://localhost:8000/docs. The deployed GitHub Pages site currently uses static snapshots and does not call this local API.
 
-## Public data API
+## Product roadmap
 
-Run the backend and open http://localhost:8000/docs for interactive API documentation.
+1. Public-data reliability, timestamps, error handling and data provenance.
+2. RBI DBIE explorer and verified official-source news/event intelligence.
+3. India and global research: IPOs, stocks, mutual funds, ETFs, bonds, deposits, gold, REITs/InvITs and international access checks.
+4. Personal finance: budget, emergency fund, goals, net worth and beginner education.
+5. Career and income: verified internships, remote roles and government recruitment.
+6. Portfolio tracking, risk analysis, scenario tools and paper trading.
+7. Carefully isolated open-source research adapters after security and license review.
 
-- GET /api/data/status — provider availability and quote-feed status.
-- GET /api/data/india/dbie/search?q=inflation — RBI DBIE public data catalogue search.
-- GET /api/data/global/world-bank?country=IND&indicator=NY.GDP.MKTP.CD — World Bank macro indicator observations.
-- GET /api/news/global?days=3&limit=8 — GDELT news discovery results; not verified facts.
-- GET /api/data/us/sec/0000320193 — SEC company filing history (requires backend SEC_USER_AGENT).
+## Non-negotiable safety rules
 
-The frontend currently plots annual World Bank GDP observations, not intraday market prices. The market quote tiles intentionally show no value until an exchange-data provider with appropriate website-display rights is configured.
-
-## Environment
-
-Copy backend/.env.example to backend/.env and set a descriptive SEC User-Agent with a contact email. Copy frontend/.env.example to frontend/.env and set VITE_API_BASE_URL to the backend origin. Never put secret API keys in VITE variables.
-
-See docs/DATA_SOURCES.md for provider limitations and official links.
-
-## Deployment
-
-- Deploy `frontend/` as a Vite static site (for example, Cloudflare Pages, Netlify or Vercel).
-- Deploy `backend/` as a Python web service (for example, Render).
-- Set the frontend's `VITE_API_BASE_URL` to the deployed backend URL when connecting the API.
-- Keep provider API keys and private credentials in backend environment variables / deployment secrets only.
-- Use HTTPS and authentication before storing personal financial information.
-
-## Planned modules
-
-1. Dashboard and personal finance foundations
-2. Indian and global market data with source and freshness labels
-3. IPO, mutual fund, ETF, bond, deposit, commodity, REIT/InvIT and international research
-4. News and geopolitical intelligence with source verification and impact analysis
-5. AI mentor, learning centre and career/income guidance
-6. Portfolio tracking, risk analysis, tax-awareness and paper trading
-7. Isolated research/backtesting adapters for selected open-source projects
-
-## Data integrity rules
-
-- Every market value must identify its source, timestamp and whether it is live, delayed, end-of-day or illustrative.
-- Never describe mock or stale information as real-time.
-- Separate facts, assumptions and model-generated scenarios.
-- Show risks, fees, tax considerations, liquidity and counterarguments alongside opportunities.
-- Verify Indian and overseas eligibility, regulation and tax before presenting an instrument as accessible.
-- Do not scrape data or bypass provider licensing and terms.
+- Never label annual/delayed/end-of-day data as live.
+- Every observation needs a provider, retrieval time, source timestamp or period, unit and freshness label.
+- Distinguish facts, assumptions, opinions and model-generated scenarios.
+- Show bull/base/bear cases, risks, fees, tax considerations, liquidity and counterarguments.
+- Verify Indian and overseas eligibility, regulation and tax before describing an instrument as accessible.
+- No scraping or bypassing provider terms. No live trading, broker credentials, leverage or unattended execution in the initial product.
+- Add authentication and secure storage before handling personal financial records.
 
 ## Project structure
 
 ```text
 FinPilot-AI/
-├── frontend/                 # React + TypeScript dashboard
-├── backend/                  # FastAPI service
-├── docs/                     # Architecture and roadmap
-├── .gitignore
-└── README.md
+├── frontend/                 # React + TypeScript static dashboard
+├── backend/                  # Optional FastAPI development API
+├── scripts/                  # Scheduled public data snapshot refresh
+├── docs/                     # Architecture, data sources and roadmap
+└── .github/workflows/        # CI and GitHub Pages deployment
 ```
 
-## License
-
-No project-wide license has been selected yet. Third-party dependencies and future integrations retain their own licenses. Do not assume this repository grants rights to reuse third-party code or market data.
-
-
-## Deployment
-
-Follow [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) to publish the frontend on GitHub Pages and deploy the API using the Render Blueprint. See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) for provider and freshness details.
+No project-wide license has been selected yet. Third-party code, dependencies and data retain their own licenses and terms.
