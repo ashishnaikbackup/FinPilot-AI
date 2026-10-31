@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, Calculator, ShieldCheck, Wallet, BriefcaseBusiness, ExternalLink } from "lucide-react";
 
 type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Portfolio" | "Learning Centre" | "Career & Income";
 type NewsItem = { title: string; url: string; domain?: string; seen_at?: string; source_country?: string; source?: string; source_type?: string; published_at?: string | null };
+type MacroObservation = { country_code: string; country: string; indicator_code: string; indicator: string; date: string; value: number | null; unit?: string };
 type ProviderStatus = { global_news?: { official_primary_source_count?: number; discovery_index_count?: number; discovery_status?: string; discovery_error?: string | null; official_feeds?: {provider:string;status:string;items?:number;error?:string}[] } };
 
 const lessons = [
@@ -57,6 +58,18 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [candidateSource, setCandidateSource] = useState("");
   const [candidateSourceDate, setCandidateSourceDate] = useState("");
   const [candidateRisks, setCandidateRisks] = useState("");
+  const [globalMacro, setGlobalMacro] = useState<MacroObservation[]>([]);
+  const [globalMacroStatus, setGlobalMacroStatus] = useState<"loading" | "available" | "unavailable">("loading");
+  const [macroCountry, setMacroCountry] = useState("IND");
+  const [macroIndicator, setMacroIndicator] = useState("NY.GDP.MKTP.KD.ZG");
+  useEffect(() => {
+    let cancelled = false;
+    fetch(import.meta.env.BASE_URL + "data/macro-global.json")
+      .then(response => { if (!response.ok) throw new Error("Macro snapshot unavailable"); return response.json(); })
+      .then(payload => { if (!cancelled) { setGlobalMacro(Array.isArray(payload.observations) ? payload.observations : []); setGlobalMacroStatus(payload.observations?.length ? "available" : "unavailable"); } })
+      .catch(() => { if (!cancelled) setGlobalMacroStatus("unavailable"); });
+    return () => { cancelled = true; };
+  }, []);
   const researchComplete = Boolean(candidateName.trim() && isHttpsUrl(candidateSource.trim()) && candidateSourceDate && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed");
   const reviewGaps = [
     !candidateName.trim() ? "Name the instrument or opportunity." : "",
@@ -66,6 +79,8 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     candidateLiquidity === "Not assessed" ? "Check liquidity, redemption terms and exit constraints." : ""
   ].filter(Boolean);
 
+  const macroCountryHistory = useMemo(() => globalMacro.filter(item => item.country_code === macroCountry && item.indicator_code === macroIndicator && item.value !== null).sort((a,b) => Number(a.date)-Number(b.date)), [globalMacro, macroCountry, macroIndicator]);
+  const macroCountryLatest = useMemo(() => globalMacro.filter(item => item.indicator_code === macroIndicator && item.value !== null).reduce((latest, item) => { const current = latest.get(item.country_code); if (!current || Number(item.date) > Number(current.date)) latest.set(item.country_code, item); return latest; }, new Map<string, MacroObservation>()), [globalMacro, macroIndicator]);
   const monthlySurplus = Number(monthlyIncome) - Number(monthlyExpenses);
   const emergencyTarget = Math.max(0, Number(monthlyExpenses) || 0) * Number(emergencyMonths);
   const emergencyGap = Math.max(0, emergencyTarget - Math.max(0, Number(currentReserve) || 0));
@@ -109,6 +124,15 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       {!["NIFTY 50 · NSE", "SENSEX · BSE", "S&P 500 · US", "NASDAQ 100 · US", "Gold & silver", "Global rates & FX"].some(x => x.toLowerCase().includes(query.toLowerCase())) && <div className="empty-data">No market category matches your search.</div>}
     </div>
     <div className="panel workspace-panel"><h2>Primary market information</h2><p>Use exchange and regulator sources for official notices, market status and disclosures. Always check the document date and data entitlement.</p><div className="resource-links"><a href="https://www.nseindia.com/" target="_blank" rel="noreferrer">NSE India <ExternalLink size={13}/></a><a href="https://www.bseindia.com/" target="_blank" rel="noreferrer">BSE India <ExternalLink size={13}/></a><a href="https://www.sebi.gov.in/" target="_blank" rel="noreferrer">SEBI <ExternalLink size={13}/></a><a href="https://www.rbi.org.in/" target="_blank" rel="noreferrer">RBI <ExternalLink size={13}/></a><a href="https://www.sec.gov/edgar/search/" target="_blank" rel="noreferrer">SEC EDGAR <ExternalLink size={13}/></a></div></div>
+    <div className="panel workspace-panel"><div className="eyebrow">GLOBAL MACRO · WORLD BANK</div><h2>Compare economies and economic trends</h2><p>Annual observations for India, the United States, China, the United Kingdom, Germany and Japan. The latest year differs by country and indicator; these are not live prices or forecasts.</p>
+      <div className="form-row"><label>Economic indicator<select value={macroIndicator} onChange={e=>setMacroIndicator(e.target.value)}><option value="NY.GDP.MKTP.KD.ZG">GDP growth (annual %)</option><option value="FP.CPI.TOTL.ZG">Inflation (consumer prices, annual %)</option><option value="SL.UEM.TOTL.ZS">Unemployment (% of labour force)</option><option value="NY.GDP.MKTP.CD">GDP (current US$)</option></select></label><label>Country history<select value={macroCountry} onChange={e=>setMacroCountry(e.target.value)}><option value="IND">India</option><option value="USA">United States</option><option value="CHN">China</option><option value="GBR">United Kingdom</option><option value="DEU">Germany</option><option value="JPN">Japan</option></select></label></div>
+      {globalMacroStatus === "loading" ? <div className="empty-data">Loading the latest published macro snapshot…</div> : globalMacroStatus === "unavailable" ? <div className="empty-data">Global macro snapshot is unavailable. Check the next scheduled refresh.</div> : <>
+        <div className="module-grid">{Array.from(macroCountryLatest.values()).sort((a,b)=>a.country.localeCompare(b.country)).map(item=><div className="module-tile" key={item.country_code}><b>{item.country}</b><span>{item.value === null ? "—" : macroIndicator === "NY.GDP.MKTP.CD" ? new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",notation:"compact",maximumFractionDigits:1}).format(item.value) : item.value.toFixed(2)+"%"} · {item.date}</span></div>)}</div>
+        <h3>{macroCountryHistory[0]?.country || macroCountry} · Historical observations</h3>
+        <div className="holding-list">{macroCountryHistory.slice(-12).reverse().map(item=><div className="holding-row" key={item.date}><span>{item.date}</span><b>{item.value === null ? "—" : macroIndicator === "NY.GDP.MKTP.CD" ? new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",notation:"compact",maximumFractionDigits:1}).format(item.value) : item.value.toFixed(2)+"%"}</b></div>)}</div>
+      </>}
+      <p className="calc-foot">Source: World Bank Indicators API · Annual series, subject to revisions and country-specific reporting delays. <a href="https://datahelpdesk.worldbank.org/knowledgebase/articles/898581-api-basic-call-structures" target="_blank" rel="noreferrer">API documentation <ExternalLink size={11}/></a></p>
+    </div>
   </div>;
 
   if (active === "Opportunities") return <div className="workspace-stack">
