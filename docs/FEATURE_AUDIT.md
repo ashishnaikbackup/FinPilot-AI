@@ -45,7 +45,7 @@ This is a source-level implementation pass. Automated CI/build and real-device/b
 | Cash flow and emergency fund planning | Available | Local calculators with assumptions and caveats. |
 | SIP and goal planning | Available | Illustrative SIP calculator and inflation-aware goal planner with a 0% return baseline. |
 | Debt planning | Available | Fixed-rate debt payoff estimate and non-amortising payment warning. |
-| Portfolio tracker and risk checks | Partial | Manual local asset tracker, category allocation, concentration flags and JSON backup/restore. Not a broker-linked or cloud-synced portfolio. |
+| Portfolio tracker and risk checks | Partial | Manual local asset tracker, category allocation, concentration flags and JSON backup/restore, plus a manual-price paper portfolio simulator with editable marks, fee-aware illustrative P/L and JSON export. Not a broker-linked or cloud-synced portfolio; paper marks are user-entered. |
 | Generative AI financial analyst | Not complete | Current mentor is rules-based educational guidance, not a connected LLM. A hosted model requires an approved provider, budget, server-side secrets, privacy and safety controls. |
 | Career and income research | Partial | Official Goa/India recruitment and apprenticeship portals plus role-family skill guidance; no live verified job API or automatic eligibility engine. |
 | Personalized secure account | Not complete | No login, private cloud database or cross-device sync. Browser-local data is not encrypted by FinPilot. |
