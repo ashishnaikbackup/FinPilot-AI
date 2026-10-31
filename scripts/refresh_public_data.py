@@ -192,7 +192,15 @@ except Exception as exc:
 status = {
     "retrieved_at": NOW,
     "refresh_interval": "approximately every 6 hours (GitHub Actions schedule; may be delayed)",
-    "global_macro": {\n        "status": "available" if global_macro_ok else "unavailable",\n        "provider": "World Bank Indicators API",\n        "freshness": "annual_dataset; subject_to_revision",\n        "message": "Six-country macroeconomic comparison; latest observation year varies by series",\n        "observation_count": len(global_observations) if global_macro_ok else 0,\n        "error": global_macro_error,\n    },\n    "india_macro": {
+    "global_macro": {
+        "status": "available" if global_macro_ok else "unavailable",
+        "provider": "World Bank Indicators API",
+        "freshness": "annual_dataset; subject_to_revision",
+        "message": "Six-country macroeconomic comparison; latest observation year varies by series",
+        "observation_count": len(global_observations) if global_macro_ok else 0,
+        "error": global_macro_error,
+    },
+    "india_macro": {
         "status": "available" if macro_ok else "unavailable",
         "provider": "World Bank Indicators API",
         "freshness": "annual_dataset; subject_to_revision",
