@@ -44,8 +44,8 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [sip, setSip] = useState("0");
   const [years, setYears] = useState("10");
   const [rate, setRate] = useState("10");
-  const [holdings, setHoldings] = useState<{ name: string; amount: number }[]>(() => {
-    try { const parsed = JSON.parse(localStorage.getItem("finpilot-holdings") || "[]"); return Array.isArray(parsed) ? parsed.filter((item: any) => item && typeof item.name === "string" && Number.isFinite(Number(item.amount)) && Number(item.amount) >= 0) : []; } catch { return []; }
+  const [holdings, setHoldings] = useState<{ name: string; amount: number; category: string }[]>(() => {
+    try { const parsed = JSON.parse(localStorage.getItem("finpilot-holdings") || "[]"); return Array.isArray(parsed) ? parsed.filter((item: any) => item && typeof item.name === "string" && Number.isFinite(Number(item.amount)) && Number(item.amount) >= 0).map((item: any) => ({ name: item.name, amount: Number(item.amount), category: typeof item.category === "string" ? item.category : "Other" })) : []; } catch { return []; }
   });
   const [assetName, setAssetName] = useState("");
   const [assetAmount, setAssetAmount] = useState("");\n  const [assetCategory, setAssetCategory] = useState("Cash & deposits");\n  const [mentorStage, setMentorStage] = useState("Studying / no regular income");\n  const [mentorGoal, setMentorGoal] = useState("Build earning capacity");
