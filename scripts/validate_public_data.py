@@ -21,9 +21,10 @@ def load(name):
 
 status = load("status.json")
 macro = load("macro-india-gdp.json")
+global_macro = load("macro-global.json")
 news = load("news-global.json")
 
-for label, payload in [("status", status), ("macro", macro), ("news", news)]:
+for label, payload in [("status", status), ("macro", macro), ("global_macro", global_macro), ("news", news)]:
     timestamp = payload.get("retrieved_at")
     if not timestamp:
         raise SystemExit(f"{label} snapshot has no retrieved_at timestamp")
@@ -36,6 +37,8 @@ for label, payload in [("status", status), ("macro", macro), ("news", news)]:
 
 if not isinstance(macro.get("observations"), list):
     raise SystemExit("macro observations must be an array")
+if not isinstance(global_macro.get("observations"), list):
+    raise SystemExit("global macro observations must be an array")
 if not isinstance(news.get("articles"), list):
     raise SystemExit("news articles must be an array")
 if len(news["articles"]) > 100:
@@ -52,7 +55,11 @@ if news.get("discovery_index_count", discovery_count) != discovery_count:
 if status.get("global_news", {}).get("official_primary_source_count", official_count) != official_count:
     raise SystemExit("Health snapshot official-source count does not match news items")
 
-for observation in macro["observations"]:
+for observation in macro["observations"] + global_macro["observations"]:
+    if observation.get("country_code") is not None and (not isinstance(observation.get("country_code"), str) or len(observation["country_code"]) != 3):
+        raise SystemExit("global macro observation has an invalid country code")
+    if observation.get("indicator_code") is not None and not isinstance(observation.get("indicator_code"), str):
+        raise SystemExit("global macro observation has an invalid indicator code")
     if not isinstance(observation.get("date"), str) or not observation["date"].isdigit():
         raise SystemExit("macro observation has an invalid period")
     value = observation.get("value")
