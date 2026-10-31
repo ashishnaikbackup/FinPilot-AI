@@ -70,6 +70,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [mentorMessages, setMentorMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [mentorDraft, setMentorDraft] = useState("");
   const [saved, setSaved] = useState(false);
+  const [importMessage, setImportMessage] = useState("");
   const [candidateName, setCandidateName] = useState("");
   const [candidateType, setCandidateType] = useState("Equity / ETF / fund");
   const [candidateHorizon, setCandidateHorizon] = useState("3–5 years");
@@ -232,6 +233,22 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     link.href = url; link.download = "finpilot-local-asset-notes.json"; link.click();
     URL.revokeObjectURL(url);
   }
+  async function importHoldingsFile(file?: File) {
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      const incoming = Array.isArray(parsed) ? parsed : parsed?.holdings;
+      if (!Array.isArray(incoming)) throw new Error("This file does not contain an asset backup.");
+      const cleaned = incoming.filter((item: any) => item && typeof item.name === "string" && item.name.trim() && Number.isFinite(Number(item.amount)) && Number(item.amount) > 0 && typeof item.category === "string").map((item: any) => ({ name: item.name.trim().slice(0,100), amount: Number(item.amount), category: item.category.slice(0,60) }));
+      if (!cleaned.length) throw new Error("No valid asset entries were found.");
+      const next = [...holdings, ...cleaned].slice(0,200);
+      setHoldings(next);
+      localStorage.setItem("finpilot-holdings", JSON.stringify(next));
+      setImportMessage("Imported " + Math.min(cleaned.length, 200 - holdings.length) + " valid entries into this browser.");
+    } catch (error) {
+      setImportMessage(error instanceof Error ? error.message : "Could not import this file.");
+    }
+  }
   function clearHoldings() {
     setHoldings([]);
     try { localStorage.removeItem("finpilot-holdings"); } catch { /* storage may be disabled */ }
@@ -328,7 +345,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       <div className="total-row"><span>Recorded total (not verified net worth)</span><b>{money(holdingTotal)}</b></div>
       {holdings.length > 0 && <div className="module-grid">{Array.from(allocation.entries()).map(([category, amount])=><div className="module-tile" key={category}><b>{category}</b><span>{money(amount)} · {holdingTotal > 0 ? (amount / holdingTotal * 100).toFixed(1) : "0.0"}% of recorded assets</span></div>)}</div>}
       <div className="calculator-card"><div className="tool-heading"><ShieldCheck size={17}/><b>Portfolio concentration review</b></div><p className="calc-foot">Simple concentration flags based on the values you entered. These are not a risk score and cannot assess asset quality, volatility, correlation, liquidity or tax.</p>{holdings.length ? <><div className="calc-result"><span>Largest single entry</span><b>{topHoldingShare.toFixed(1)}%</b></div><div className="calc-result"><span>Largest asset category</span><b>{categoryShares[0]?.category} · {categoryShares[0]?.share.toFixed(1)}%</b></div><ul className="review-gaps">{topHoldingShare > 30 && <li>One holding is over 30% of recorded assets. Review single-name concentration.</li>}{categoryShares[0]?.share > 60 && <li>One asset category is over 60%. Check whether this matches your goal and loss capacity.</li>}{holdings.some(item=>item.category==="Digital assets") && <li>Digital assets are volatile and may involve custody, platform and regulatory risks. Do not use emergency funds.</li>}{topHoldingShare <= 30 && categoryShares[0]?.share <= 60 && <li>No simple concentration threshold was crossed; this does not mean the portfolio is low-risk.</li>}</ul></> : <div className="empty-data">Add asset notes to see concentration checks.</div>}</div>
-      <div className="resource-links"><button className="text-action" onClick={exportHoldings} disabled={!holdings.length}>Export backup JSON <ArrowUpRight size={13}/></button><button className="text-action" onClick={clearHoldings} disabled={!holdings.length}>Clear local entries</button></div>
+      <div className="resource-links"><button className="text-action" onClick={exportHoldings} disabled={!holdings.length}>Export backup JSON <ArrowUpRight size={13}/></button><label className="text-action">Import backup JSON<input type="file" accept=".json,application/json" onChange={e=>void importHoldingsFile(e.target.files?.[0])}/></label><button className="text-action" onClick={clearHoldings} disabled={!holdings.length}>Clear local entries</button></div>{importMessage && <p className="calc-foot">{importMessage}</p>}
       <p className="calc-foot">Export a backup before clearing browser data. The export is a plain JSON file; keep it private and do not upload it to a public repository.</p>
     </div>
   </div>;
