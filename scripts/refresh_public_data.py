@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse\nfrom feed_utils import parse_feed
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "frontend" / "public" / "data"
@@ -31,42 +31,9 @@ def write(name, payload):
 
 
 def fetch_rss(url, provider, allowed_domains, country="India", limit=8):
-    request = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/rss+xml, application/xml, text/xml"})
+    request = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml"})
     with urllib.request.urlopen(request, timeout=25) as response:
-        root = ET.fromstring(response.read())
-    items = root.findall(".//item") or root.findall(".//{*}entry")
-    normalized = []
-
-    def child_text(element, name):
-        child = element.find(name)
-        if child is None:
-            child = element.find(f"{{*}}{name}")
-        return (child.text or "").strip() if child is not None and child.text else ""
-
-    for item in items[:limit]:
-        title = child_text(item, "title")
-        link_element = item.find("link")
-        if link_element is None:
-            link_element = item.find("{*}link")
-        link = ((link_element.text or "").strip() if link_element is not None and link_element.text else "")
-        if not link and link_element is not None:
-            link = (link_element.attrib.get("href") or "").strip()
-        parsed_link = urlparse(link)
-        domain = (parsed_link.hostname or "").lower()
-        published = child_text(item, "pubDate") or child_text(item, "published") or child_text(item, "updated") or child_text(item, "date")
-        if not title or parsed_link.scheme != "https" or not domain or not any(domain == allowed or domain.endswith("." + allowed) for allowed in allowed_domains):
-            continue
-        normalized.append({
-            "title": title,
-            "url": link,
-            "domain": domain,
-            "source": provider,
-            "source_type": "official_primary_source",
-            "published_at": published or None,
-            "seen_at": NOW,
-            "source_country": country,
-        })
-    return normalized
+        return parse_feed(response.read(), provider, allowed_domains, country, NOW, limit)
 
 
 # World Bank: annual India GDP, current US dollars. This is not a market quote.
