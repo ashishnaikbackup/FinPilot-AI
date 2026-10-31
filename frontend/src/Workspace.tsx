@@ -38,6 +38,8 @@ function isHttpsUrl(value: string) {
 export default function Workspace({ active, query, newsItems = [], providerStatus }: { active: Section; query: string; newsItems?: NewsItem[]; providerStatus?: ProviderStatus | null }) {
   const [monthlyIncome, setMonthlyIncome] = useState("0");
   const [monthlyExpenses, setMonthlyExpenses] = useState("0");
+  const [emergencyMonths, setEmergencyMonths] = useState("6");
+  const [currentReserve, setCurrentReserve] = useState("0");
   const [sip, setSip] = useState("0");
   const [years, setYears] = useState("10");
   const [rate, setRate] = useState("10");
@@ -65,6 +67,8 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   ].filter(Boolean);
 
   const monthlySurplus = Number(monthlyIncome) - Number(monthlyExpenses);
+  const emergencyTarget = Math.max(0, Number(monthlyExpenses) || 0) * Number(emergencyMonths);
+  const emergencyGap = Math.max(0, emergencyTarget - Math.max(0, Number(currentReserve) || 0));
   const projected = useMemo(() => {
     const p = Math.min(100000000, Math.max(0, Number(sip) || 0));
     const n = Math.min(60, Math.max(0, Number(years) || 0)) * 12;
@@ -175,7 +179,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   return <div className="workspace-stack">
     <div className="panel workspace-panel"><div className="eyebrow">FINANCIAL TOOLS</div><h2>Simple planning calculators</h2><p>Illustrative calculations only. They are not forecasts, promises or investment recommendations.</p>
       <div className="calculator-grid">
-        <div className="calculator-card"><div className="tool-heading"><Wallet size={17}/><b>Monthly cash-flow check</b></div><label>Monthly take-home income (₹)<input type="number" min="0" value={monthlyIncome} onChange={e=>setMonthlyIncome(e.target.value)}/></label><label>Monthly expenses (₹)<input type="number" min="0" value={monthlyExpenses} onChange={e=>setMonthlyExpenses(e.target.value)}/><div className="calc-result"><span>Monthly surplus / shortfall</span><b>{money(monthlySurplus)}</b></div></label><p className="calc-foot">A positive surplus is not automatically investable; account for debt, irregular expenses and emergency savings.</p></div>
+        <div className="calculator-card"><div className="tool-heading"><Wallet size={17}/><b>Monthly cash-flow check</b></div><label>Monthly take-home income (₹)<input type="number" min="0" value={monthlyIncome} onChange={e=>setMonthlyIncome(e.target.value)}/></label><label>Monthly expenses (₹)<input type="number" min="0" value={monthlyExpenses} onChange={e=>setMonthlyExpenses(e.target.value)}/><div className="calc-result"><span>Monthly surplus / shortfall</span><b>{money(monthlySurplus)}</b></div></label><label>Emergency reserve horizon<select value={emergencyMonths} onChange={e=>setEmergencyMonths(e.target.value)}><option value="3">3 months</option><option value="6">6 months</option><option value="9">9 months</option><option value="12">12 months</option></select></label><label>Existing emergency savings (₹)<input type="number" min="0" value={currentReserve} onChange={e=>setCurrentReserve(e.target.value)}/></label><div className="calc-result"><span>Illustrative reserve target</span><b>{money(emergencyTarget)}</b></div><div className="calc-result"><span>Remaining reserve gap</span><b>{money(emergencyGap)}</b></div><p className="calc-foot">A positive surplus is not automatically investable. Reserve months are a planning choice, not a universal rule; consider income stability, dependants, debt and health/insurance cover.</p></div>
         <div className="calculator-card"><div className="tool-heading"><Calculator size={17}/><b>SIP illustration</b></div><label>Monthly contribution (₹)<input type="number" min="0" value={sip} onChange={e=>setSip(e.target.value)}/></label><label>Years<input type="number" min="1" max="60" value={years} onChange={e=>setYears(e.target.value)}/></label><label>Assumed annual return (%)<input type="number" min="-50" max="50" step="0.5" value={rate} onChange={e=>setRate(e.target.value)}/></label><div className="calc-result"><span>Illustrative future value</span><b>{money(projected)}</b></div><p className="calc-foot">Assumed constant return, monthly compounding and month-end contributions; actual returns vary and can be negative. Taxes and fees excluded. Keep this at ₹0 until you have a reliable surplus and safety reserve.</p></div>
       </div>
     </div>
