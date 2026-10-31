@@ -12,14 +12,15 @@ FinPilot is being built to help a beginner understand markets, economics, person
 - Public data snapshots for India's annual GDP indicator (World Bank), RBI press releases/notifications and PIB releases, plus GDELT global news discovery.
 - Scheduled refresh and static hosting using GitHub Actions + GitHub Pages. **No Render or paid backend hosting required for the current public dashboard.**
 - Explicit source, retrieval time, freshness and caveat labels; official RBI/PIB items are distinguished from unverified GDELT discovery.
-- Working planning modules: cash-flow check, illustrative SIP calculator, beginner learning path, official career links and a browser-local manual asset tracker.
+- Working planning modules: cash-flow check, illustrative SIP calculator, beginner learning path, official career links, a browser-local asset tracker with JSON backup, and an evidence-completeness research worksheet.
+- News Intelligence displays the scheduled RBI/PIB/GDELT snapshot and per-feed health when available.
 - The AI Mentor is currently a guided educational framework, not a connected LLM or personalized regulated advisory service. Career pages are official portal links, not a live job feed.
 - Exchange quotes remain blank until an appropriately licensed market-data provider is configured.
 - FastAPI adapters remain available for local development and future server-side features; the deployed static site does not depend on them.
 
 ## Run locally
 
-Requirements: Node.js 20+, Python 3.11+.
+Requirements: Node.js 22+, Python 3.11+.
 
 ```bash
 python scripts/refresh_public_data.py
@@ -38,7 +39,7 @@ The script writes public-source snapshots to `frontend/public/data/`. If a provi
 4. When the workflow succeeds, the site is published at:
    https://ashishnaikbackup.github.io/FinPilot-AI/
 
-The workflow refreshes public data and rebuilds the website approximately every six hours. Weekly Dependabot checks propose frontend, backend and GitHub Actions dependency updates as pull requests; CI must pass before you merge them. GitHub scheduled jobs can be delayed, so the UI must always show the snapshot's actual retrieval time. This is periodic data, not a guaranteed real-time service.
+The workflow refreshes public data and rebuilds the website approximately every six hours. The deployment validates timestamp timezones, macro numeric values, HTTPS source URLs and the official-source domain allowlist before publishing. Weekly Dependabot checks propose frontend, backend and GitHub Actions dependency updates as pull requests. Review the changelog and CI result before merging; updates are not silently installed. GitHub scheduled jobs can be delayed, so the UI must always show the snapshot's actual retrieval time. This is periodic data, not a guaranteed real-time service.
 
 ## Public data and freshness
 
