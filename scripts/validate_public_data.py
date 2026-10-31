@@ -43,6 +43,10 @@ if not isinstance(news.get("articles"), list):
     raise SystemExit("news articles must be an array")
 if len(news["articles"]) > 100:
     raise SystemExit("news snapshot exceeds the expected item limit")
+if status.get("global_macro", {}).get("status") not in {"available", "unavailable"}:
+    raise SystemExit("Global macro health status is missing or invalid")
+if status.get("global_macro", {}).get("observation_count", 0) != len(global_macro["observations"]):
+    raise SystemExit("Global macro observation count does not match the health snapshot")
 if status.get("market_quotes", {}).get("status") != "not_connected":
     raise SystemExit("Market quotes must remain explicitly disconnected until licensed data is configured")
 
