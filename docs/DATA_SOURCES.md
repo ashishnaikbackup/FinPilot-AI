@@ -7,7 +7,7 @@ This document records the initial public-source integrations. Provider availabil
 | Area | Source | API / access | Freshness and limits |
 |---|---|---|---|
 | Indian macroeconomics | RBI Database on Indian Economy (DBIE) | Public read-only JSON API, no key | Backend/local adapter only; not currently included in the static public snapshot. Periodic dataset loads, not a live market feed. Tables have different frequencies and units. |
-| Global macroeconomics | World Bank Indicators API | Public API | Indicator-specific; many observations are annual or quarterly and may be revised. |
+| Global macroeconomics | World Bank Indicators API | Public API | Static snapshot compares India, US, China, UK, Germany and Japan across GDP growth, inflation, unemployment and nominal GDP. Annual observations vary by country and can be revised. |
 | Official Indian updates | RBI RSS, SEBI RSS, PIB RSS, NSE announcements/corporate actions/board meetings RSS | Public RSS feeds | Regulator, exchange and government primary-source releases. Feed health is recorded separately; open and check the original document. |
 | Global official updates | Federal Reserve monetary-policy RSS, ECB press-release RSS | Public RSS feeds | Central-bank releases; subject to provider feed availability. |
 | Global news discovery | GDELT DOC | Public API | Discovery/coverage aggregation. Not a truth-verification service and not a substitute for primary documents. |
@@ -15,14 +15,14 @@ This document records the initial public-source integrations. Provider availabil
 
 ## Market prices: intentionally not faked
 
-FinPilot does not scrape NSE/BSE pages or rely on undocumented exchange endpoints. NSE describes real-time feeds as subscription products and also documents delayed snapshot products. Exchange data redistribution and display can have separate terms. Before enabling live or delayed quotes on the deployed website, choose a provider whose contract explicitly permits:
+FinPilot does not scrape NSE/BSE pages or rely on undocumented exchange endpoints. NSE lists its official corporate RSS categories on its [RSS directory](https://www.nseindia.com/static/rss-feed). NSE describes real-time feeds as subscription products and also documents delayed snapshot products. Exchange data redistribution and display can have separate terms. Before enabling live or delayed quotes on the deployed website, choose a provider whose contract explicitly permits:
 - the instruments and exchanges we need;
 - personal/internal use and public website display (these are not always the same);
 - caching, historical storage and derived analytics;
 - mobile/web display and the expected number of users;
 - redistribution and attribution requirements.
 
-Until then the quote API status is not_connected, and the UI displays no fabricated prices. A provider adapter should return value, currency, source, source_timestamp, retrieved_at, freshness, and entitlement.
+SEBI circular HO/47/17/12(11)2025 dated 8 May 2026 amended the permitted lag for market-price data shared for investor education and awareness to 30 days (with a separate NISM simulation-lab exception). FinPilot will not ingest or display exchange price data without confirming the current legal basis and permissions for the intended use. Until then the quote API status is not_connected, and the UI displays no fabricated prices. A provider adapter should return value, currency, source, source_timestamp, retrieved_at, freshness, and entitlement.
 
 ## News verification workflow (planned)
 
@@ -45,6 +45,7 @@ GDELT is only the discovery connector in Phase 2. Do not show an aggregated head
 - NSE announcements RSS: https://nsearchives.nseindia.com/content/RSS/Online_announcements.xml
 - NSE corporate actions RSS: https://nsearchives.nseindia.com/content/RSS/Corporate_action.xml
 - NSE board meetings RSS: https://nsearchives.nseindia.com/content/RSS/Board_Meetings.xml
+- NSE official RSS category directory: https://www.nseindia.com/static/rss-feed
 - Federal Reserve monetary policy RSS: https://www.federalreserve.gov/feeds/press_monetary.xml
 - ECB press releases RSS: https://www.ecb.europa.eu/rss/press.html
 - RBI DBIE: https://dev.dbie.rbihub.in/docs/using-the-site
