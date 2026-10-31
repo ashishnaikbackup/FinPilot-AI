@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, Calculator, ShieldCheck, Wallet, BriefcaseBusiness, ExternalLink } from "lucide-react";
 
 type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Portfolio" | "Learning Centre" | "Career & Income";
@@ -31,6 +31,69 @@ const careerLinks = [
 
 function money(value: number) {
   return Number.isFinite(value) ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(value) : "—";
+}
+
+const widgetScriptPromises = new Map<string, Promise<void>>();
+
+function loadTradingViewWidget(src: string, tag: string) {
+  if (!widgetScriptPromises.has(src)) {
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${src}"]`);
+    const promise = new Promise<void>((resolve, reject) => {
+      if (customElements.get(tag) || existing?.dataset.loaded === "true") {
+        resolve();
+        return;
+      }
+      const script = existing || document.createElement("script");
+      script.type = "module";
+      script.src = src;
+      script.addEventListener("load", () => { script.dataset.loaded = "true"; resolve(); }, { once: true });
+      script.addEventListener("error", () => reject(new Error("TradingView widget could not be loaded.")), { once: true });
+      if (!existing) document.head.appendChild(script);
+    });
+    widgetScriptPromises.set(src, promise);
+  }
+  return widgetScriptPromises.get(src)!;
+}
+
+function TradingViewEmbed({ tag, script, attributes, height = 420, label }: {
+  tag: string;
+  script: string;
+  attributes: Record<string, string>;
+  height?: number;
+  label: string;
+}) {
+  const host = useRef<HTMLDivElement>(null);
+  const [failed, setFailed] = useState(false);
+  const attributeKey = JSON.stringify(attributes);
+  useEffect(() => {
+    let cancelled = false;
+    async function mount() {
+      try {
+        if (!customElements.get(tag)) {
+          await loadTradingViewWidget(script, tag);
+          await customElements.whenDefined(tag);
+        }
+        if (cancelled || !host.current) return;
+        const element = document.createElement(tag);
+        Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+        element.style.display = "block";
+        element.style.width = "100%";
+        element.style.height = `${height}px`;
+        host.current.replaceChildren(element);
+      } catch {
+        if (!cancelled) setFailed(true);
+      }
+    }
+    mount();
+    return () => {
+      cancelled = true;
+      if (host.current) host.current.replaceChildren();
+    };
+  }, [tag, script, attributeKey, height]);
+  return <div className="tv-widget-shell">
+    <div ref={host} className="tv-widget-host" style={{ minHeight: height }} aria-label={label}/>
+    {failed && <div className="tv-widget-fallback">The market widget could not load. Check your connection or <a href="https://www.tradingview.com/widget/" target="_blank" rel="noreferrer">open TradingView widgets</a>.</div>}
+  </div>;
 }
 
 function isHttpsUrl(value: string) {
@@ -91,6 +154,10 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [globalMacroRetrievedAt, setGlobalMacroRetrievedAt] = useState("");
   const [macroCountry, setMacroCountry] = useState("IND");
   const [macroIndicator, setMacroIndicator] = useState("NY.GDP.MKTP.KD.ZG");
+  const [chartSymbol, setChartSymbol] = useState("NSE:RELIANCE");
+  const [chartSymbolDraft, setChartSymbolDraft] = useState("NSE:RELIANCE");
+  const [chartInterval, setChartInterval] = useState("1D");
+  const [chartInputError, setChartInputError] = useState("");
   useEffect(() => {
     let cancelled = false;
     fetch(import.meta.env.BASE_URL + "data/macro-global.json")
@@ -260,9 +327,39 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   }
 
   if (active === "Markets") return <div className="workspace-stack">
-    <div className="panel workspace-panel"><div className="eyebrow">MARKET COVERAGE</div><h2>Market data, without pretending</h2><p>FinPilot currently tracks the market universe conceptually, but has no licensed live or delayed exchange quote feed. No index value is fabricated.</p>
-      <div className="module-grid">{["NIFTY 50 · NSE", "SENSEX · BSE", "S&P 500 · US", "NASDAQ 100 · US", "Gold & silver", "Global rates & FX"].filter(x => x.toLowerCase().includes(query.toLowerCase())).map(x => <div className="module-tile" key={x}><b>{x}</b><span>Quote feed not connected</span></div>)}</div>
-      {!["NIFTY 50 · NSE", "SENSEX · BSE", "S&P 500 · US", "NASDAQ 100 · US", "Gold & silver", "Global rates & FX"].some(x => x.toLowerCase().includes(query.toLowerCase())) && <div className="empty-data">No market category matches your search.</div>}
+    <div className="panel workspace-panel market-live-panel">
+      <div className="eyebrow">LIVE MARKET VIEW · EXTERNAL DATA WIDGET</div>
+      <h2>Explore stocks, indices and assets</h2>
+      <p>Interactive charts are embedded from TradingView. Select a market symbol, change the timeframe, and inspect the chart. Coverage and quote speed depend on the exchange and the provider's data entitlement.</p>
+      <div className="market-symbol-row">
+        {[
+          ["NIFTY 50","NSE:NIFTY"],["SENSEX","BSE:SENSEX"],["RELIANCE","NSE:RELIANCE"],["TCS","NSE:TCS"],["INFOSYS","NSE:INFY"],["S&P 500","SP:SPX"],["NASDAQ 100","NASDAQ:NDX"],["GOLD","TVC:GOLD"],["BITCOIN","BINANCE:BTCUSDT"]
+        ].map(([label,symbol])=><button key={symbol} className={chartSymbol===symbol?"symbol-chip selected":"symbol-chip"} onClick={()=>{setChartSymbol(symbol);setChartSymbolDraft(symbol);setChartInputError("");}}>{label}</button>)}
+      </div>
+      <div className="market-chart-controls">
+        <label>Symbol (EXCHANGE:TICKER)<input value={chartSymbolDraft} onChange={e=>setChartSymbolDraft(e.target.value.toUpperCase())} placeholder="NSE:RELIANCE" /></label>
+        <label>Timeframe<select value={chartInterval} onChange={e=>setChartInterval(e.target.value)}><option value="1">1 minute</option><option value="5">5 minutes</option><option value="15">15 minutes</option><option value="60">1 hour</option><option value="240">4 hours</option><option value="1D">1 day</option><option value="1W">1 week</option><option value="1M">1 month</option></select></label>
+        <button className="primary-button" onClick={()=>{const value=chartSymbolDraft.trim().toUpperCase();if(!/^[A-Z0-9._-]+:[A-Z0-9._-]+$/.test(value)){setChartInputError("Use EXCHANGE:TICKER format, for example NSE:RELIANCE.");return;}setChartSymbol(value);setChartInputError("");}}>Load chart <ArrowUpRight size={14}/></button>
+      </div>
+      {chartInputError && <p className="error-note">{chartInputError}</p>}
+      <TradingViewEmbed tag="tv-advanced-chart" script="https://widgets.tradingview-widget.com/w/en/tv-advanced-chart.js" attributes={{symbol:chartSymbol,interval:chartInterval,theme:"dark",timezone:"Asia/Kolkata","allow-symbol-change":"true",autosize:"true"}} height={540} label={"TradingView chart for "+chartSymbol}/>
+      <p className="calc-foot">Source: TradingView embedded chart. Its free widgets can show real-time, delayed or end-of-day data depending on the selected market. A TradingView subscription does not upgrade exchange data rights; some real-time exchange data requires a separate exchange entitlement. FinPilot does not copy these quotes into its own database. <a href="https://www.tradingview.com/widget/" target="_blank" rel="noreferrer">Widget data and market coverage details <ExternalLink size={11}/></a></p>
+    </div>
+    <div className="panel workspace-panel">
+      <div className="eyebrow">MARKET BREADTH</div><h2>Global stock market heatmap</h2>
+      <p>Explore market performance by sector and market capitalisation. This view is provided and refreshed by TradingView; it is not an independently verified FinPilot quote feed.</p>
+      <TradingViewEmbed tag="tv-heatmap" script="https://widgets.tradingview-widget.com/w/en/tv-heatmap.js" attributes={{"heatmap-type":"stock","data-source":"SPX500",grouping:"sector","block-size":"market_cap_basic","block-color":"change"}} height={440} label="Global stock market heatmap"/>
+      <div className="resource-links"><a href="https://www.tradingview.com/markets/stocks-india/market-movers-all-stocks/" target="_blank" rel="noreferrer">India stock screener <ExternalLink size={13}/></a><a href="https://www.tradingview.com/markets/stocks-usa/market-movers-all-stocks/" target="_blank" rel="noreferrer">US stock screener <ExternalLink size={13}/></a><a href="https://www.tradingview.com/markets/cryptocurrencies/prices-all/" target="_blank" rel="noreferrer">Crypto market <ExternalLink size={13}/></a><a href="https://www.tradingview.com/markets/etfs/funds/" target="_blank" rel="noreferrer">ETF market <ExternalLink size={13}/></a></div>
+    </div>
+    <div className="panel workspace-panel">
+      <div className="eyebrow">DIGITAL ASSETS · HIGH VOLATILITY</div><h2>Crypto market heatmap</h2>
+      <p>Market-cap and daily-change view for supported crypto assets. This is market information, not a recommendation or a prompt to trade.</p>
+      <TradingViewEmbed tag="tv-heatmap" script="https://widgets.tradingview-widget.com/w/en/tv-heatmap.js" attributes={{"heatmap-type":"crypto-coins","data-source":"Crypto","block-size":"market_cap_calc","block-color":"24h_close_change|5"}} height={420} label="Cryptocurrency market heatmap"/>
+    </div>
+    <div className="panel workspace-panel">
+      <div className="eyebrow">ECONOMIC EVENTS</div><h2>Global economic calendar</h2>
+      <p>Upcoming macro releases and central-bank events can move markets. Check the actual release, consensus, revisions and source before drawing conclusions.</p>
+      <TradingViewEmbed tag="tv-economic-calendar" script="https://widgets.tradingview-widget.com/w/en/tv-economic-calendar.js" attributes={{importance:"0,1,2"}} height={440} label="Global economic calendar"/>
     </div>
     <div className="panel workspace-panel"><h2>Primary market information</h2><p>Use exchange and regulator sources for official notices, market status and disclosures. Always check the document date and data entitlement.</p><div className="resource-links"><a href="https://www.nseindia.com/" target="_blank" rel="noreferrer">NSE India <ExternalLink size={13}/></a><a href="https://www.bseindia.com/" target="_blank" rel="noreferrer">BSE India <ExternalLink size={13}/></a><a href="https://www.sebi.gov.in/" target="_blank" rel="noreferrer">SEBI <ExternalLink size={13}/></a><a href="https://www.rbi.org.in/" target="_blank" rel="noreferrer">RBI <ExternalLink size={13}/></a><a href="https://www.sec.gov/edgar/search/" target="_blank" rel="noreferrer">SEC EDGAR <ExternalLink size={13}/></a></div></div>
     <div className="panel workspace-panel"><div className="eyebrow">GLOBAL MACRO · WORLD BANK</div><h2>Compare economies and economic trends</h2><p>Annual observations for India, the United States, China, the United Kingdom, Germany and Japan. The latest year differs by country and indicator; these are not live prices or forecasts.</p><p className="calc-foot">Snapshot freshness: {globalMacroFreshness}. Retrieved: {globalMacroRetrievedAt ? new Date(globalMacroRetrievedAt).toLocaleString() + " (device local time)" : "timestamp unavailable"}.</p>
