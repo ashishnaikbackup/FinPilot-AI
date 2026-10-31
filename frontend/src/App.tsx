@@ -57,6 +57,7 @@ function App() {
   useEffect(() => {
     let cancelled = false;
     async function loadIntelligence() {
+      try {
       const base = import.meta.env.BASE_URL;
       const results = await Promise.allSettled([
         fetch(base + "data/status.json"),
@@ -92,6 +93,9 @@ function App() {
       const sourcesAvailable = macroLoaded && newsLoaded && loadedStatus?.india_macro.status === "available" && loadedStatus?.global_news.status === "available";
       setApiState(successes === 0 ? "offline" : sourcesAvailable ? "connected" : "partial");
       setLastRefresh(loadedStatus?.retrieved_at ? new Date(loadedStatus.retrieved_at).toLocaleString("en-IN") : "timestamp unavailable");
+      } catch {
+        if (!cancelled) setApiState("partial");
+      }
     }
     loadIntelligence();
     return () => { cancelled = true; };
