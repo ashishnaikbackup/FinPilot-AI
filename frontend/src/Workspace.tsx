@@ -109,6 +109,56 @@ function isHttpsUrl(value: string) {
   }
 }
 
+type EventCluster = {
+  id: string;
+  title: string;
+  items: NewsItem[];
+  publishers: string[];
+  officialCount: number;
+  topic: string;
+  watchFor: string;
+};
+
+const EVENT_STOP_WORDS = new Set(["about","after","amid","and","are","bank","banks","from","have","into","its","new","over","says","the","their","this","with","will","india","global","update","updates"]);
+
+function eventTopic(text: string): { topic: string; watchFor: string } {
+  const value = text.toLowerCase();
+  if (/(rbi|reserve bank|interest rate|monetary policy|repo rate|inflation)/.test(value)) return { topic: "Central banks & inflation", watchFor: "Policy rates, borrowing costs, bond yields and currency expectations" };
+  if (/(sebi|nse|bse|stock exchange|market regulator|securities)/.test(value)) return { topic: "Markets & regulation", watchFor: "Disclosure obligations, market access, liquidity and investor protection" };
+  if (/(budget|tax|gst|fiscal|ministry of finance|government spending)/.test(value)) return { topic: "Fiscal policy & taxation", watchFor: "Household costs, company margins, government borrowing and sector exposure" };
+  if (/(oil|crude|energy|gas|opec|commodity)/.test(value)) return { topic: "Energy & commodities", watchFor: "Input costs, inflation, trade balances and energy-sensitive sectors" };
+  if (/(trade|tariff|sanction|geopolit|war|conflict|border)/.test(value)) return { topic: "Trade & geopolitics", watchFor: "Supply chains, currencies, commodity routes and policy uncertainty" };
+  if (/(bank|lender|credit|loan|deposit|financial stability)/.test(value)) return { topic: "Banking & credit", watchFor: "Funding costs, credit availability, asset quality and depositor risk" };
+  if (/(company|corporate|earnings|profit|revenue|merger|acquisition|ipo|listing)/.test(value)) return { topic: "Companies & corporate actions", watchFor: "Issuer filings, earnings quality, valuation, dilution and execution risk" };
+  return { topic: "General economic & policy", watchFor: "Check the primary document and identify which sectors or households are directly affected" };
+}
+
+function clusterNewsEvents(items: NewsItem[]): EventCluster[] {
+  const clusters: EventCluster[] = [];
+  for (const item of items) {
+    const tokens = new Set((item.title.toLowerCase().match(/[a-z0-9]{4,}/g) || []).filter(token => !EVENT_STOP_WORDS.has(token)));
+    let best: EventCluster | undefined;
+    let bestScore = 0;
+    for (const cluster of clusters) {
+      const first = cluster.title.toLowerCase().match(/[a-z0-9]{4,}/g) || [];
+      const base = new Set(first.filter(token => !EVENT_STOP_WORDS.has(token)));
+      const overlap = [...tokens].filter(token => base.has(token)).length;
+      const score = overlap / Math.max(1, Math.min(tokens.size, base.size));
+      if (overlap >= 2 && score > bestScore && score >= 0.5) { best = cluster; bestScore = score; }
+    }
+    if (!best) {
+      const topic = eventTopic(item.title);
+      best = { id: item.url, title: item.title, items: [], publishers: [], officialCount: 0, ...topic };
+      clusters.push(best);
+    }
+    best.items.push(item);
+    const publisher = (item.domain || new URL(item.url).hostname).replace(/^www\\./, "").toLowerCase();
+    if (!best.publishers.includes(publisher)) best.publishers.push(publisher);
+    if (item.source_type === "official_primary_source") best.officialCount += 1;
+  }
+  return clusters.sort((a,b) => b.items.length - a.items.length || b.officialCount - a.officialCount).slice(0, 12);
+}
+
 export default function Workspace({ active, query, newsItems = [], providerStatus }: { active: Section; query: string; newsItems?: NewsItem[]; providerStatus?: ProviderStatus | null }) {
   const [monthlyIncome, setMonthlyIncome] = useState("0");
   const [monthlyExpenses, setMonthlyExpenses] = useState("0");
@@ -206,6 +256,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     !candidateRisks.trim() ? "Record independent counterarguments and the evidence that could invalidate your view." : ""
   ].filter(Boolean);
 
+  const eventClusters = useMemo(() => clusterNewsEvents(newsItems), [newsItems]);
   const ipoItems = useMemo(() => newsItems.filter(item => item.source_type === "official_primary_source" && /(ipo|public issue|offer document|drhp|rhp|issue summary|initial public)/i.test(item.title + " " + (item.source || ""))).slice(0, 10), [newsItems]);
   const macroCountryHistory = useMemo(() => globalMacro.filter(item => item.country_code === macroCountry && item.indicator_code === macroIndicator && item.value !== null).sort((a,b) => Number(a.date)-Number(b.date)), [globalMacro, macroCountry, macroIndicator]);
   const macroCountryLatest = useMemo(() => globalMacro.filter(item => item.indicator_code === macroIndicator && item.value !== null).reduce((latest, item) => { const current = latest.get(item.country_code); if (!current || Number(item.date) > Number(current.date)) latest.set(item.country_code, item); return latest; }, new Map<string, MacroObservation>()), [globalMacro, macroIndicator]);
@@ -440,6 +491,9 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     <div className="panel workspace-panel"><div className="eyebrow">GLOBAL EVENT MONITOR</div><h2>Official releases and global discovery</h2><p>Official RBI, SEBI, NSE, BSE, PIB, Federal Reserve and ECB items link to primary sources. GDELT items are a discovery index, not fact-checked. Check the original document, date and independent corroboration before relying on any claim.</p>
       <p className="calc-foot">Overall news snapshot: {providerStatus?.global_news?.status || "status unavailable"}{providerStatus?.global_news?.error ? " · "+providerStatus.global_news.error : ""}</p><div className="module-grid"><div className="module-tile"><b>GDELT news discovery</b><span>{providerStatus?.global_news?.discovery_status || "checking"} · {providerStatus?.global_news?.discovery_index_count ?? 0} items{providerStatus?.global_news?.discovery_error ? " · "+providerStatus.global_news.discovery_error : ""}</span></div>{(providerStatus?.global_news?.official_feeds || []).map(feed=><div className="module-tile" key={feed.provider}><b>{feed.provider}</b><span>{feed.status}{feed.items !== undefined ? " · "+feed.items+" items" : ""}{feed.error ? " · "+feed.error : ""}</span></div>)}</div>
       <div className="resource-links"><a href="https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx" target="_blank" rel="noreferrer">RBI press releases <ExternalLink size={13}/></a><a href="https://www.pib.gov.in/" target="_blank" rel="noreferrer">Press Information Bureau <ExternalLink size={13}/></a><a href="https://www.sebi.gov.in/rss.html" target="_blank" rel="noreferrer">SEBI RSS <ExternalLink size={13}/></a><a href="https://www.nseindia.com/static/rss-feed" target="_blank" rel="noreferrer">NSE RSS <ExternalLink size={13}/></a><a href="https://www.bseindia.com/corporates/ann.html" target="_blank" rel="noreferrer">BSE announcements <ExternalLink size={13}/></a><a href="https://www.federalreserve.gov/newsevents/pressreleases.htm" target="_blank" rel="noreferrer">Federal Reserve <ExternalLink size={13}/></a><a href="https://www.ecb.europa.eu/press/html/index.en.html" target="_blank" rel="noreferrer">European Central Bank <ExternalLink size={13}/></a><a href="https://www.imf.org/en/News" target="_blank" rel="noreferrer">IMF News <ExternalLink size={13}/></a></div>
+    </div>
+    <div className="panel workspace-panel"><div className="eyebrow">EVENT INTELLIGENCE · HEURISTIC GROUPING</div><h2>Related coverage & possible market channels</h2><p>Headlines are grouped by title-keyword similarity, not by a verified event identity. Distinct publisher domains indicate coverage diversity only; they do not prove independent reporting or that a claim is true. No sentiment, price-impact or buy/sell score is generated.</p>
+      {eventClusters.length ? <div className="research-news-list">{eventClusters.map(cluster=><article className="research-news-item" key={cluster.id}><div className="news-meta"><span>{cluster.topic}</span><small>{cluster.items.length} item{cluster.items.length===1?"":"s"} · {cluster.publishers.length} publisher domain{cluster.publishers.length===1?"":"s"} · {cluster.officialCount} official-source item{cluster.officialCount===1?"":"s"}</small></div><b>{cluster.title}</b><p>Possible channel to monitor: {cluster.watchFor}.</p>{cluster.items.map(item=><a key={item.url} href={item.url} target="_blank" rel="noreferrer">{item.source || item.domain || "Open source"}: {item.title} <ExternalLink size={12}/></a>)}</article>)}</div> : <div className="empty-data">No event groups can be formed until source items are available.</div>}
     </div>
     <div className="panel workspace-panel"><div className="eyebrow">LATEST SNAPSHOT</div><h2>Recent source items</h2>
       {newsItems.length ? <div className="research-news-list">{newsItems.map((item,index)=><article className="research-news-item" key={item.url || index}><div className="news-meta"><span>{item.source || item.domain || "Source"}</span><small>{item.published_at ? "Published "+item.published_at : "Indexed "+(item.seen_at || "time unavailable")}</small></div><a href={item.url} target="_blank" rel="noreferrer">{item.title}</a><p>{item.source_type === "official_primary_source" ? "Official primary-source release. Open the source document and check its date." : "Unverified discovery result. Check the original publisher and independent sources."}</p></article>)}</div> : <div className="empty-data">No news items are available in the latest public snapshot.</div>}
