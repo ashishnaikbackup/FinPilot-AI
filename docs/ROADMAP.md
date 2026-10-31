@@ -12,9 +12,14 @@
 - [x] Static JSON snapshot generator with provider errors and retrieval timestamps
 - [x] GitHub Actions scheduled refresh and GitHub Pages deployment (no hosted backend required)
 - [x] Honest no-market-feed status; no fabricated prices
-- [ ] Run the new Pages workflow and verify the published site and generated snapshots
+- [x] RBI press-release and notification RSS feeds
+- [x] PIB official press-release RSS feed
+- [x] Distinguish official primary-source releases from GDELT discovery items
+- [x] Snapshot schema validation before Pages deployment
+- [x] Weekly Dependabot proposals for npm, pip and GitHub Actions
+- [ ] Verify the published site and scheduled snapshots in GitHub Pages
 - [ ] Add RBI DBIE table explorer with units, periods, revisions and provenance
-- [ ] Add primary-source event verification, news clustering and corroboration
+- [ ] Add cross-source event clustering, independent corroboration and claim-level evidence
 - [ ] Select a market-data provider with explicit public website-display rights
 - [ ] Add live/delayed/EOD quote adapter only after provider entitlement is confirmed
 - [ ] Add source freshness monitoring and alerts for failed scheduled refreshes
@@ -27,7 +32,10 @@
 - [ ] REITs/InvITs, commodities and legally accessible international investments
 
 ## Phase 4 — Personal finance mentor
-- [ ] Budget, emergency fund, net worth and goal tracker
+- [x] Cash-flow and SIP illustration calculators (educational, not forecasts)
+- [x] Browser-local manual asset notes with privacy warning
+- [x] Beginner learning path and official career-resource links
+- [ ] Secure budget, emergency fund, net worth and goal tracker with account-based private storage
 - [ ] Beginner-friendly explainers and structured learning paths
 - [ ] Student income and career roadmap, verified internships and recruitment opportunities
 - [ ] Personalized guidance based on user-approved financial inputs
