@@ -230,7 +230,7 @@ status = {
     "global_macro": {
         "status": "available" if global_macro_ok else ("stale" if global_observations else "unavailable"),
         "provider": "World Bank Indicators API",
-        "freshness": "annual_dataset; subject_to_revision",
+        "freshness": "annual_dataset; subject_to_revision" if global_macro_ok else ("stale_last_known_good" if global_observations else "unavailable"),
         "message": "Six-country macroeconomic comparison; latest observation year varies by series",
         "observation_count": len(global_observations),
         "error": global_macro_error,
@@ -238,7 +238,7 @@ status = {
     "india_macro": {
         "status": "available" if macro_ok else ("stale" if observations else "unavailable"),
         "provider": "World Bank Indicators API",
-        "freshness": "annual_dataset; subject_to_revision",
+        "freshness": "annual_dataset; subject_to_revision" if macro_ok else ("stale_last_known_good" if observations else "unavailable"),
         "message": "India GDP indicator; not live economic activity",
         "error": macro_error,
     },
