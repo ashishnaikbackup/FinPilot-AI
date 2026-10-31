@@ -63,6 +63,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [mentorMessages, setMentorMessages] = useState<MentorChatMessage[]>([]);
   const [mentorDraft, setMentorDraft] = useState("");
   const [mentorProviderStatus, setMentorProviderStatus] = useState<"checking" | "ready" | "model_missing" | "offline">("checking");
+  const [mentorCheckCount, setMentorCheckCount] = useState(0);
   const [mentorBusy, setMentorBusy] = useState(false);
   const [mentorError, setMentorError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -95,6 +96,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     return () => { cancelled = true; };
   }, []);
   useEffect(() => {
+    if (active !== "AI Mentor") return;
     let cancelled = false;
     fetch(LOCAL_API_BASE + "/api/mentor/status")
       .then(response => { if (!response.ok) throw new Error("Local mentor API unavailable"); return response.json(); })
@@ -289,7 +291,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       <div className="mentor-chat-window">{mentorMessages.length ? mentorMessages.map((message,index)=><div className={"mentor-message "+message.role} key={index}><b>{message.role === "user" ? "You" : "FinPilot · local AI"}</b><p>{message.content}</p></div>) : <div className="empty-data">Try asking: “Explain the difference between an FD and a government T-bill in simple terms.”</div>}</div>
       <textarea rows={3} value={mentorDraft} onChange={e=>setMentorDraft(e.target.value)} placeholder="Ask a financial education or research question…" aria-label="Message the local AI mentor"/>
       {mentorError && <p className="error-note">{mentorError}</p>}
-      <div className="resource-links"><button onClick={sendMentorMessage} disabled={mentorBusy || !mentorDraft.trim() || mentorProviderStatus !== "ready"}>{mentorBusy ? "Thinking…" : "Send to local AI"} <ArrowUpRight size={13}/></button></div>
+      <div className="resource-links"><button className="text-action" onClick={()=>{setMentorProviderStatus("checking");setMentorCheckCount(count=>count+1)}}>Check local connection</button><button onClick={sendMentorMessage} disabled={mentorBusy || !mentorDraft.trim() || mentorProviderStatus !== "ready"}>{mentorBusy ? "Thinking…" : "Send to local AI"} <ArrowUpRight size={13}/></button></div>
       <p className="calc-foot">Do not enter account numbers, passwords, OTPs, private keys or identity documents. This is educational output, not regulated financial advice or a trade signal.</p>
     </div>
     <div className="panel workspace-panel"><h2>Risk guardrails</h2><div className="module-grid">{["No guaranteed-return claims","No leverage or derivatives","No automatic trading","No broker credentials stored","No unverified buy/sell signals","Capital preservation first"].map(x=><div className="module-tile" key={x}><ShieldCheck size={16}/><b>{x}</b></div>)}</div></div>
