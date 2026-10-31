@@ -143,10 +143,9 @@ async def search_global_news(query: str, days: int = 3, limit: int = 15) -> dict
 async def sec_company_submissions(cik: str) -> dict[str, Any]:
     if not settings.sec_user_agent:
         raise ValueError("SEC_USER_AGENT is not configured. Set a descriptive contact User-Agent on the backend.")
-    digits = "".join(ch for ch in cik if ch.isdigit())
-    if not digits or len(digits) > 10:
+    if not cik.isdigit() or len(cik) > 10:
         raise ValueError("CIK must contain up to 10 digits.")
-    padded = digits.zfill(10)
+    padded = cik.zfill(10)
     payload = await get_json(
         f"https://data.sec.gov/submissions/CIK{padded}.json",
         headers={"User-Agent": settings.sec_user_agent, "Accept-Encoding": "gzip, deflate"},
