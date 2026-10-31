@@ -23,7 +23,10 @@
 - [x] Snapshot schema validation before Pages deployment
 - [x] Last-known-good snapshot cache and stale-data labelling on upstream outages
 - [x] Weekly Dependabot proposals for npm, pip and GitHub Actions
-- [x] Verify the GitHub Pages deployment workflow and built asset paths\n- [x] Add TradingView embedded charts, global stock/crypto heatmaps and economic calendar\n- [x] Add editable symbol/timeframe controls and India/global market screener links\n- [x] Increase typography, form control sizing and responsive market workspace usability
+- [x] Verify the GitHub Pages deployment workflow and built asset paths
+- [x] Add TradingView embedded charts, global stock/crypto heatmaps and economic calendar
+- [x] Add editable symbol/timeframe controls and India/global market screener links
+- [x] Increase typography, form control sizing and responsive market workspace usability
 - [ ] Add RBI DBIE table explorer with units, periods, revisions and provenance
 - [x] Show scheduled source items and official-feed health in the News Intelligence workspace
 - [ ] Add cross-source event clustering, independent corroboration and claim-level evidence
