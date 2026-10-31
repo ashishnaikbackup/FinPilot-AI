@@ -29,7 +29,7 @@ npm install
 npm run dev
 ```
 
-The script writes public-source snapshots to `frontend/public/data/`. If a provider is unavailable, it records the error and emits an empty dataset rather than inventing values.
+The script writes public-source snapshots to `frontend/public/data/`. If a provider is unavailable, it records the error and preserves a cached last-known-good snapshot when one exists, clearly labelling it stale. It never invents values.
 
 ## Publish for free with GitHub Pages
 
@@ -39,7 +39,7 @@ The script writes public-source snapshots to `frontend/public/data/`. If a provi
 4. When the workflow succeeds, the site is published at:
    https://ashishnaikbackup.github.io/FinPilot-AI/
 
-The workflow refreshes public data and rebuilds the website approximately every six hours. The deployment validates timestamp timezones, macro numeric values, HTTPS source URLs and the official-source domain allowlist before publishing. Weekly Dependabot checks propose frontend, backend and GitHub Actions dependency updates as pull requests. Review the changelog and CI result before merging; updates are not silently installed. GitHub scheduled jobs can be delayed, so the UI must always show the snapshot's actual retrieval time. This is periodic data, not a guaranteed real-time service.
+The workflow refreshes public data and rebuilds the website approximately every six hours. A last-known-good cache helps retain useful snapshots during temporary upstream outages; stale data is visibly labelled and its original retrieval time is preserved. The deployment validates timestamp timezones, macro numeric values, HTTPS source URLs and the official-source domain allowlist before publishing. Weekly Dependabot checks propose frontend, backend and GitHub Actions dependency updates as pull requests. Review the changelog and CI result before merging; updates are not silently installed. GitHub scheduled jobs can be delayed, so the UI must always show the snapshot's actual retrieval time. This is periodic data, not a guaranteed real-time service.
 
 ## Public data and freshness
 
