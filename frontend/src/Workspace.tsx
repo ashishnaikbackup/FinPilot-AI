@@ -66,6 +66,10 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [candidateSource, setCandidateSource] = useState("");
   const [candidateSourceDate, setCandidateSourceDate] = useState("");
   const [candidateRisks, setCandidateRisks] = useState("");
+  const [candidateBull, setCandidateBull] = useState("");
+  const [candidateBase, setCandidateBase] = useState("");
+  const [candidateBear, setCandidateBear] = useState("");
+  const [candidateCosts, setCandidateCosts] = useState("");
   const [globalMacro, setGlobalMacro] = useState<MacroObservation[]>([]);
   const [globalMacroStatus, setGlobalMacroStatus] = useState<"loading" | "available" | "stale" | "unavailable">("loading");
   const [globalMacroFreshness, setGlobalMacroFreshness] = useState("not yet loaded");
@@ -80,13 +84,17 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       .catch(() => { if (!cancelled) setGlobalMacroStatus("unavailable"); });
     return () => { cancelled = true; };
   }, []);
-  const researchComplete = Boolean(candidateName.trim() && isHttpsUrl(candidateSource.trim()) && candidateSourceDate && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed");
+  const researchComplete = Boolean(candidateName.trim() && isHttpsUrl(candidateSource.trim()) && candidateSourceDate && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed" && candidateBull.trim() && candidateBase.trim() && candidateBear.trim() && candidateCosts.trim());
   const reviewGaps = [
     !candidateName.trim() ? "Name the instrument or opportunity." : "",
     !isHttpsUrl(candidateSource.trim()) ? "Add a primary-source HTTPS link (offer document, factsheet, filing or issuer disclosure)." : "",
     !candidateSourceDate ? "Record the date of the source document." : "",
     candidateValuation === "Not assessed" ? "Assess valuation using a documented method appropriate to the instrument." : "",
-    candidateLiquidity === "Not assessed" ? "Check liquidity, redemption terms and exit constraints." : ""
+    candidateLiquidity === "Not assessed" ? "Check liquidity, redemption terms and exit constraints." : "",
+    !candidateBull.trim() ? "Write a bull case with evidence and assumptions." : "",
+    !candidateBase.trim() ? "Write a base case with evidence and assumptions." : "",
+    !candidateBear.trim() ? "Write a bear case and downside risks." : "",
+    !candidateCosts.trim() ? "Record fees, taxes and other costs to verify." : ""
   ].filter(Boolean);
 
   const ipoItems = useMemo(() => newsItems.filter(item => item.source_type === "official_primary_source" && /(ipo|public issue|offer document|drhp|rhp|issue summary|initial public)/i.test(item.title + " " + (item.source || ""))).slice(0, 10), [newsItems]);
@@ -163,6 +171,10 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
           <label>Liquidity / exit review<select value={candidateLiquidity} onChange={e=>setCandidateLiquidity(e.target.value)}><option>Not assessed</option><option>High liquidity — verify source</option><option>Limited liquidity / lock-in</option><option>Unclear redemption or exit terms</option><option>Not applicable</option></select></label>
           <label>Primary source HTTPS URL<input value={candidateSource} onChange={e=>setCandidateSource(e.target.value)} placeholder="https://…"/></label>
           <label>Source document date<input type="date" value={candidateSourceDate} onChange={e=>setCandidateSourceDate(e.target.value)}/></label>
+          <label>Bull case<textarea value={candidateBull} onChange={e=>setCandidateBull(e.target.value)} rows={2} placeholder="Optimistic scenario, assumptions and supporting evidence"/></label>
+          <label>Base case<textarea value={candidateBase} onChange={e=>setCandidateBase(e.target.value)} rows={2} placeholder="Central scenario, assumptions and supporting evidence"/></label>
+          <label>Bear case<textarea value={candidateBear} onChange={e=>setCandidateBear(e.target.value)} rows={2} placeholder="Downside scenario, failure modes and loss risks"/></label>
+          <label>Fees, taxes and other costs<textarea value={candidateCosts} onChange={e=>setCandidateCosts(e.target.value)} rows={2} placeholder="Expense ratio, brokerage, tax, exit load, FX or custody costs"/></label>
           <label>Risks and counterarguments<textarea value={candidateRisks} onChange={e=>setCandidateRisks(e.target.value)} rows={3} placeholder="What could go wrong? What evidence would change your view?"/></label>
         </div>
         <div className="calculator-card">
@@ -170,7 +182,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
           <div className="calc-result"><span>Evidence checklist</span><b>{researchComplete ? "Core fields entered" : "Incomplete"}</b></div>
           <p className="calc-foot">{researchComplete ? "The basic worksheet fields are filled. This is not an approval, risk score or investment recommendation." : "Complete these items before treating the candidate as researched."}</p>
           {reviewGaps.length > 0 && <ul className="review-gaps">{reviewGaps.map(g=><li key={g}>{g}</li>)}</ul>}
-          <div className="review-summary"><b>{candidateName.trim() || "No candidate entered"}</b><span>{candidateType} · {candidateHorizon}</span><span>Valuation: {candidateValuation}</span><span>Liquidity: {candidateLiquidity}</span><span>Source date: {candidateSourceDate || "Not recorded"}</span>{isHttpsUrl(candidateSource.trim()) && <a href={candidateSource.trim()} target="_blank" rel="noreferrer">Open primary source <ExternalLink size={12}/></a>}</div>
+          <div className="review-summary"><b>{candidateName.trim() || "No candidate entered"}</b><span>{candidateType} · {candidateHorizon}</span><span>Valuation: {candidateValuation}</span><span>Liquidity: {candidateLiquidity}</span><span>Source date: {candidateSourceDate || "Not recorded"}</span><span>Bull case: {candidateBull || "Not recorded"}</span><span>Base case: {candidateBase || "Not recorded"}</span><span>Bear case: {candidateBear || "Not recorded"}</span><span>Fees/tax: {candidateCosts || "Not recorded"}</span>{isHttpsUrl(candidateSource.trim()) && <a href={candidateSource.trim()} target="_blank" rel="noreferrer">Open primary source <ExternalLink size={12}/></a>}</div>
           {candidateRisks.trim() && <div className="review-summary"><b>Your risk notes</b><span>{candidateRisks}</span></div>}
           <p className="calc-foot">Never rely on one source. Also review fees, tax, issuer quality, concentration, currency exposure, eligibility, custody, fraud risk and downside scenarios. Save the original document and its date outside this temporary worksheet.</p>
         </div>
