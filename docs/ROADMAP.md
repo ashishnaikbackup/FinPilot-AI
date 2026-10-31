@@ -8,6 +8,7 @@
 
 ## Phase 2 — Public data foundation (in progress)
 - [x] World Bank India GDP public indicator adapter
+- [x] Six-country World Bank macro comparison for GDP growth, inflation, unemployment and GDP
 - [x] GDELT global news discovery adapter (unverified discovery, not fact-checking)
 - [x] Static JSON snapshot generator with provider errors and retrieval timestamps
 - [x] GitHub Actions scheduled refresh and GitHub Pages deployment (no hosted backend required)
