@@ -97,11 +97,16 @@ official_feeds = [
 ]
 official_articles = []
 official_errors = []
+official_feed_status = []
 for provider, feed_url, domains in official_feeds:
     try:
-        official_articles.extend(fetch_rss(feed_url, provider, domains))
+        items = fetch_rss(feed_url, provider, domains)
+        official_articles.extend(items)
+        official_feed_status.append({"provider": provider, "source_url": feed_url, "status": "available" if items else "empty", "items": len(items)})
     except Exception as exc:
-        official_errors.append({"provider": provider, "error": str(exc)[:240]})
+        error = str(exc)[:240]
+        official_errors.append({"provider": provider, "error": error})
+        official_feed_status.append({"provider": provider, "source_url": feed_url, "status": "unavailable", "error": error})
 
 # GDELT is a discovery index. Its seendate is the index/seen time, not necessarily publisher time.
 query = '("India economy" OR "global markets" OR "central bank" OR geopolitics)'
@@ -124,7 +129,7 @@ try:
         "language": item.get("language"),
     } for item in articles if item.get("title") and item.get("url")]
     write("news-global.json", {
-        "provider": "GDELT DOC API", "source_url": gdelt_url,
+        "provider": "RBI + PIB official RSS and GDELT discovery", "source_url": gdelt_url,
         "retrieved_at": NOW, "freshness": "rolling_3_day_discovery_index",
         "verification": "mixed_official_primary_source_and_unverified_discovery", "articles": official_articles + normalized,
         "official_primary_source_count": len(official_articles),
@@ -140,7 +145,7 @@ except Exception as exc:
     write("news-global.json", {
         "provider": "RBI + PIB official RSS and GDELT discovery", "source_url": gdelt_url,
         "retrieved_at": NOW, "freshness": "feed_dependent",
-        "verification": "official_primary_source_items_plus_unavailable_discovery", "articles": official_articles, "official_primary_source_count": len(official_articles), "discovery_index_count": 0, "official_feed_errors": official_errors, "error": news_error,
+        "verification": "official_primary_source_items_plus_unavailable_discovery", "articles": official_articles, "official_primary_source_count": len(official_articles), "discovery_index_count": 0, "official_feed_errors": official_errors, "official_feeds": official_feed_status, "error": news_error,
     })
 
 status = {
