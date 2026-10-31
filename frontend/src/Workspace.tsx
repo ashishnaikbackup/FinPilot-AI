@@ -20,7 +20,12 @@ const careerLinks = [
   ["Employment News", "Official government recruitment and vacancy notices", "https://employmentnews.gov.in/"],
   ["Goa Government", "Official Goa government portal and department notices", "https://www.goa.gov.in/"],
   ["RBI Opportunities", "RBI recruitment and career notices", "https://opportunities.rbi.org.in/"],
-  ["SEBI Careers", "SEBI recruitment notices", "https://www.sebi.gov.in/"]
+  ["SEBI Careers", "SEBI recruitment notices", "https://www.sebi.gov.in/"],
+  ["IBPS", "Public-sector bank recruitment and examinations", "https://www.ibps.in/"],
+  ["Railway Recruitment Boards", "Official railway recruitment notices and updates", "https://www.rrbcdg.gov.in/"],
+  ["Staff Selection Commission", "Central government recruitment examinations", "https://ssc.gov.in/"],
+  ["Goa Public Service Commission", "Goa state government officer recruitment", "https://gpsc.goa.gov.in/"],
+  ["UPSC", "Central civil services and specialist recruitment", "https://upsc.gov.in/"]
 ];
 
 function money(value: number) {
@@ -208,6 +213,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
 
   if (active === "Career & Income") return <div className="workspace-stack">
     <div className="panel workspace-panel"><div className="eyebrow">EARNING POWER</div><h2>Career and income research</h2><p>Official starting points for recruitment and apprenticeships. Always confirm eligibility, age cut-off, category rules, location, dates and fees in the original notification.</p><div className="career-list">{careerLinks.map(([name,desc,url])=><a href={url} target="_blank" rel="noreferrer" key={name}><BriefcaseBusiness size={16}/><div><b>{name}</b><span>{desc}</span></div><ArrowUpRight size={14}/></a>)}</div></div>
+    <div className="panel workspace-panel"><h2>Useful finance and technology pathways</h2><div className="checklist-grid">{[["Finance operations / banking","Excel or Sheets, accounting basics, reconciliations, KYC/AML awareness, clear written communication."],["Business / data analyst","SQL, Python, spreadsheets, Power BI, statistics, data cleaning and concise business reporting."],["Risk / compliance analyst","Financial products, regulatory reading, controls, audit trails, fraud indicators and evidence documentation."],["Software / fintech support","Python or JavaScript, APIs, SQL, debugging, security basics and customer problem-solving."]].map(([title,desc])=><div className="check-tile" key={title}><BriefcaseBusiness size={17}/><div><b>{title}</b><p>{desc}</p></div></div>)}</div><p className="calc-foot">These are role families and skill suggestions, not confirmed vacancies. Check each official notification for eligibility, location, deadlines and fees.</p></div>
   </div>;
 
   return <div className="workspace-stack">
