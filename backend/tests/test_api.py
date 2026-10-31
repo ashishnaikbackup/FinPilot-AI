@@ -22,3 +22,8 @@ def test_data_status_is_honest_about_market_quotes():
 def test_dbie_search_requires_query():
     response = client.get("/api/data/india/dbie/search?q=x")
     assert response.status_code == 422
+
+
+def test_world_bank_rejects_invalid_country_code():
+    response = client.get("/api/data/global/world-bank?country=I%2F")
+    assert response.status_code == 422
