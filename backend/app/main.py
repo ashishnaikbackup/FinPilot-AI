@@ -55,7 +55,7 @@ async def dbie_search(q: str = Query(min_length=2, max_length=100)):
 
 @app.get("/api/data/global/world-bank")
 async def world_bank(
-    country: str = Query(default="IND", min_length=2, max_length=3),
+    country: str = Query(default="IND", min_length=2, max_length=3, pattern="^[A-Za-z]{2,3}$"),
     indicator: str = Query(default="NY.GDP.MKTP.CD", min_length=3, max_length=40),
     per_page: int = Query(default=12, ge=1, le=50),
 ):
