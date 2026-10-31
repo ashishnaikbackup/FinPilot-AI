@@ -54,7 +54,8 @@ The workflow refreshes public data and rebuilds the website approximately hourly
 | Global official releases | Federal Reserve monetary-policy RSS and ECB press-release RSS | Primary-source releases, subject to feed availability |
 | Global macro comparison | World Bank Indicators API | Annual GDP growth, inflation, unemployment and nominal GDP for India, US, China, UK, Germany and Japan; latest years vary. |
 | Global news discovery | GDELT DOC API | Rolling discovery index; not fact-checked and not necessarily the publisher's publication time |
-| Embedded charts / heatmaps | TradingView widgets | External chart and market visualisations; real-time, delayed or end-of-day availability varies by exchange and widget |\n| FinPilot quote API | Not connected | FinPilot does not ingest, store or redistribute the embedded widget quotes |
+| Embedded charts / heatmaps | TradingView widgets | External chart and market visualisations; real-time, delayed or end-of-day availability varies by exchange and widget |
+| FinPilot quote API | Not connected | FinPilot does not ingest, store or redistribute the embedded widget quotes |
 
 See the [Feature Audit](docs/FEATURE_AUDIT.md) for completed, partial and externally blocked requirements. See the [Project Handover](docs/PROJECT_HANDOVER.md) for the delivered scope and release boundaries, [Data Sources](docs/DATA_SOURCES.md) for provider documentation and licensing, and [Open-source Adapter Review](docs/OPEN_SOURCE_ADAPTER_REVIEW.md) for project-by-project reuse and safety decisions.
 
