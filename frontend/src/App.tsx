@@ -33,10 +33,10 @@ type StatusPayload = {
   sec_filings: { status: string; provider: string; message: string };
 };
 const markets = [
-  { name: "NIFTY 50", area: "India · NSE index", value: "—", change: "Licensed quote feed required" },
-  { name: "SENSEX", area: "India · BSE index", value: "—", change: "Licensed quote feed required" },
-  { name: "S&P 500", area: "United States · Equity index", value: "—", change: "Quote provider not configured" },
-  { name: "NASDAQ 100", area: "United States · Equity index", value: "—", change: "Quote provider not configured" }
+  { name: "NIFTY 50", area: "India · NSE index", value: "Chart available", change: "Open Markets workspace" },
+  { name: "SENSEX", area: "India · BSE index", value: "Chart available", change: "Open Markets workspace" },
+  { name: "S&P 500", area: "United States · Equity index", value: "Chart available", change: "Open Markets workspace" },
+  { name: "NASDAQ 100", area: "United States · Equity index", value: "Chart available", change: "Open Markets workspace" }
 ];
 const opportunities = [
   { type: "IPO WATCH", title: "Upcoming & open issues", text: "Review offer documents, valuation, risks and dates before applying.", tag: "Research queue" },
@@ -133,7 +133,7 @@ function App() {
         <section className="stat-grid">
           <StatCard icon={<Wallet/>} label="Investable capital" value="₹0.00" hint="Starting point · no pressure to invest" tone="blue"/>
           <StatCard icon={<TrendingUp/>} label="Portfolio value" value="Not connected" hint="Add assets when you have them" tone="violet"/>
-          <StatCard icon={<Globe2/>} label="Markets tracked" value="4 indices" hint="Quote feed not connected" tone="cyan"/>
+          <StatCard icon={<Globe2/>} label="Market tools" value="Multi-asset" hint="Charts · heatmaps · calendar" tone="cyan"/>
           <StatCard icon={<ShieldCheck/>} label="Risk posture" value="Capital first" hint="No leverage · no auto-trading" tone="green"/>
         </section>
 
@@ -157,7 +157,7 @@ function App() {
         <Workspace active="Overview" query={query} newsItems={newsItems} providerStatus={providerStatus}/>
         </>}
         {active !== "Overview" && <Workspace active={active} query={query} newsItems={newsItems} providerStatus={providerStatus}/>}
-        <div className="data-footnote"><b>Data integrity</b><span>Public data: {apiState} {lastRefresh ? "· snapshot " + lastRefresh : ""}</span><span>India GDP: {providerStatus?.india_macro.status || "checking"}</span><span>Exchange quotes: {providerStatus?.market_quotes.status || "checking"}</span><span>News: {providerStatus?.global_news.status || "checking"} · {providerStatus?.global_news.official_primary_source_count ?? 0} official / {providerStatus?.global_news.discovery_index_count ?? 0} discovery</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
+        <div className="data-footnote"><b>Data integrity</b><span>Public data: {apiState} {lastRefresh ? "· snapshot " + lastRefresh : ""}</span><span>India GDP: {providerStatus?.india_macro.status || "checking"}</span><span>FinPilot quote API: {providerStatus?.market_quotes.status || "checking"} · TradingView widgets in Markets</span><span>News: {providerStatus?.global_news.status || "checking"} · {providerStatus?.global_news.official_primary_source_count ?? 0} official / {providerStatus?.global_news.discovery_index_count ?? 0} discovery</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
       </div>
     </main>
   </div>;
