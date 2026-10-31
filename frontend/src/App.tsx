@@ -29,7 +29,7 @@ type StatusPayload = {
   refresh_interval: string;
   market_quotes: { status: string; message: string; freshness: string };
   india_macro: { status: string; freshness: string; provider: string; message: string; error?: string | null };
-  global_news: { status: string; freshness: string; provider: string; caveat: string; error?: string | null };
+  global_news: { status: string; freshness: string; provider: string; caveat: string; official_primary_source_count?: number; discovery_index_count?: number; official_feeds?: {provider:string;status:string;items?:number;error?:string}[]; error?: string | null };
   sec_filings: { status: string; provider: string; message: string };
 };
 const markets = [
@@ -149,7 +149,7 @@ function App() {
         <Workspace active="Overview" query={query}/>
         </>}
         {active !== "Overview" && <Workspace active={active} query={query}/>}
-        <div className="data-footnote"><b>Data integrity</b><span>Public data: {apiState} {lastRefresh ? "· snapshot " + lastRefresh : ""}</span><span>India GDP: {providerStatus?.india_macro.status || "checking"}</span><span>Exchange quotes: {providerStatus?.market_quotes.status || "checking"}</span><span>News: {providerStatus?.global_news.status || "checking"} · discovery only</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
+        <div className="data-footnote"><b>Data integrity</b><span>Public data: {apiState} {lastRefresh ? "· snapshot " + lastRefresh : ""}</span><span>India GDP: {providerStatus?.india_macro.status || "checking"}</span><span>Exchange quotes: {providerStatus?.market_quotes.status || "checking"}</span><span>News: {providerStatus?.global_news.status || "checking"} · {providerStatus?.global_news.official_primary_source_count ?? 0} official / {providerStatus?.global_news.discovery_index_count ?? 0} discovery</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
       </div>
     </main>
   </div>;
