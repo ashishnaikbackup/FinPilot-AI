@@ -8,6 +8,7 @@ import {
 import {
   Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis
 } from "recharts";
+import Workspace from "./Workspace";
 
 type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Portfolio" | "Learning Centre" | "Career & Income";
 const navItems: { label: Section; icon: typeof LayoutDashboard }[] = [
@@ -120,8 +121,7 @@ function App() {
 
         {showNotice && <div className="demo-notice"><div className="notice-icon"><CircleHelp size={18}/></div><div><b>{apiState === "connected" ? "Public data snapshots available" : apiState === "partial" ? "Some public data sources are unavailable" : apiState === "loading" ? "Loading public data snapshots" : "Public data snapshots unavailable"}</b><p>{apiState === "connected" ? "The latest scheduled public-source snapshots are loaded. Exchange prices still require a licensed market-data feed." : apiState === "partial" ? "At least one source did not refresh successfully. Check source status and timestamps; missing values are not filled with guesses." : apiState === "loading" ? "Loading the latest snapshots refreshed by GitHub Actions." : "No public data snapshots were loaded. Check the scheduled refresh workflow. No market prices or headlines are invented when a source is unavailable."}</p></div><button onClick={() => setShowNotice(false)} aria-label="Dismiss notice"><X size={16}/></button></div>}
 
-        {active !== "Overview" && <div className="section-banner"><div className="section-icon"><Sparkles size={19}/></div><div><b>{active}</b><p>This module is part of the FinPilot roadmap. The first release establishes its interface and data foundations.</p></div><span className="status-chip">PHASE 1 FOUNDATION</span></div>}
-
+        {active === "Overview" && <>
         <section className="stat-grid">
           <StatCard icon={<Wallet/>} label="Investable capital" value="₹0.00" hint="Starting point · no pressure to invest" tone="blue"/>
           <StatCard icon={<TrendingUp/>} label="Portfolio value" value="Not connected" hint="Add assets when you have them" tone="violet"/>
@@ -146,7 +146,10 @@ function App() {
         </section>
 
         <section className="footer-grid"><div className="foot-card"><div className="foot-icon"><BookOpen/></div><div><b>Learn the language of money</b><p>Plain-English explainers, from bonds and ETFs to inflation and valuation.</p><button onClick={() => setActive("Learning Centre")}>Go to learning centre <ArrowUpRight size={13}/></button></div></div><div className="foot-card"><div className="foot-icon"><BriefcaseBusiness/></div><div><b>Grow your earning power</b><p>Build skills, explore career paths and find legitimate income opportunities.</p><button onClick={() => setActive("Career & Income")}>Explore career workspace <ArrowUpRight size={13}/></button></div></div></section>
-        </>}\n        {active !== "Overview" && <Workspace active={active}/>}\n        <div className="data-footnote"><b>Data integrity</b><span>Public data: {apiState} {lastRefresh ? "· snapshot " + lastRefresh : ""}</span><span>India GDP: {providerStatus?.india_macro.status || "checking"}</span><span>Exchange quotes: {providerStatus?.market_quotes.status || "checking"}</span><span>News: {providerStatus?.global_news.status || "checking"} · discovery only</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
+        </>}
+        {active !== "Overview" && <Workspace active={active}/>}\n        </>}
+        {active !== "Overview" && <Workspace active={active}/>}
+        <div className="data-footnote"><b>Data integrity</b><span>Public data: {apiState} {lastRefresh ? "· snapshot " + lastRefresh : ""}</span><span>India GDP: {providerStatus?.india_macro.status || "checking"}</span><span>Exchange quotes: {providerStatus?.market_quotes.status || "checking"}</span><span>News: {providerStatus?.global_news.status || "checking"} · discovery only</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
       </div>
     </main>
   </div>;
