@@ -114,6 +114,7 @@ function App() {
 
   return <div className="app-shell">
     <a className="skip-link" href="#main-content">Skip to main content</a>
+    {mobileOpen && <button className="sidebar-backdrop" type="button" tabIndex={-1} aria-hidden="true" onClick={() => setMobileOpen(false)}/> }
     <aside id="workspace-navigation" className={`sidebar ${mobileOpen ? "open" : ""}`} aria-label="Main navigation">
       <div className="brand"><div className="brand-mark"><Activity size={21}/></div><div><b>finpilot<span>.ai</span></b><small>FINANCIAL INTELLIGENCE</small></div><button className="mobile-close" type="button" onClick={() => setMobileOpen(false)} aria-label="Close menu"><X size={18}/></button></div>
       <div className="workspace-label">WORKSPACE</div>
@@ -131,6 +132,7 @@ function App() {
         <div className="top-actions"><div className="search-box"><Search size={16} aria-hidden="true"/><input aria-label="Search markets" value={query} onChange={e => setQuery(e.target.value)} placeholder={active === "Overview" || active === "Markets" ? "Search markets..." : "Search disabled here"} disabled={active !== "Overview" && active !== "Markets"} /></div><a className="icon-button" href="https://github.com/ashishnaikbackup/FinPilot-AI/actions" target="_blank" rel="noreferrer" aria-label="Open update history" title="Open data refresh and software update history"><Bell size={18}/><i/></a><div className="top-avatar">FP</div></div>
       </header>
 
+      {active !== "Overview" && <h1 className="sr-only">{active}</h1>}
       <div className="page-content">
         <section className="welcome-row"><div><div className="eyebrow"><span className="pulse"/> YOUR FINANCIAL COMMAND CENTRE</div><h1>{greeting}. <span>Let's build your financial edge.</span></h1><p>Understand the world. Research opportunities. Make better-informed decisions.</p></div><div className="date-pill"><CalendarDays size={15}/> {new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date())}</div></section>
 
