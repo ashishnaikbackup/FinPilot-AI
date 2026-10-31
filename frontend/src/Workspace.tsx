@@ -69,9 +69,13 @@ function TradingViewEmbed({ tag, script, attributes, height = 420, label }: {
     let cancelled = false;
     async function mount() {
       try {
+        setFailed(false);
         if (!customElements.get(tag)) {
           await loadTradingViewWidget(script, tag);
-          await customElements.whenDefined(tag);
+          await new Promise<void>((resolve, reject) => {
+            const timeout = window.setTimeout(() => reject(new Error("TradingView custom element timed out.")), 15000);
+            customElements.whenDefined(tag).then(() => { window.clearTimeout(timeout); resolve(); }, error => { window.clearTimeout(timeout); reject(error); });
+          });
         }
         if (cancelled || !host.current) return;
         const element = document.createElement(tag);
