@@ -31,6 +31,7 @@
 
 ## Phase 3 — India and global research
 - [x] Add a candidate research worksheet that checks evidence completeness without producing a buy/sell score
+- [ ] Add official IPO offer-document calendar and structured issue comparisons
 - [ ] NSE/BSE official filings and corporate actions
 - [ ] IPO tracker: DRHP/RHP, dates, valuations, promoter holdings, use of proceeds, risks and official links
 - [ ] Government securities, T-bills, SDLs, corporate bonds and deposits
@@ -40,11 +41,13 @@
 ## Phase 4 — Personal finance mentor
 - [ ] Connect a real AI model through a secure server-side provider; do not expose API keys in the browser
 - [ ] Add source-grounded answers, citations, uncertainty labels and a risk-review step
-- [x] Cash-flow and SIP illustration calculators (educational, not forecasts)
-- [x] Browser-local manual asset notes with privacy warning and JSON backup/clear controls
+- [x] Cash-flow, emergency reserve and SIP illustration calculators (educational, not forecasts)
+- [x] Rules-based financial-stage and goal planner with transparent limitations
+- [x] Browser-local asset tracker with asset-class allocation, privacy warning and JSON backup/clear controls
 - [x] Beginner learning path and official career-resource links
 - [ ] Secure budget, emergency fund, net worth and goal tracker with account-based private storage
 - [x] Beginner-friendly explainers and structured learning paths
+- [x] Finance, banking, risk, compliance and fintech role pathways with official recruitment portals
 - [ ] Student income and career roadmap, verified internships and recruitment opportunities
 - [ ] Personalized guidance based on user-approved financial inputs
 
