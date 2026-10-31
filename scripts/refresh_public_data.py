@@ -148,6 +148,8 @@ official_feeds = [
     ("NSE Announcements", "https://nsearchives.nseindia.com/content/RSS/Online_announcements.xml", ["nseindia.com"], "India"),
     ("NSE Corporate Actions", "https://nsearchives.nseindia.com/content/RSS/Corporate_action.xml", ["nseindia.com"], "India"),
     ("NSE Board Meetings", "https://nsearchives.nseindia.com/content/RSS/Board_Meetings.xml", ["nseindia.com"], "India"),
+    ("BSE Corporate Announcements", "https://www.bseindia.com/data/xml/announcements.xml", ["bseindia.com"], "India"),
+    ("BSE Notices", "https://www.bseindia.com/data/xml/notices.xml", ["bseindia.com"], "India"),
     ("Press Information Bureau", "https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=1", ["pib.gov.in"], "India"),
     ("US Federal Reserve Monetary Policy", "https://www.federalreserve.gov/feeds/press_monetary.xml", ["federalreserve.gov"], "United States"),
     ("European Central Bank Press Releases", "https://www.ecb.europa.eu/rss/press.html", ["ecb.europa.eu"], "European Union"),
@@ -188,7 +190,7 @@ try:
         "language": item.get("language"),
     } for item in articles if item.get("title") and item.get("url") and urlparse(item.get("url", "")).scheme == "https" and urlparse(item.get("url", "")).hostname]
     write("news-global.json", {
-        "provider": "Official RBI/SEBI/NSE/PIB/Fed/ECB RSS and GDELT discovery", "source_url": gdelt_url,
+        "provider": "Official RBI/SEBI/NSE/BSE/PIB/Fed/ECB RSS and GDELT discovery", "source_url": gdelt_url,
         "retrieved_at": NOW, "freshness": "rolling_3_day_discovery_index",
         "verification": "mixed_official_primary_source_and_unverified_discovery", "articles": official_articles + normalized,
         "official_primary_source_count": len(official_articles),
@@ -251,7 +253,7 @@ status = {
         "status": "partial" if news_stale and official_articles else ("stale" if news_stale else ("available" if (news_ok or bool(official_articles)) else "unavailable")),
         "provider": "Official RBI/SEBI/NSE/PIB/Fed/ECB RSS and GDELT discovery",
         "freshness": "feed_dependent; GDELT rolling 3 days",
-        "caveat": "RBI/SEBI/NSE/PIB/Federal Reserve/ECB items link to primary releases. GDELT items are discovery only and not fact-checked; seen_at is not publisher publication time.",
+        "caveat": "RBI/SEBI/NSE/BSE/PIB/Federal Reserve/ECB items link to primary releases. GDELT items are discovery only and not fact-checked; seen_at is not publisher publication time.",
         "official_primary_source_count": len(official_articles),
         "discovery_index_count": len(normalized),
         "discovery_status": "stale" if news_stale and normalized else ("available" if news_ok else "unavailable"),
