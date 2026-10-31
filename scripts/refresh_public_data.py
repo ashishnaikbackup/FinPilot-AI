@@ -121,9 +121,11 @@ try:
         "verification": "mixed_official_primary_source_and_unverified_discovery", "articles": official_articles + normalized,
         "official_primary_source_count": len(official_articles),
         "discovery_index_count": len(normalized),
+        "discovery_status": "available" if normalized else "unavailable",
+        "discovery_error": None if normalized else "GDELT returned no articles",
         "official_feed_errors": official_errors,
         "official_feeds": official_feed_status,
-        "error": None if normalized else "GDELT returned no articles",
+        "error": None if (normalized or official_articles) else "No news source returned items",
     })
     news_ok = bool(normalized)
     news_error = None if news_ok else "GDELT returned no articles"
@@ -133,7 +135,7 @@ except Exception as exc:
     write("news-global.json", {
         "provider": "Official RBI/SEBI/NSE/PIB/Fed/ECB RSS and GDELT discovery", "source_url": gdelt_url,
         "retrieved_at": NOW, "freshness": "feed_dependent",
-        "verification": "official_primary_source_items_plus_unavailable_discovery", "articles": official_articles, "official_primary_source_count": len(official_articles), "discovery_index_count": 0, "official_feed_errors": official_errors, "official_feeds": official_feed_status, "error": news_error,
+        "verification": "official_primary_source_items_plus_unavailable_discovery", "articles": official_articles, "official_primary_source_count": len(official_articles), "discovery_index_count": 0, "discovery_status": "unavailable", "discovery_error": news_error, "official_feed_errors": official_errors, "official_feeds": official_feed_status, "error": None if official_articles else news_error,
     })
 
 status = {
@@ -157,7 +159,7 @@ status = {
         "discovery_error": news_error,
         "official_feed_errors": official_errors,
         "official_feeds": official_feed_status,
-        "error": news_error,
+        "error": None if (news_ok or bool(official_articles)) else news_error,
     },
     "market_quotes": {
         "status": "not_connected",
