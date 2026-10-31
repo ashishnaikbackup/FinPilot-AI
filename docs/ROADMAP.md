@@ -1,50 +1,49 @@
 # Roadmap
 
-## Phase 1 — Foundation (current)
-- [x] Responsive dashboard shell and navigation
-- [x] Clear demo-data and no-live-trading disclosures
-- [x] FastAPI health endpoint
-- [x] Architecture and data integrity rules
-- [ ] Install dependencies and run local build checks
+## Phase 1 — Foundation
+- [x] Responsive React + TypeScript dashboard
+- [x] FastAPI backend and health endpoint
+- [x] Architecture, safety and setup documentation
+- [x] CI workflow for frontend build and backend tests
 
-## Phase 2 — Reliable market and news data
-- Provider abstraction for India/global indices, equities, FX, rates and commodities
-- Source/time/freshness metadata on every quote
-- Official-source news aggregation and duplicate/event clustering
-- Financial calendar and source-linked market snapshots
+## Phase 2 — Public data foundation (in progress)
+- [x] RBI DBIE public read-only search adapter
+- [x] World Bank macro indicator adapter
+- [x] GDELT global news discovery adapter (unverified discovery, not fact-checking)
+- [x] SEC EDGAR company-submissions adapter (descriptive User-Agent required)
+- [x] Provider status endpoint and honest no-market-feed status
+- [x] Dashboard macro chart and news discovery connection
+- [ ] Configure SEC_USER_AGENT with a real monitored contact
+- [ ] Run CI and fix any integration failures
+- [ ] Add RBI DBIE table explorer with units, periods and provenance
+- [ ] Add primary-source event verification and news clustering
+- [ ] Select a market-data provider with explicit website-display rights
+- [ ] Add a live/delayed/EOD quote adapter only after provider entitlement is confirmed
 
-## Phase 3 — Research opportunities
-- IPO tracker: DRHP/RHP, issue dates, valuation, promoters, financials, risks and post-listing review
-- Bonds and government securities: YTM, duration, credit quality, liquidity and default risk
-- Mutual funds/ETFs: costs, tracking error, benchmark, holdings and overlap
-- Deposits, T-bills, G-Secs, REITs/InvITs, commodities and legally accessible international instruments
-- Every listing includes eligibility, minimum amount, fees/tax questions, risks and official links
+## Phase 3 — India and global research
+- [ ] NSE/BSE official filings and corporate actions
+- [ ] IPO tracker: DRHP/RHP, dates, valuations, promoter holdings, use of proceeds, risks and official links
+- [ ] Government securities, T-bills, SDLs, corporate bonds and deposits
+- [ ] Mutual funds and ETFs: costs, benchmark, tracking error, holdings and overlap
+- [ ] REITs/InvITs, commodities and legally accessible international investments
 
-## Phase 4 — AI mentor and learning
-- Plain-language financial education and guided learning paths
-- Financial foundation, budget, emergency-fund and goal planning
-- Student career/income skills, remote role research and verified recruitment calendar
-- Answers cite sources and separate evidence from model interpretation
+## Phase 4 — Personal finance mentor
+- [ ] Budget, emergency fund, net worth and goal tracker
+- [ ] Beginner-friendly explainers and structured learning paths
+- [ ] Student income and career roadmap, verified internships and recruitment opportunities
+- [ ] Personalized guidance based on user-approved financial inputs
 
-## Phase 5 — Intelligence and risk
-- Macro/geopolitical/company event analysis
-- Scenario simulator and crisis early-warning signals
-- Bull/base/bear analysis, risk checks and forecast scorecard
-- Scam-risk signals with evidence, never unsupported accusations
+## Phase 5 — Global intelligence and risk
+- [ ] Macro/geopolitical/company event analysis with primary-source evidence
+- [ ] Bull/base/bear research framework and risk-manager review
+- [ ] Scenario simulator, crisis early-warning and forecast scorecard
+- [ ] Scam-risk indicators with evidence and uncertainty labels
 
 ## Phase 6 — Portfolio and simulation
-- User-controlled portfolio tracker and performance after fees/tax assumptions
-- Paper trading and backtesting with leakage/look-ahead controls
-- Read-only broker connectivity only after security and compliance review
+- [ ] Portfolio tracker with fees, taxes and allocation
+- [ ] Paper trading and backtesting with look-ahead controls
+- [ ] Read-only broker connectivity after security review
 
 ## Phase 7 — Research framework adapters
-Assess external projects independently; isolate dependencies and preserve their licenses:
-- TradingAgents
-- AI Hedge Fund
-- Freqtrade (crypto-specific)
-- Microsoft Qlib
-- Kronos
-- AI-Trader
-- Hummingbot (exchange / market-making tooling)
-
-No copy-paste integration before reviewing license, architecture, security, data assumptions and suitability. Do not use crypto engines as equity or mutual-fund execution systems.
+Review and isolate third-party projects, dependencies and licenses before integrating:
+TradingAgents, AI Hedge Fund, Freqtrade (crypto-specific), Microsoft Qlib, Kronos, AI-Trader and Hummingbot. Do not treat these as interchangeable execution engines.
