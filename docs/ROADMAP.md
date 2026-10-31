@@ -67,5 +67,8 @@
 - [ ] Read-only broker connectivity after security review
 
 ## Phase 7 — Research framework adapters
+- [x] Document candidate open-source adapters, licenses and safety boundaries
+- [ ] Integrate isolated read-only research adapters only after security, data and license review
+
 Review and isolate third-party projects, dependencies and licenses before integrating:
 TradingAgents, AI Hedge Fund, Freqtrade (crypto-specific), Microsoft Qlib, Kronos, AI-Trader and Hummingbot. Do not treat these as interchangeable execution engines.
