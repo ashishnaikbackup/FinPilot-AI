@@ -39,8 +39,9 @@ def fetch_rss(url, provider, allowed_domains, limit=12):
     for item in items[:limit]:
         title = (item.findtext("title") or "").strip()
         link = (item.findtext("link") or "").strip()
-        domain = (urlparse(link).hostname or "").lower()
-        if not title or not link or not any(domain == allowed or domain.endswith("." + allowed) for allowed in allowed_domains):
+        parsed_link = urlparse(link)
+        domain = (parsed_link.hostname or "").lower()
+        if not title or parsed_link.scheme != "https" or not domain or not any(domain == allowed or domain.endswith("." + allowed) for allowed in allowed_domains):
             continue
         normalized.append({
             "title": title,
@@ -120,14 +121,14 @@ try:
     normalized = [{
         "title": item.get("title"),
         "url": item.get("url"),
-        "domain": item.get("domain"),
+        "domain": urlparse(item.get("url", "")).hostname,
         "source": "GDELT DOC API",
         "source_type": "discovery_unverified",
         "source_country": item.get("sourcecountry"),
         "seen_at": item.get("seendate"),
         "published_at": None,
         "language": item.get("language"),
-    } for item in articles if item.get("title") and item.get("url")]
+    } for item in articles if item.get("title") and item.get("url") and urlparse(item.get("url", "")).scheme == "https" and urlparse(item.get("url", "")).hostname]
     write("news-global.json", {
         "provider": "RBI + PIB official RSS and GDELT discovery", "source_url": gdelt_url,
         "retrieved_at": NOW, "freshness": "rolling_3_day_discovery_index",
