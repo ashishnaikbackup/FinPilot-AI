@@ -15,7 +15,13 @@
 - Independent RSS feeds fetched concurrently; source ordering remains stable.
 - GitHub Actions refreshes and deploys public snapshots approximately hourly (schedule delays are possible).
 
-### Market views\n- TradingView embedded advanced chart with editable exchange:ticker symbol and interval.\n- Global stock heatmap, crypto heatmap and global economic calendar.\n- India, US, ETF and crypto screener links.\n- These widgets are externally hosted; per-market data may be real-time, delayed or end-of-day. They are not a FinPilot quote API and do not guarantee every exchange or instrument is live.\n\n### Financial planning and education
+### Market views
+- TradingView embedded advanced chart with editable exchange:ticker symbol and interval.
+- Global stock heatmap, crypto heatmap and global economic calendar.
+- India, US, ETF and crypto screener links.
+- These widgets are externally hosted; per-market data may be real-time, delayed or end-of-day. They are not a FinPilot quote API and do not guarantee every exchange or instrument is live.
+
+### Financial planning and education
 - Monthly cash-flow and emergency-reserve planner.
 - SIP illustration with explicit assumptions and risk caveats.
 - Inflation-aware goal planner, including a 0%-return monthly savings baseline.
