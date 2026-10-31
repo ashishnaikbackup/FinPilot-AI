@@ -113,7 +113,8 @@ function App() {
   const filteredMarkets = markets.filter(m => (m.name + m.area).toLowerCase().includes(query.toLowerCase()));
 
   return <div className="app-shell">
-    <aside className={`sidebar ${mobileOpen ? "open" : ""}`}>
+    <a className="skip-link" href="#main-content">Skip to main content</a>
+    <aside id="workspace-navigation" className={`sidebar ${mobileOpen ? "open" : ""}`} aria-label="Main navigation">
       <div className="brand"><div className="brand-mark"><Activity size={21}/></div><div><b>finpilot<span>.ai</span></b><small>FINANCIAL INTELLIGENCE</small></div><button className="mobile-close" type="button" onClick={() => setMobileOpen(false)} aria-label="Close menu"><X size={18}/></button></div>
       <div className="workspace-label">WORKSPACE</div>
       <nav aria-label="Workspace sections">{navItems.map(({label, icon: Icon}) => <button key={label} type="button" aria-current={active === label ? "page" : undefined} className={`nav-link ${active === label ? "active" : ""}`} onClick={() => {setActive(label); setMobileOpen(false);}}><Icon size={18} aria-hidden="true"/><span>{label}</span>{label === "News Intelligence" && <i className="nav-dot" aria-hidden="true"/>}</button>)}</nav>
