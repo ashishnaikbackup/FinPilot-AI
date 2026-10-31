@@ -63,13 +63,14 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [candidateRisks, setCandidateRisks] = useState("");
   const [globalMacro, setGlobalMacro] = useState<MacroObservation[]>([]);
   const [globalMacroStatus, setGlobalMacroStatus] = useState<"loading" | "available" | "unavailable">("loading");
+  const [globalMacroRetrievedAt, setGlobalMacroRetrievedAt] = useState("");
   const [macroCountry, setMacroCountry] = useState("IND");
   const [macroIndicator, setMacroIndicator] = useState("NY.GDP.MKTP.KD.ZG");
   useEffect(() => {
     let cancelled = false;
     fetch(import.meta.env.BASE_URL + "data/macro-global.json")
       .then(response => { if (!response.ok) throw new Error("Macro snapshot unavailable"); return response.json(); })
-      .then(payload => { if (!cancelled) { setGlobalMacro(Array.isArray(payload.observations) ? payload.observations : []); setGlobalMacroStatus(payload.observations?.length ? "available" : "unavailable"); } })
+      .then(payload => { if (!cancelled) { setGlobalMacro(Array.isArray(payload.observations) ? payload.observations : []); setGlobalMacroRetrievedAt(typeof payload.retrieved_at === "string" ? payload.retrieved_at : ""); setGlobalMacroStatus(payload.observations?.length ? "available" : "unavailable"); } })
       .catch(() => { if (!cancelled) setGlobalMacroStatus("unavailable"); });
     return () => { cancelled = true; };
   }, []);
@@ -131,7 +132,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
       {!["NIFTY 50 · NSE", "SENSEX · BSE", "S&P 500 · US", "NASDAQ 100 · US", "Gold & silver", "Global rates & FX"].some(x => x.toLowerCase().includes(query.toLowerCase())) && <div className="empty-data">No market category matches your search.</div>}
     </div>
     <div className="panel workspace-panel"><h2>Primary market information</h2><p>Use exchange and regulator sources for official notices, market status and disclosures. Always check the document date and data entitlement.</p><div className="resource-links"><a href="https://www.nseindia.com/" target="_blank" rel="noreferrer">NSE India <ExternalLink size={13}/></a><a href="https://www.bseindia.com/" target="_blank" rel="noreferrer">BSE India <ExternalLink size={13}/></a><a href="https://www.sebi.gov.in/" target="_blank" rel="noreferrer">SEBI <ExternalLink size={13}/></a><a href="https://www.rbi.org.in/" target="_blank" rel="noreferrer">RBI <ExternalLink size={13}/></a><a href="https://www.sec.gov/edgar/search/" target="_blank" rel="noreferrer">SEC EDGAR <ExternalLink size={13}/></a></div></div>
-    <div className="panel workspace-panel"><div className="eyebrow">GLOBAL MACRO · WORLD BANK</div><h2>Compare economies and economic trends</h2><p>Annual observations for India, the United States, China, the United Kingdom, Germany and Japan. The latest year differs by country and indicator; these are not live prices or forecasts.</p>
+    <div className="panel workspace-panel"><div className="eyebrow">GLOBAL MACRO · WORLD BANK</div><h2>Compare economies and economic trends</h2><p>Annual observations for India, the United States, China, the United Kingdom, Germany and Japan. The latest year differs by country and indicator; these are not live prices or forecasts.</p><p className="calc-foot">Snapshot retrieved: {globalMacroRetrievedAt ? new Date(globalMacroRetrievedAt).toLocaleString() + " (device local time)" : "timestamp unavailable"}.</p>
       <div className="form-row"><label>Economic indicator<select value={macroIndicator} onChange={e=>setMacroIndicator(e.target.value)}><option value="NY.GDP.MKTP.KD.ZG">GDP growth (annual %)</option><option value="FP.CPI.TOTL.ZG">Inflation (consumer prices, annual %)</option><option value="SL.UEM.TOTL.ZS">Unemployment (% of labour force)</option><option value="NY.GDP.MKTP.CD">GDP (current US$)</option></select></label><label>Country history<select value={macroCountry} onChange={e=>setMacroCountry(e.target.value)}><option value="IND">India</option><option value="USA">United States</option><option value="CHN">China</option><option value="GBR">United Kingdom</option><option value="DEU">Germany</option><option value="JPN">Japan</option></select></label></div>
       {globalMacroStatus === "loading" ? <div className="empty-data">Loading the latest published macro snapshot…</div> : globalMacroStatus === "unavailable" ? <div className="empty-data">Global macro snapshot is unavailable. Check the next scheduled refresh.</div> : <>
         <div className="module-grid">{Array.from(macroCountryLatest.values()).sort((a,b)=>a.country.localeCompare(b.country)).map(item=><div className="module-tile" key={item.country_code}><b>{item.country}</b><span>{item.value === null ? "—" : macroIndicator === "NY.GDP.MKTP.CD" ? new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",notation:"compact",maximumFractionDigits:1}).format(item.value) : item.value.toFixed(2)+"%"} · {item.date}</span></div>)}</div>
