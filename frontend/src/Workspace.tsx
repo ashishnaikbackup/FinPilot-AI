@@ -23,7 +23,16 @@ const careerLinks = [
 ];
 
 function money(value: number) {
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+  return Number.isFinite(value) ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(value) : "—";
+}
+
+function isHttpsUrl(value: string) {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" && Boolean(parsed.hostname);
+  } catch {
+    return false;
+  }
 }
 
 export default function Workspace({ active, query, newsItems = [], providerStatus }: { active: Section; query: string; newsItems?: NewsItem[]; providerStatus?: ProviderStatus | null }) {
@@ -48,15 +57,15 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const researchComplete = Boolean(candidateName.trim() && isHttpsUrl(candidateSource.trim()) && candidateValuation !== "Not assessed" && candidateLiquidity !== "Not assessed");
   const reviewGaps = [
     !candidateName.trim() ? "Name the instrument or opportunity." : "",
-    !candidateSource.trim().startsWith("https://") ? "Add a primary-source HTTPS link (offer document, factsheet, filing or issuer disclosure)." : "",
+    !isHttpsUrl(candidateSource.trim()) ? "Add a primary-source HTTPS link (offer document, factsheet, filing or issuer disclosure)." : "",
     candidateValuation === "Not assessed" ? "Assess valuation using a documented method appropriate to the instrument." : "",
     candidateLiquidity === "Not assessed" ? "Check liquidity, redemption terms and exit constraints." : ""
   ].filter(Boolean);
 
   const monthlySurplus = Number(monthlyIncome) - Number(monthlyExpenses);
   const projected = useMemo(() => {
-    const p = Math.max(0, Number(sip) || 0);
-    const n = Math.max(0, Number(years) || 0) * 12;
+    const p = Math.min(100000000, Math.max(0, Number(sip) || 0));
+    const n = Math.min(60, Math.max(0, Number(years) || 0)) * 12;
     const r = Math.min(50, Math.max(-50, Number(rate) || 0)) / 1200;
     if (!n) return 0;
     return r === 0 ? p * n : p * ((Math.pow(1 + r, n) - 1) / r);
