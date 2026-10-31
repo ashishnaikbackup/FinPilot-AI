@@ -97,7 +97,7 @@ try:
         "value": row.get("value"),
         "unit": row.get("unit") or ("%" if (row.get("indicator") or {}).get("id") != "NY.GDP.MKTP.CD" else "current US$"),
         "observation_status": row.get("obs_status"),
-    } for row in rows if row.get("date") and row.get("countryiso3code") and (row.get("indicator") or {}).get("id")]
+    } for row in rows if row.get("date") and row.get("value") is not None and row.get("countryiso3code") and (row.get("indicator") or {}).get("id")]
     global_macro_ok = bool(global_observations)
     global_macro_error = None if global_macro_ok else "No observations returned by World Bank"
     write("macro-global.json", {
