@@ -64,47 +64,58 @@ function App() {
     let cancelled = false;
     async function loadIntelligence() {
       try {
-      const base = import.meta.env.BASE_URL;
-      const results = await Promise.allSettled([
-        fetch(base + "data/status.json"),
-        fetch(base + "data/macro-india-gdp.json"),
-        fetch(base + "data/news-global.json")
-      ]);
-      if (cancelled) return;
-      let successes = 0;
-      let macroLoaded = false;
-      let newsLoaded = false;
-      const [statusResult, macroResult, newsResult] = results;
-      let loadedStatus: StatusPayload | null = null;
-      if (statusResult.status === "fulfilled" && statusResult.value.ok) {
-        loadedStatus = await statusResult.value.json();
-        setProviderStatus(loadedStatus);
-        successes += 1;
-      }
-      if (macroResult.status === "fulfilled" && macroResult.value.ok) {
-        const macro = await macroResult.value.json();
-        const points = (macro.observations || [])
-          .filter((item: {date:string;value:number|null}) => item.value !== null)
-          .map((item: {date:string;value:number}) => ({date:item.date,value:item.value}));
-        setMacroSeries(points);
-        macroLoaded = true;
-        successes += 1;
-      }
-      if (newsResult.status === "fulfilled" && newsResult.value.ok) {
-        const news = await newsResult.value.json();
-        setNewsItems(news.articles || []);
-        newsLoaded = true;
-        successes += 1;
-      }
-      const sourcesAvailable = macroLoaded && newsLoaded && loadedStatus?.india_macro.status === "available" && loadedStatus?.global_news.status === "available";
-      setApiState(successes === 0 ? "offline" : sourcesAvailable ? "connected" : "partial");
-      setLastRefresh(loadedStatus?.retrieved_at ? new Date(loadedStatus.retrieved_at).toLocaleString("en-IN") : "timestamp unavailable");
+        const base = import.meta.env.BASE_URL;
+        const results = await Promise.allSettled([
+          fetch(base + "data/status.json", { cache: "no-store" }),
+          fetch(base + "data/macro-india-gdp.json", { cache: "no-store" }),
+          fetch(base + "data/news-global.json", { cache: "no-store" })
+        ]);
+        if (cancelled) return;
+        let successes = 0;
+        let macroLoaded = false;
+        let newsLoaded = false;
+        const [statusResult, macroResult, newsResult] = results;
+        let loadedStatus: StatusPayload | null = null;
+        if (statusResult.status === "fulfilled" && statusResult.value.ok) {
+          loadedStatus = await statusResult.value.json();
+          setProviderStatus(loadedStatus);
+          successes += 1;
+        }
+        if (macroResult.status === "fulfilled" && macroResult.value.ok) {
+          const macro = await macroResult.value.json();
+          const points = (macro.observations || [])
+            .filter((item: {date:string;value:number|null}) => item.value !== null)
+            .map((item: {date:string;value:number}) => ({date:item.date,value:item.value}));
+          setMacroSeries(points);
+          macroLoaded = true;
+          successes += 1;
+        }
+        if (newsResult.status === "fulfilled" && newsResult.value.ok) {
+          const news = await newsResult.value.json();
+          setNewsItems(news.articles || []);
+          newsLoaded = true;
+          successes += 1;
+        }
+        const sourcesAvailable = macroLoaded && newsLoaded && loadedStatus?.india_macro.status === "available" && loadedStatus?.global_news.status === "available";
+        setApiState(successes === 0 ? "offline" : sourcesAvailable ? "connected" : "partial");
+        setLastRefresh(loadedStatus?.retrieved_at ? new Date(loadedStatus.retrieved_at).toLocaleString("en-IN") : "timestamp unavailable");
       } catch {
         if (!cancelled) setApiState("partial");
       }
     }
-    loadIntelligence();
-    return () => { cancelled = true; };
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void loadIntelligence();
+    };
+    void loadIntelligence();
+    const timer = window.setInterval(refreshWhenVisible, 5 * 60 * 1000);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    window.addEventListener("focus", refreshWhenVisible);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      window.removeEventListener("focus", refreshWhenVisible);
+    };
   }, []);
   useEffect(() => { document.title = active === "Overview" ? "FinPilot AI — Financial Intelligence" : `${active} | FinPilot AI`; }, [active]);
 
