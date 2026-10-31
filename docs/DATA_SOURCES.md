@@ -8,6 +8,7 @@ This document records the initial public-source integrations. Provider availabil
 |---|---|---|---|
 | Indian macroeconomics | RBI Database on Indian Economy (DBIE) | Public read-only JSON API, no key | Periodic dataset loads, not a live market feed. Tables have different frequencies and units. |
 | Global macroeconomics | World Bank Indicators API | Public API | Indicator-specific; many observations are annual or quarterly and may be revised. |
+| Official Indian updates | RBI RSS (press releases and notifications), PIB press-release RSS | Public RSS feeds | Original government/regulator releases; the feed is an index, and consequential claims should be checked in the linked document. |
 | Global news discovery | GDELT DOC | Public API | Discovery/coverage aggregation. Not a truth-verification service and not a substitute for primary documents. |
 | US listed-company filings | SEC EDGAR submissions API | Public JSON API; descriptive User-Agent required | Filing updates are disseminated through SEC systems; respect SEC fair-access rules. |
 
@@ -35,6 +36,9 @@ GDELT is only the discovery connector in Phase 2. Do not show an aggregated head
 
 ## Official source directory
 
+- RBI press releases RSS: https://www.rbi.org.in/pressreleases_rss.xml
+- RBI notifications RSS: https://www.rbi.org.in/notifications_rss.xml
+- PIB press releases RSS: https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=1
 - RBI DBIE: https://dev.dbie.rbihub.in/docs/using-the-site
 - NSE data products: https://www.nseindia.com/static/market-data/real-time-data-subscription
 - BSE market data: https://marketdata.bseindia.com/
