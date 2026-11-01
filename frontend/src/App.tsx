@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import {
   Activity, ArrowUpRight, Bell, BookOpen, BriefcaseBusiness,
   CalendarDays, ChevronDown, CircleHelp, Compass, Globe2, Landmark, LayoutDashboard,
   Menu, Newspaper, Search, ShieldCheck, Sparkles, TrendingUp,
   Wallet, X
 } from "lucide-react";
-import {
-  Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis
-} from "recharts";
 import Workspace from "./Workspace";
+import type { MacroPoint } from "./MacroChart";
+import { money } from "./lib/finance";
+import { sanitizeNewsItems, type NewsItem } from "./lib/news";
+import { loadHoldings } from "./lib/storage";
+
+const MacroChart = lazy(() => import("./MacroChart"));
 
 type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Portfolio" | "Learning Centre" | "Career & Income";
 const navItems: { label: Section; icon: typeof LayoutDashboard }[] = [
@@ -22,8 +25,6 @@ const navItems: { label: Section; icon: typeof LayoutDashboard }[] = [
   { label: "Career & Income", icon: BriefcaseBusiness }
 ];
 
-type MacroPoint = { date: string; value: number };
-type NewsItem = { title: string; url: string; domain: string; seen_at: string; source_country: string; source?: string; source_type?: string; published_at?: string | null };
 type StatusPayload = {
   retrieved_at: string;
   refresh_interval: string;
@@ -92,7 +93,7 @@ function App() {
         }
         if (newsResult.status === "fulfilled" && newsResult.value.ok) {
           const news = await newsResult.value.json();
-          setNewsItems(news.articles || []);
+          setNewsItems(sanitizeNewsItems(news.articles));
           newsLoaded = true;
           successes += 1;
         }
@@ -123,6 +124,8 @@ function App() {
     const hour = new Date().getHours();
     return hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   }, []);
+  const recordedAssets = useMemo(() => loadHoldings(), [active]);
+  const recordedTotal = recordedAssets.reduce((sum, item) => sum + item.amount, 0);
   const filteredMarkets = markets.filter(m => (m.name + m.area).toLowerCase().includes(query.toLowerCase()));
 
   return <div className="app-shell">
@@ -154,7 +157,7 @@ function App() {
         {active === "Overview" && <>
         <section className="stat-grid">
           <StatCard icon={<Wallet/>} label="Investable capital" value="₹0.00" hint="Starting point · no pressure to invest" tone="blue"/>
-          <StatCard icon={<TrendingUp/>} label="Portfolio value" value="Not connected" hint="Add assets when you have them" tone="violet"/>
+          <StatCard icon={<TrendingUp/>} label="Recorded assets" value={recordedAssets.length ? money(recordedTotal) : "None added"} hint={recordedAssets.length ? recordedAssets.length + (recordedAssets.length === 1 ? " entry" : " entries") + " · your own notes, not verified" : "Add assets in Portfolio when you have them"} tone="violet"/>
           <StatCard icon={<Globe2/>} label="Market tools" value="Multi-asset" hint="Charts · heatmaps · calendar" tone="cyan"/>
           <StatCard icon={<ShieldCheck/>} label="Risk posture" value="Capital first" hint="No leverage · no auto-trading" tone="green"/>
         </section>
@@ -163,7 +166,7 @@ function App() {
           <div className="panel market-panel">
             <div className="panel-heading"><div><div className="eyebrow">MARKET PULSE</div><h2>India economic snapshot</h2></div><button className="subtle-button" onClick={() => setActive("Markets")}>Explore markets <ArrowUpRight size={14}/></button></div>
             <div className="chart-legend"><span><i className="legend-india"/> India GDP · current US$</span><em>{providerStatus?.india_macro.provider || "World Bank"} · annual observations</em></div>
-            <div className="chart-wrap">{macroSeries.length ? <ResponsiveContainer width="100%" height="100%"><AreaChart data={macroSeries} margin={{top:12,right:4,left:-20,bottom:0}}><defs><linearGradient id="macro" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#8490ff" stopOpacity={0.28}/><stop offset="100%" stopColor="#8490ff" stopOpacity={0}/></linearGradient></defs><CartesianGrid stroke="#222b40" vertical={false}/><XAxis dataKey="date" tick={{fill:"#77839c",fontSize:10}} axisLine={false} tickLine={false}/><YAxis tick={{fill:"#77839c",fontSize:10}} axisLine={false} tickLine={false} tickFormatter={(v:number) => (v/1e12).toFixed(1)+"T"}/><Tooltip formatter={(v) => "$"+(Number(v)/1e12).toFixed(2)+" trillion"} contentStyle={{background:"#111a2c",border:"1px solid #2b3852",borderRadius:12,color:"#fff"}}/><Area type="monotone" dataKey="value" name="GDP" stroke="#8490ff" strokeWidth={2.5} fill="url(#macro)"/></AreaChart></ResponsiveContainer> : <div className="empty-data">{apiState === "offline" ? "Waiting for the scheduled public-data snapshot." : "Loading World Bank observations…"}</div>}</div>
+            <div className="chart-wrap">{macroSeries.length ? <Suspense fallback={<div className="empty-data">Loading chart…</div>}><MacroChart data={macroSeries}/></Suspense> : <div className="empty-data">{apiState === "offline" ? "Waiting for the scheduled public-data snapshot." : "Loading World Bank observations…"}</div>}</div>
             <div className="market-strip">{filteredMarkets.map(m => <div className="market-mini" key={m.name}><div><b>{m.name}</b><span>{m.area}</span></div><div className="market-value">{m.value}<small>{m.change}</small></div></div>)}</div>
           </div>
 

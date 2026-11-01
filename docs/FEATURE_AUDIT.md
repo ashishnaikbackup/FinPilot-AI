@@ -95,3 +95,20 @@ The widgets obtain data from TradingView and render independently in the browser
 6. **Career intelligence:** connect verified recruitment sources with closing dates, age/category/qualification/location criteria and source links; do not infer eligibility from incomplete notices.
 
 These remaining items cannot honestly be marked complete without external providers, permissions, deployment infrastructure or user-approved costs. The current release remains usable as a free-first research and education workspace.
+
+## Independent audit and hardening — 1 November 2026
+
+Tested at base commit `d5894e3` plus the hardening branch `claude/audit-hardening`.
+
+| Check | Result |
+|---|---|
+| `tsc -b` | Pass |
+| Frontend unit/UI tests (`npm test`, vitest) | 51 passed |
+| Production build | Pass (chart code split into a lazy chunk) |
+| Data-script tests (`unittest`) | 17 passed |
+| Backend tests (`pytest`) | 4 passed |
+| `npm audit --omit=dev` | 0 vulnerabilities |
+
+Changes: financial maths moved into tested pure modules (`frontend/src/lib/`); backup import validation and safe localStorage handling; https-only news links; RSS parser rejects DOCTYPE/entity-expansion and look-alike domains; CI now runs frontend tests, uses `npm ci`, read-only token permissions and job timeouts (supersedes PR #13); Overview shows recorded assets instead of "Not connected".
+
+Not tested: real-device mobile layouts, TradingView embeds, live GitHub Pages after this branch merges. Open dependency PRs #1–#12 were not merged; review each against CI after this branch lands.

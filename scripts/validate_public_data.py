@@ -2,11 +2,13 @@
 """Validate public snapshots before a GitHub Pages deployment."""
 import json
 import math
+import os
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
-DATA = Path(__file__).resolve().parents[1] / "frontend" / "public" / "data"
+# FINPILOT_DATA_DIR lets tests validate fixture snapshots; production uses the default.
+DATA = Path(os.environ.get("FINPILOT_DATA_DIR") or Path(__file__).resolve().parents[1] / "frontend" / "public" / "data")
 
 
 def load(name):
