@@ -8,3 +8,5 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .DS_Store
+tsconfig.tsbuildinfo
+*.tsbuildinfo

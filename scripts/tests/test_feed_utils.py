@@ -40,6 +40,27 @@ class FeedParserTests(unittest.TestCase):
         items = parse_feed(xml, "SEBI", ["sebi.gov.in"], "India", "2026-10-31T10:05:00+00:00", limit=1)
         self.assertEqual(len(items), 1)
 
+    def test_doctype_and_entity_declarations_are_rejected(self):
+        xml = b"""<?xml version="1.0"?>
+        <!DOCTYPE rss [<!ENTITY a "aaaaaaaaaa"><!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;">]>
+        <rss><channel><item><title>&b;</title><link>https://www.rbi.org.in/1</link></item></channel></rss>"""
+        with self.assertRaises(ValueError):
+            parse_feed(xml, "RBI", ["rbi.org.in"], "India", "2026-10-31T10:05:00+00:00")
+
+    def test_doctype_is_rejected_in_utf16_feeds_too(self):
+        xml = '<?xml version="1.0" encoding="utf-16"?><!DOCTYPE rss [<!ENTITY a "x">]><rss><channel/></rss>'.encode("utf-16")
+        with self.assertRaises(ValueError):
+            parse_feed(xml, "RBI", ["rbi.org.in"], "India", "2026-10-31T10:05:00+00:00")
+
+    def test_lookalike_and_subdomain_spoofing_is_rejected(self):
+        xml = b"""<rss><channel>
+          <item><title>Spoof</title><link>https://rbi.org.in.evil.example/1</link></item>
+          <item><title>Spoof2</title><link>https://evilrbi.org.in/1</link></item>
+          <item><title>Real subdomain</title><link>https://opportunities.rbi.org.in/1</link></item>
+        </channel></rss>"""
+        items = parse_feed(xml, "RBI", ["rbi.org.in"], "India", "2026-10-31T10:05:00+00:00")
+        self.assertEqual([i["title"] for i in items], ["Real subdomain"])
+
 
 if __name__ == "__main__":
     unittest.main()

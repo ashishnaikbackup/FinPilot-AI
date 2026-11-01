@@ -1,9 +1,27 @@
 """Safe parser for public RSS/Atom source feeds."""
 import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
+from xml.parsers import expat
+
+
+def reject_dtd(xml_content):
+    """Refuse feeds that declare a DOCTYPE/DTD.
+
+    Legitimate RSS/Atom feeds never need one, and DTD/entity declarations are the
+    mechanism behind entity-expansion attacks on XML parsers. Works for every
+    encoding because the check is done by expat itself, before ElementTree runs.
+    """
+    parser = expat.ParserCreate()
+
+    def forbid(*_args):
+        raise ValueError("Feed rejected: DOCTYPE declarations are not allowed")
+
+    parser.StartDoctypeDeclHandler = forbid
+    parser.Parse(xml_content, True)
 
 
 def parse_feed(xml_content, provider, allowed_domains, country, retrieved_at, limit=8):
+    reject_dtd(xml_content)
     root = ET.fromstring(xml_content)
     items = root.findall(".//item")
     if not items:

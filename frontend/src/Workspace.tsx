@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, Calculator, ShieldCheck, Wallet, BriefcaseBusiness, ExternalLink } from "lucide-react";
+import { DEBT_OK, debtPayoff, emergencyFund, goalPlan, money, paperPnl, parseAmount, price, sipProjection } from "./lib/finance";
+import { clusterNewsEvents, safeHttpsUrl, type NewsItem } from "./lib/news";
+import { answerMentor } from "./lib/mentor";
+import { HOLDINGS_KEY, MAX_HOLDINGS, MAX_PAPER_POSITIONS, PAPER_KEY, RESEARCH_KEY, downloadJson, hydrateHoldings, hydratePaperPositions, nextId, parseHoldingsBackup, readStored, writeStored, type Holding, type PaperPosition } from "./lib/storage";
 
 type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Portfolio" | "Learning Centre" | "Career & Income";
-type NewsItem = { title: string; url: string; domain?: string; seen_at?: string; source_country?: string; source?: string; source_type?: string; published_at?: string | null };
 type MacroObservation = { country_code: string; country: string; indicator_code: string; indicator: string; date: string; value: number | null; unit?: string };
 type ResearchCase = { id: number; name: string; type: string; horizon: string; valuation: string; liquidity: string; source: string; sourceDate: string; bull: string; base: string; bear: string; costs: string; risks: string; savedAt: string };
-type PaperPosition = { id: number; symbol: string; quantity: number; entryPrice: number; markPrice: number; fees: number; updatedAt: string };
 type ProviderStatus = { global_news?: { status?: string; error?: string | null; official_primary_source_count?: number; discovery_index_count?: number; discovery_status?: string; discovery_error?: string | null; official_feeds?: {provider:string;status:string;items?:number;error?:string}[] } };
 
 const lessons = [
@@ -30,8 +32,16 @@ const careerLinks = [
   ["UPSC", "Central civil services and specialist recruitment", "https://upsc.gov.in/"]
 ];
 
-function money(value: number) {
-  return Number.isFinite(value) ? new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(value) : "—";
+/** Number field that commits on blur/Enter, so clearing or retyping never silently saves a 0 mark. */
+function MarkInput({ value, label, onCommit }: { value: number; label: string; onCommit: (value: number) => void }) {
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => { setDraft(String(value)); }, [value]);
+  function commit() {
+    const n = Number(draft);
+    if (draft.trim() === "" || !Number.isFinite(n) || n < 0) { setDraft(String(value)); return; }
+    if (n !== value) onCommit(n);
+  }
+  return <label>{label}<input type="number" min="0" step="any" value={draft} onChange={e => setDraft(e.target.value)} onBlur={commit} onKeyDown={e => { if (e.key === "Enter") commit(); }} /></label>;
 }
 
 const widgetScriptPromises = new Map<string, Promise<void>>();
@@ -102,62 +112,7 @@ function TradingViewEmbed({ tag, script, attributes, height = 420, label }: {
 }
 
 function isHttpsUrl(value: string) {
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === "https:" && Boolean(parsed.hostname);
-  } catch {
-    return false;
-  }
-}
-
-type EventCluster = {
-  id: string;
-  title: string;
-  items: NewsItem[];
-  publishers: string[];
-  officialCount: number;
-  topic: string;
-  watchFor: string;
-};
-
-const EVENT_STOP_WORDS = new Set(["about","after","amid","and","are","bank","banks","from","have","into","its","new","over","says","the","their","this","with","will","india","global","update","updates"]);
-
-function eventTopic(text: string): { topic: string; watchFor: string } {
-  const value = text.toLowerCase();
-  if (/(rbi|reserve bank|interest rate|monetary policy|repo rate|inflation)/.test(value)) return { topic: "Central banks & inflation", watchFor: "Policy rates, borrowing costs, bond yields and currency expectations" };
-  if (/(sebi|nse|bse|stock exchange|market regulator|securities)/.test(value)) return { topic: "Markets & regulation", watchFor: "Disclosure obligations, market access, liquidity and investor protection" };
-  if (/(budget|tax|gst|fiscal|ministry of finance|government spending)/.test(value)) return { topic: "Fiscal policy & taxation", watchFor: "Household costs, company margins, government borrowing and sector exposure" };
-  if (/(oil|crude|energy|gas|opec|commodity)/.test(value)) return { topic: "Energy & commodities", watchFor: "Input costs, inflation, trade balances and energy-sensitive sectors" };
-  if (/(trade|tariff|sanction|geopolit|war|conflict|border)/.test(value)) return { topic: "Trade & geopolitics", watchFor: "Supply chains, currencies, commodity routes and policy uncertainty" };
-  if (/(bank|lender|credit|loan|deposit|financial stability)/.test(value)) return { topic: "Banking & credit", watchFor: "Funding costs, credit availability, asset quality and depositor risk" };
-  if (/(company|corporate|earnings|profit|revenue|merger|acquisition|ipo|listing)/.test(value)) return { topic: "Companies & corporate actions", watchFor: "Issuer filings, earnings quality, valuation, dilution and execution risk" };
-  return { topic: "General economic & policy", watchFor: "Check the primary document and identify which sectors or households are directly affected" };
-}
-
-function clusterNewsEvents(items: NewsItem[]): EventCluster[] {
-  const clusters: EventCluster[] = [];
-  for (const item of items) {
-    const tokens = new Set((item.title.toLowerCase().match(/[a-z0-9]{4,}/g) || []).filter(token => !EVENT_STOP_WORDS.has(token)));
-    let best: EventCluster | undefined;
-    let bestScore = 0;
-    for (const cluster of clusters) {
-      const first = cluster.title.toLowerCase().match(/[a-z0-9]{4,}/g) || [];
-      const base = new Set(first.filter(token => !EVENT_STOP_WORDS.has(token)));
-      const overlap = [...tokens].filter(token => base.has(token)).length;
-      const score = overlap / Math.max(1, Math.min(tokens.size, base.size));
-      if (overlap >= 2 && score > bestScore && score >= 0.5) { best = cluster; bestScore = score; }
-    }
-    if (!best) {
-      const topic = eventTopic(item.title);
-      best = { id: item.url, title: item.title, items: [], publishers: [], officialCount: 0, ...topic };
-      clusters.push(best);
-    }
-    best.items.push(item);
-    const publisher = (item.domain || new URL(item.url).hostname).replace(/^www\\./, "").toLowerCase();
-    if (!best.publishers.includes(publisher)) best.publishers.push(publisher);
-    if (item.source_type === "official_primary_source") best.officialCount += 1;
-  }
-  return clusters.sort((a,b) => b.items.length - a.items.length || b.officialCount - a.officialCount).slice(0, 12);
+  return safeHttpsUrl(value) !== null;
 }
 
 export default function Workspace({ active, query, newsItems = [], providerStatus }: { active: Section; query: string; newsItems?: NewsItem[]; providerStatus?: ProviderStatus | null }) {
@@ -177,13 +132,11 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [debtBalance, setDebtBalance] = useState("100000");
   const [debtRate, setDebtRate] = useState("14");
   const [debtPayment, setDebtPayment] = useState("5000");
-  const [holdings, setHoldings] = useState<{ name: string; amount: number; category: string }[]>(() => {
-    try { const parsed = JSON.parse(localStorage.getItem("finpilot-holdings") || "[]"); return Array.isArray(parsed) ? parsed.filter((item: any) => item && typeof item.name === "string" && Number.isFinite(Number(item.amount)) && Number(item.amount) >= 0).map((item: any) => ({ name: item.name, amount: Number(item.amount), category: typeof item.category === "string" ? item.category : "Other" })) : []; } catch { return []; }
-  });
+  const [holdings, setHoldings] = useState<Holding[]>(() => hydrateHoldings(readStored(HOLDINGS_KEY)));
   const [assetName, setAssetName] = useState("");
   const [assetAmount, setAssetAmount] = useState("");
   const [assetCategory, setAssetCategory] = useState("Cash & deposits");
-  const [paperPositions, setPaperPositions] = useState<PaperPosition[]>(() => { try { const value = JSON.parse(localStorage.getItem("finpilot-paper-positions") || "[]"); return Array.isArray(value) ? value.filter((p: any) => p && typeof p.symbol === "string" && Number(p.quantity) > 0 && Number(p.entryPrice) > 0 && Number(p.markPrice) >= 0).map((p: any) => ({ id: Number(p.id) || Date.now(), symbol: p.symbol.slice(0,40), quantity: Number(p.quantity), entryPrice: Number(p.entryPrice), markPrice: Number(p.markPrice), fees: Math.max(0,Number(p.fees)||0), updatedAt: typeof p.updatedAt === "string" ? p.updatedAt : "" })) : []; } catch { return []; } });
+  const [paperPositions, setPaperPositions] = useState<PaperPosition[]>(() => hydratePaperPositions(readStored(PAPER_KEY)));
   const [paperSymbol, setPaperSymbol] = useState("");
   const [paperQuantity, setPaperQuantity] = useState("1");
   const [paperEntry, setPaperEntry] = useState("");
@@ -208,7 +161,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const [candidateBase, setCandidateBase] = useState("");
   const [candidateBear, setCandidateBear] = useState("");
   const [candidateCosts, setCandidateCosts] = useState("");
-  const [researchCases, setResearchCases] = useState<ResearchCase[]>(() => { try { const value = JSON.parse(localStorage.getItem("finpilot-research-cases") || "[]"); return Array.isArray(value) ? value.filter((item: any) => item && typeof item.name === "string" && typeof item.source === "string") : []; } catch { return []; } });
+  const [researchCases, setResearchCases] = useState<ResearchCase[]>(() => { try { const value: unknown = JSON.parse(readStored(RESEARCH_KEY) || "[]"); const seen = new Set<number>(); return Array.isArray(value) ? value.filter((item): item is ResearchCase => !!item && typeof item.name === "string" && typeof item.source === "string").map(item => ({ ...item, id: Number.isInteger(item.id) && !seen.has(item.id) ? (seen.add(item.id), item.id) : nextId(seen) })) : []; } catch { return []; } });
   const [researchSaved, setResearchSaved] = useState(false);
   const [globalMacro, setGlobalMacro] = useState<MacroObservation[]>([]);
   const [globalMacroStatus, setGlobalMacroStatus] = useState<"loading" | "available" | "stale" | "unavailable">("loading");
@@ -271,72 +224,18 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   const holdingTotal = holdings.reduce((sum, item) => sum + item.amount, 0);
   const topHoldingShare = holdingTotal > 0 ? Math.max(...holdings.map(item => item.amount)) / holdingTotal * 100 : 0;
   const categoryShares = Array.from(holdings.reduce((map, item) => map.set(item.category, (map.get(item.category) || 0) + item.amount), new Map<string, number>()).entries()).map(([category, amount]) => ({ category, amount, share: holdingTotal > 0 ? amount / holdingTotal * 100 : 0 })).sort((a,b) => b.share-a.share);
-  const goalProjection = useMemo(() => {
-    const target = Math.max(0, Number(goalTarget) || 0);
-    const current = Math.max(0, Number(goalCurrent) || 0);
-    const months = Math.min(600, Math.max(0, Number(goalYears) || 0) * 12);
-    const inflation = Math.min(30, Math.max(0, Number(goalInflation) || 0)) / 100;
-    const annualReturn = Math.min(30, Math.max(0, Number(goalReturn) || 0)) / 100;
-    const futureTarget = target * Math.pow(1 + inflation, months / 12);
-    const gapAtZero = Math.max(0, futureTarget - current);
-    const zeroReturnMonthly = months > 0 ? gapAtZero / months : 0;
-    const monthlyRate = Math.pow(1 + annualReturn, 1 / 12) - 1;
-    const futureCurrent = current * Math.pow(1 + monthlyRate, months);
-    const monthlyAtAssumption = months > 0 ? (monthlyRate === 0 ? Math.max(0, futureTarget - futureCurrent) / months : Math.max(0, futureTarget - futureCurrent) * monthlyRate / (Math.pow(1 + monthlyRate, months) - 1)) : 0;
-    return { futureTarget, zeroReturnMonthly, monthlyAtAssumption, months };
-  }, [goalTarget, goalCurrent, goalYears, goalInflation, goalReturn]);
-  const debtProjection = useMemo(() => {
-    let balance = Math.max(0, Number(debtBalance) || 0);
-    const payment = Math.max(0, Number(debtPayment) || 0);
-    const monthlyRate = Math.min(100, Math.max(0, Number(debtRate) || 0)) / 1200;
-    if (!balance) return { months: 0, interest: 0, totalPaid: 0, status: "No outstanding balance" };
-    if (!payment) return { months: 0, interest: 0, totalPaid: 0, status: "Enter a monthly payment" };
-    if (monthlyRate > 0 && payment <= balance * monthlyRate) return { months: 0, interest: 0, totalPaid: 0, status: "Payment does not cover monthly interest" };
-    let months = 0, interest = 0, totalPaid = 0;
-    while (balance > 0.01 && months < 1200) {
-      const charge = balance * monthlyRate;
-      const paid = Math.min(balance + charge, payment);
-      interest += charge;
-      totalPaid += paid;
-      balance = Math.max(0, balance + charge - paid);
-      months += 1;
-    }
-    return { months, interest, totalPaid, status: months >= 1200 ? "More than 100 years" : "Illustrative payoff estimate" };
-  }, [debtBalance, debtRate, debtPayment]);
+  const goalProjection = useMemo(() => goalPlan({ target: goalTarget, current: goalCurrent, years: goalYears, inflationPct: goalInflation, returnPct: goalReturn }), [goalTarget, goalCurrent, goalYears, goalInflation, goalReturn]);
+  const debtProjection = useMemo(() => debtPayoff(debtBalance, debtRate, debtPayment), [debtBalance, debtRate, debtPayment]);
   const allocation = holdings.reduce((map, item) => { map.set(item.category, (map.get(item.category) || 0) + item.amount); return map; }, new Map<string, number>());
   const mentorGuidance = mentorStage === "Studying / no regular income" ? "Prioritise completing your course, building employable skills and securing reliable income. Keep the investing contribution at zero if you have no surplus. Learn with simulations only." : mentorStage === "Income, but high-interest debt" ? "List every debt, interest rate, minimum payment and due date. Protect essentials, avoid new borrowing and compare repayment options. Do not take market risk to try to recover debt." : mentorStage === "Income, no emergency reserve" ? "Track essential monthly costs and build a cash reserve in an accessible, low-risk place. Choose a realistic monthly amount after debt payments and irregular costs." : mentorStage === "Stable income and emergency reserve" ? "Define goals and time horizons, then learn about diversified, low-cost products. Compare fees, tax, liquidity and downside risk before making any decision." : "Review allocation, concentration, fees, taxes and liquidity. Rebalance only against a written plan, not short-term headlines.";
   const mentorGoalGuidance: Record<string, string> = { "Build earning capacity": "Choose one employable skill track, build two demonstrable projects, apply consistently to verified internships or entry roles, and track applications weekly.", "Manage debt": "Write down each balance, effective interest rate, minimum payment and due date. Prioritise expensive debt while keeping essentials current; avoid borrowing to invest.", "Build emergency savings": "Estimate essential monthly costs, choose a realistic reserve horizon and build it gradually in an accessible, low-risk account.", "Learn investing": "Start with diversification, index construction, fund costs, tracking difference, volatility, liquidity and tax. Use paper examples before risking money.", "Review existing portfolio": "Record each holding, asset class, costs, tax impact, concentration and exit restrictions. Compare the current mix with your goals before changing it." };
-  const monthlySurplus = Number(monthlyIncome) - Number(monthlyExpenses);
-  const emergencyTarget = Math.max(0, Number(monthlyExpenses) || 0) * Number(emergencyMonths);
-  const emergencyGap = Math.max(0, emergencyTarget - Math.max(0, Number(currentReserve) || 0));
-  const projected = useMemo(() => {
-    const p = Math.min(100000000, Math.max(0, Number(sip) || 0));
-    const n = Math.min(60, Math.max(0, Number(years) || 0)) * 12;
-    const r = Math.min(50, Math.max(-50, Number(rate) || 0)) / 1200;
-    if (!n) return 0;
-    return r === 0 ? p * n : p * ((Math.pow(1 + r, n) - 1) / r);
-  }, [sip, years, rate]);
+  const { surplus: monthlySurplus, target: emergencyTarget, gap: emergencyGap } = emergencyFund(monthlyIncome, monthlyExpenses, emergencyMonths, currentReserve);
+  const sipResult = useMemo(() => sipProjection(parseAmount(sip), parseAmount(years), parseAmount(rate, -50, 50)), [sip, years, rate]);
 
   function sendMentorMessage() {
     const content = mentorDraft.trim();
     if (!content) return;
-    const q = content.toLowerCase();
-    let answer = "I can help with cash flow, emergency savings, debt, investing basics, Indian and global assets, IPO checks, risk, scams, taxes and career planning. Try asking about one of those topics. This is a rules-based learning guide, not a generative AI model or personalised investment advice.";
-    if (/\b(no money|zero|0|student|no income|unemployed|starting from|start investing)\b/.test(q)) answer = "If you currently have no investable surplus, do not force an SIP or borrow to invest. First focus on completing your studies, building employable skills, finding reliable income, tracking essential expenses and avoiding high-interest debt. Start an emergency reserve when income begins. You can learn markets with paper examples without risking money.";
-    else if (/\b(emergency|reserve|savings|cash buffer)\b/.test(q)) answer = "An emergency reserve is money kept accessible for essential expenses and unexpected events. Estimate essential monthly costs, choose a realistic target (often several months, adjusted to job stability and family responsibilities), and build it gradually in an appropriate low-risk, liquid account. Check deposit insurance, access rules and fees; do not put emergency money into volatile assets.";
-    else if (/\b(debt|loan|credit card|emi|borrow)\b/.test(q)) answer = "List each debt, outstanding balance, effective interest rate, minimum payment and due date. Keep essential bills current and prioritise expensive debt. Avoid taking new loans to invest or trying to recover losses through trading. Compare prepayment charges and maintain a small cash buffer.";
-    else if (/\b(sip|mutual fund|index fund|etf)\b/.test(q)) answer = "A SIP is a way to invest a fixed amount periodically; it is not an asset or a return guarantee. Before choosing a mutual fund or ETF, compare its benchmark, expense ratio, tracking difference, portfolio holdings, concentration, liquidity, exit load, tax treatment and risk. Equity funds can fall substantially. If you have no surplus or emergency reserve, keep the contribution at ₹0 for now.";
-    else if (/\b(fd|fixed deposit|t-bill|treasury bill|bond|g-sec|government securit)\b/.test(q)) answer = "An FD is a bank deposit with a stated interest rate and tenure, subject to the bank's terms and deposit-insurance limits. A T-bill is a short-term government security issued at a discount and redeemed at face value; longer government bonds can fluctuate in market price when yields change. Compare yield to maturity, tax, minimum investment, liquidity, reinvestment risk and early-exit rules. Verify current terms on official RBI/bank sources.";
-    else if (/\b(stock|share|equity|nifty|sensex|valuation)\b/.test(q)) answer = "A share represents ownership in a company. Research business quality, revenue and cash-flow durability, debt, governance, competitive position, valuation assumptions, sector risks and liquidity. Compare bull/base/bear scenarios and identify what evidence would disprove your thesis. A good company can still be a poor investment at an excessive price. This site does not currently provide licensed live quotes or buy/sell signals.";
-    else if (/\b(gold|silver|commodity)\b/.test(q)) answer = "Gold and silver can diversify some portfolios but prices can be volatile and they do not generate business cash flow. Compare the instrument (physical metal, ETF, fund or other route), spreads, making/storage costs, expense ratio, tracking difference, liquidity, tax and regulatory eligibility. Avoid treating recent price rises as a guarantee.";
-    else if (/\b(ipo|drhp|rhp|public issue)\b/.test(q)) answer = "For an IPO, read the latest DRHP/RHP and exchange/issuer notices. Check the business model, audited financials, debt, promoter and related-party disclosures, litigation, use of proceeds, dilution, valuation versus listed peers, anchor/institutional demand where disclosed, lock-ins and risk factors. Compare a bull/base/bear case. Subscription demand or grey-market premiums are not proof of value; verify dates and details from official sources.";
-    else if (/\b(crypto|bitcoin|digital asset)\b/.test(q)) answer = "Crypto assets can be extremely volatile and may involve custody, fraud, liquidity, platform, regulatory and tax risks. Do not borrow, use leverage or risk emergency money. Verify current Indian tax and legal treatment from official sources and understand that exchange availability does not equal regulatory protection. FinPilot does not connect to wallets or execute trades.";
-    else if (/\b(reit|invit|real estate|property)\b/.test(q)) answer = "Property and listed REITs/InvITs have different liquidity, leverage, valuation, cash-flow and concentration risks. For direct property, include stamp duty, registration, maintenance, vacancy, financing, title and exit costs. For listed trusts, review portfolio quality, occupancy, debt, distribution history, fees and market-price volatility. Do not compare headline rental yield with a risk-free deposit rate without adjusting for costs and risk.";
-    else if (/\b(global|international|us stock|foreign|overseas|dollar)\b/.test(q)) answer = "Cross-border investing adds currency, market-hours, custody, platform, tax, remittance and regulatory risks. For an India resident, verify current RBI/FEMA/LRS rules, tax reporting, permitted routes, fees and provider eligibility before transferring money. Use official RBI and tax sources; do not assume a foreign app or product is automatically accessible.";
-    else if (/\b(tax|capital gain|itr|income tax)\b/.test(q)) answer = "Tax depends on instrument type, holding period, transaction date, residency and current law. Keep contract notes, statements, dividend/interest records and expense details. Verify current rules on the Income Tax Department portal or consult a qualified tax professional. FinPilot's educational material is not tax advice.";
-    else if (/\b(job|career|internship|income|salary|goa|government|railway|bank exam)\b/.test(q)) answer = "Treat income growth as a core part of financial planning. Build demonstrable skills and projects, prepare a focused CV, apply consistently and verify vacancies, eligibility, age limits, fees and deadlines on official employer or recruitment portals. For Goa and India-wide roles, use NCS, NATS, Employment News, GPSC, Goa Government, RBI, SEBI, IBPS, RRB, SSC and UPSC official sites. Never pay an unofficial agent for a job.";
-    else if (/\b(scam|fraud|telegram|guaranteed|double money|tip|signal)\b/.test(q)) answer = "Red flags include guaranteed returns, urgency, secret strategies, unregistered advisers, pressure to move chats to Telegram/WhatsApp, requests for OTPs or remote access, and payments to personal accounts. Verify intermediaries and warnings on SEBI/RBI official sites. Never share passwords, OTPs, card details, private keys or screen access.";
-    else if (/\b(risk|diversif|portfolio|allocation|loss|crash)\b/.test(q)) answer = "Review risk at the whole-portfolio level: asset allocation, concentration, volatility, drawdowns, liquidity needs, time horizon, currency exposure, fees and taxes. Diversification can reduce some company-specific risk but cannot eliminate market losses. Write down a rebalancing rule in advance and avoid reacting to headlines.";
+    const answer = answerMentor(content);
     const reply = { role: "assistant" as const, content: answer };
     setMentorMessages(items => [...items, { role: "user" as const, content }, reply].slice(-12));
     setMentorDraft("");
@@ -345,7 +244,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   function saveResearchCase() {
     if (!researchComplete) return;
     const item: ResearchCase = {
-      id: Date.now(), name: candidateName.trim(), type: candidateType, horizon: candidateHorizon,
+      id: nextId(new Set(researchCases.map(item => item.id))), name: candidateName.trim(), type: candidateType, horizon: candidateHorizon,
       valuation: candidateValuation, liquidity: candidateLiquidity, source: candidateSource.trim(),
       sourceDate: candidateSourceDate, bull: candidateBull.trim(), base: candidateBase.trim(),
       bear: candidateBear.trim(), costs: candidateCosts.trim(), risks: candidateRisks.trim(),
@@ -353,86 +252,77 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     };
     const next = [item, ...researchCases].slice(0, 50);
     setResearchCases(next);
-    try { localStorage.setItem("finpilot-research-cases", JSON.stringify(next)); setResearchSaved(true); } catch { setResearchSaved(false); }
+    setResearchSaved(writeStored(RESEARCH_KEY, next));
   }
   function exportResearchCases() {
-    const payload = { exported_at: new Date().toISOString(), note: "User-created research notes. Not investment advice or recommendations.", cases: researchCases };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url; link.download = "finpilot-research-notes.json"; link.click();
-    URL.revokeObjectURL(url);
+    downloadJson("finpilot-research-notes.json", { exported_at: new Date().toISOString(), note: "User-created research notes. Not investment advice or recommendations.", cases: researchCases });
   }
   function removeResearchCase(id: number) {
     const next = researchCases.filter(item => item.id !== id);
     setResearchCases(next);
-    try { localStorage.setItem("finpilot-research-cases", JSON.stringify(next)); } catch { /* storage may be disabled */ }
+    writeStored(RESEARCH_KEY, next);
   }
 
   function savePaperPosition() {
-    const quantity = Number(paperQuantity), entryPrice = Number(paperEntry), markPrice = Number(paperMark), fees = Number(paperFees);
+    const quantity = Number(paperQuantity), entryPrice = Number(paperEntry), fees = Number(paperFees);
+    const markBlank = paperMark.trim() === "";
+    const markPrice = markBlank ? entryPrice : Number(paperMark);
     if (!paperSymbol.trim() || !Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(entryPrice) || entryPrice <= 0 || !Number.isFinite(markPrice) || markPrice < 0 || !Number.isFinite(fees) || fees < 0) {
       setPaperMessage("Enter a symbol, positive quantity and entry price, a non-negative manual mark price and fees.");
       return;
     }
-    const next = [...paperPositions, { id: Date.now(), symbol: paperSymbol.trim().toUpperCase().slice(0,40), quantity, entryPrice, markPrice, fees, updatedAt: new Date().toISOString() }].slice(-200);
+    if (paperPositions.length >= MAX_PAPER_POSITIONS) {
+      setPaperMessage("You have reached the limit of " + MAX_PAPER_POSITIONS + " paper positions. Remove one first.");
+      return;
+    }
+    const id = nextId(new Set(paperPositions.map(position => position.id)));
+    const next = [...paperPositions, { id, symbol: paperSymbol.trim().toUpperCase().slice(0, 40), quantity, entryPrice, markPrice, fees, updatedAt: new Date().toISOString() }];
     setPaperPositions(next);
-    try { localStorage.setItem("finpilot-paper-positions", JSON.stringify(next)); setPaperMessage("Paper position saved on this device."); } catch { setPaperMessage("Browser storage is unavailable. Export may not be possible."); }
+    const stored = writeStored(PAPER_KEY, next);
+    setPaperMessage((stored ? "Paper position saved on this device." : "Browser storage is unavailable, so this position will be lost on reload. Export may still work.") + (markBlank ? " No mark price was entered, so the entry price was used." : ""));
     setPaperSymbol(""); setPaperQuantity("1"); setPaperEntry(""); setPaperMark(""); setPaperFees("0");
   }
-  function updatePaperMark(id: number, value: string) {
-    const markPrice = Number(value);
+  function updatePaperMark(id: number, markPrice: number) {
     if (!Number.isFinite(markPrice) || markPrice < 0) return;
     const next = paperPositions.map(position => position.id === id ? { ...position, markPrice, updatedAt: new Date().toISOString() } : position);
     setPaperPositions(next);
-    try { localStorage.setItem("finpilot-paper-positions", JSON.stringify(next)); } catch { setPaperMessage("Could not save the updated mark to browser storage."); }
+    if (!writeStored(PAPER_KEY, next)) setPaperMessage("Could not save the updated mark to browser storage.");
   }
   function removePaperPosition(id: number) {
     const next = paperPositions.filter(position => position.id !== id);
     setPaperPositions(next);
-    try { localStorage.setItem("finpilot-paper-positions", JSON.stringify(next)); } catch { /* storage may be disabled */ }
+    writeStored(PAPER_KEY, next);
   }
   function exportPaperPositions() {
-    const payload = { exported_at: new Date().toISOString(), mode: "manual_price_paper_simulation_only", note: "No orders were placed. Prices are user-entered and are not live or verified.", positions: paperPositions };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a"); link.href = url; link.download = "finpilot-paper-positions.json"; link.click(); URL.revokeObjectURL(url);
+    downloadJson("finpilot-paper-positions.json", { exported_at: new Date().toISOString(), mode: "manual_price_paper_simulation_only", note: "No orders were placed. Prices are user-entered and are not live or verified.", positions: paperPositions });
   }
   function saveHolding() {
     if (!assetName.trim() || !(Number(assetAmount) > 0)) return;
-    const next = [...holdings, { name: assetName.trim(), amount: Number(assetAmount), category: assetCategory }];
+    if (holdings.length >= MAX_HOLDINGS) { setImportMessage("You have reached the limit of " + MAX_HOLDINGS + " asset entries. Remove one first."); return; }
+    const next = [...holdings, { name: assetName.trim().slice(0, 100), amount: Number(assetAmount), category: assetCategory }];
     setHoldings(next);
-    try { localStorage.setItem("finpilot-holdings", JSON.stringify(next)); } catch { /* storage may be disabled */ }
+    writeStored(HOLDINGS_KEY, next);
     setAssetName(""); setAssetAmount(""); setAssetCategory("Cash & deposits"); setSaved(true);
     window.setTimeout(() => setSaved(false), 2200);
   }
   function exportHoldings() {
-    const payload = { exported_at: new Date().toISOString(), note: "User-entered local asset notes; values are not verified.", holdings };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url; link.download = "finpilot-local-asset-notes.json"; link.click();
-    URL.revokeObjectURL(url);
+    downloadJson("finpilot-local-asset-notes.json", { exported_at: new Date().toISOString(), note: "User-entered local asset notes; values are not verified.", holdings });
   }
   async function importHoldingsFile(file?: File) {
     if (!file) return;
     try {
-      const parsed = JSON.parse(await file.text());
-      const incoming = Array.isArray(parsed) ? parsed : parsed?.holdings;
-      if (!Array.isArray(incoming)) throw new Error("This file does not contain an asset backup.");
-      const cleaned = incoming.filter((item: any) => item && typeof item.name === "string" && item.name.trim() && Number.isFinite(Number(item.amount)) && Number(item.amount) > 0 && typeof item.category === "string").map((item: any) => ({ name: item.name.trim().slice(0,100), amount: Number(item.amount), category: item.category.slice(0,60) }));
-      if (!cleaned.length) throw new Error("No valid asset entries were found.");
-      const next = [...holdings, ...cleaned].slice(0,200);
+      const { holdings: incoming, skipped, duplicates } = parseHoldingsBackup(await file.text(), holdings);
+      const next = [...holdings, ...incoming];
       setHoldings(next);
-      localStorage.setItem("finpilot-holdings", JSON.stringify(next));
-      setImportMessage("Imported " + Math.max(0, Math.min(cleaned.length, 200 - holdings.length)) + " valid entries into this browser.");
+      const stored = writeStored(HOLDINGS_KEY, next);
+      setImportMessage("Imported " + incoming.length + " new " + (incoming.length === 1 ? "entry" : "entries") + (duplicates ? ", skipped " + duplicates + " already present" : "") + (skipped ? ", ignored " + skipped + " invalid or over-limit" : "") + "." + (stored ? "" : " Browser storage is unavailable, so these entries will be lost on reload."));
     } catch (error) {
       setImportMessage(error instanceof Error ? error.message : "Could not import this file.");
     }
   }
   function clearHoldings() {
     setHoldings([]);
-    try { localStorage.removeItem("finpilot-holdings"); } catch { /* storage may be disabled */ }
+    try { localStorage.removeItem(HOLDINGS_KEY); } catch { /* storage may be disabled */ }
   }
   function removeHolding(index: number) {
     const next = holdings.filter((_, i) => i !== index);
@@ -519,7 +409,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
         </div>
       </div>
     </div>
-    <div className="panel workspace-panel"><h2>Saved research notes</h2><p>{researchCases.length} of 50 locally saved research notes. These are your own research records, not recommendations.</p><div className="resource-links"><button className="text-action" onClick={exportResearchCases} disabled={!researchCases.length}>Export research backup JSON <ArrowUpRight size={13}/></button></div>{researchCases.length ? <div className="holding-list">{researchCases.map(item=><div className="holding-row" key={item.id}><span><b>{item.name}</b><small> · {item.type} · {item.horizon} · saved {new Date(item.savedAt).toLocaleDateString()}</small><br/><a href={item.source} target="_blank" rel="noreferrer">Primary source <ExternalLink size={11}/></a></span><button onClick={()=>removeResearchCase(item.id)} aria-label={"Delete research note "+item.name}>Delete</button></div>)}</div> : <div className="empty-data">No saved notes yet. Complete the evidence checklist and save a candidate review.</div>}<p className="calc-foot">Local browser storage is not a secure vault. Do not store private account data, passwords or confidential documents here.</p></div>
+    <div className="panel workspace-panel"><h2>Saved research notes</h2><p>{researchCases.length} of 50 locally saved research notes. These are your own research records, not recommendations.</p><div className="resource-links"><button className="text-action" onClick={exportResearchCases} disabled={!researchCases.length}>Export research backup JSON <ArrowUpRight size={13}/></button></div>{researchCases.length ? <div className="holding-list">{researchCases.map(item=><div className="holding-row" key={item.id}><span><b>{item.name}</b><small> · {item.type} · {item.horizon} · saved {new Date(item.savedAt).toLocaleDateString()}</small><br/>{safeHttpsUrl(item.source) ? <a href={safeHttpsUrl(item.source) as string} target="_blank" rel="noreferrer">Primary source <ExternalLink size={11}/></a> : <span>Source link unavailable</span>}</span><button onClick={()=>removeResearchCase(item.id)} aria-label={"Delete research note "+item.name}>Delete</button></div>)}</div> : <div className="empty-data">No saved notes yet. Complete the evidence checklist and save a candidate review.</div>}<p className="calc-foot">Local browser storage is not a secure vault. Do not store private account data, passwords or confidential documents here.</p></div>
     <div className="panel workspace-panel"><h2>Coverage checklist by asset class</h2><div className="checklist-grid">{[["IPO / public issue","DRHP/RHP, price band, dates, use of proceeds, promoter holdings, valuation, risks and official registrar."],["Mutual funds / ETFs","SID/KIM, expense ratio, benchmark, tracking difference, holdings, overlap and exit load."],["Bonds / T-bills / deposits","Issuer, yield-to-maturity, duration, credit risk, liquidity, tax and reinvestment risk."],["Gold / REITs / InvITs","Instrument structure, costs, cash flows, concentration, valuation and liquidity."],["International assets","FEMA/LRS route, broker eligibility, FX costs, withholding tax, local tax and custody."],["Digital assets","Regulatory, custody, counterparty, fraud, volatility and tax risks; no trading enabled."]].map(([title,desc])=><div className="check-tile" key={title}><ShieldCheck size={17}/><div><b>{title}</b><p>{desc}</p></div></div>)}</div></div>
     <div className="panel workspace-panel"><h2>Decision standard</h2><p>Every future research report should show bull/base/bear scenarios, dated evidence, valuation assumptions, fees, taxes, liquidity, downside scenarios, counterarguments and an “insufficient evidence” outcome when needed.</p></div>
   </div>;
@@ -544,11 +434,11 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     <div className="panel workspace-panel"><div className="eyebrow">GUIDED PLANNER · RULES-BASED, NOT A CONNECTED AI MODEL</div><h2>Choose your current financial stage</h2><div className="form-row"><label>Where are you now?<select value={mentorStage} onChange={e=>setMentorStage(e.target.value)}><option>Studying / no regular income</option><option>Income, but high-interest debt</option><option>Income, no emergency reserve</option><option>Stable income and emergency reserve</option><option>Already investing</option></select></label><label>Main goal<select value={mentorGoal} onChange={e=>setMentorGoal(e.target.value)}><option>Build earning capacity</option><option>Manage debt</option><option>Build emergency savings</option><option>Learn investing</option><option>Review existing portfolio</option></select></label></div><div className="review-summary"><b>Your next-step checklist</b><span>{mentorGuidance}</span><span>Selected goal: {mentorGoal}</span><span>{mentorGoalGuidance[mentorGoal]}</span></div><p className="calc-foot">This is a transparent rules-based guide, not personalised financial advice or a generative AI response. It does not need an account or send your inputs anywhere.</p></div>
     <div className="panel workspace-panel"><div className="eyebrow">FINPILOT LEARNING ASSISTANT · GITHUB PAGES READY</div><h2>Ask a financial learning question</h2><p>This guided assistant runs entirely in your browser. It uses reviewed topic rules and educational explanations—no Ollama, local setup, API key, external AI provider or personal-data upload. It is not a generative AI model and cannot verify live market facts.</p>
       <div className="mentor-connection"><span className="connection-dot"></span><b>Ready · browser-based learning assistant</b><small>No account or server connection required</small></div>
-      <div className="mentor-chat-window">{mentorMessages.length ? mentorMessages.map((message,index)=><div className={"mentor-message "+message.role} key={index}><b>{message.role === "user" ? "You" : "FinPilot · learning guide"}</b><p>{message.content}</p></div>) : <div className="empty-data">Try: “I have ₹0 to invest. What should I do first?” or “Explain FD vs T-bill.”</div>}</div>
+      <div className="mentor-chat-window">{mentorMessages.length ? mentorMessages.map((message,index)=><div className={"mentor-message "+message.role} key={index}><b>{message.role === "user" ? "You" : "FinPilot · learning guide"}</b>{message.content.split("\n\n").map((part,i)=><p key={i}>{part}</p>)}</div>) : <div className="empty-data">Try: “I have ₹0 to invest. What should I do first?” or “Explain FD vs T-bill.”</div>}</div>
       <div className="resource-links mentor-suggestions" aria-label="Suggested questions">
         {["Build a starting plan with ₹0", "Explain SIP vs FD", "How do I research an IPO?", "How can I check portfolio risk?", "Suggest finance career paths"].map(prompt => <button key={prompt} type="button" className="text-action" onClick={() => setMentorDraft(prompt)}>{prompt}</button>)}
       </div>
-      <textarea rows={3} value={mentorDraft} onChange={e=>setMentorDraft(e.target.value)} placeholder="Ask about savings, debt, SIPs, stocks, bonds, gold, IPOs, risk, tax or careers…" aria-label="Ask FinPilot learning assistant"/>
+      <textarea rows={3} maxLength={500} value={mentorDraft} onChange={e=>setMentorDraft(e.target.value)} placeholder="Ask about savings, debt, SIPs, stocks, bonds, gold, IPOs, risk, tax or careers…" aria-label="Ask FinPilot learning assistant"/>
       <div className="resource-links"><button onClick={sendMentorMessage} disabled={!mentorDraft.trim()}>Ask FinPilot <ArrowUpRight size={13}/></button><button className="text-action" onClick={()=>setMentorMessages([])}>Clear chat</button></div>
       <p className="calc-foot">Answers are selected from built-in educational rules, not generated by an LLM. They are general information, not personalised investment, legal or tax advice. Check current facts with official sources before acting.</p>
     </div>
@@ -557,19 +447,19 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
 
   if (active === "Portfolio") return <div className="workspace-stack">
     <div className="panel workspace-panel"><div className="eyebrow">PAPER LAB · NO BROKER CONNECTION</div><h2>Manual-price paper portfolio</h2><p>Practise tracking hypothetical positions without placing orders. You enter both entry and current mark prices manually; FinPilot does not fetch live quotes, calculate tax, or connect to a broker. Results exclude slippage and may not match executable prices.</p>
-      <div className="form-row"><input value={paperSymbol} onChange={e=>setPaperSymbol(e.target.value)} placeholder="Symbol / asset label"/><input type="number" min="0.000001" step="any" value={paperQuantity} onChange={e=>setPaperQuantity(e.target.value)} placeholder="Quantity"/><input type="number" min="0.01" step="any" value={paperEntry} onChange={e=>setPaperEntry(e.target.value)} placeholder="Entry price ₹"/><input type="number" min="0" step="any" value={paperMark} onChange={e=>setPaperMark(e.target.value)} placeholder="Manual mark ₹"/><input type="number" min="0" step="any" value={paperFees} onChange={e=>setPaperFees(e.target.value)} placeholder="Estimated fees ₹"/><button onClick={savePaperPosition}>Add paper position</button></div>
+      <div className="form-row"><input value={paperSymbol} onChange={e=>setPaperSymbol(e.target.value)} placeholder="Symbol / asset label" aria-label="Symbol or asset label"/><input type="number" min="0.000001" step="any" value={paperQuantity} onChange={e=>setPaperQuantity(e.target.value)} placeholder="Quantity" aria-label="Quantity"/><input type="number" min="0.01" step="any" value={paperEntry} onChange={e=>setPaperEntry(e.target.value)} placeholder="Entry price ₹" aria-label="Entry price in rupees"/><input type="number" min="0" step="any" value={paperMark} onChange={e=>setPaperMark(e.target.value)} placeholder="Manual mark ₹ (blank = entry)" aria-label="Manual mark price in rupees; blank uses the entry price"/><input type="number" min="0" step="any" value={paperFees} onChange={e=>setPaperFees(e.target.value)} placeholder="Estimated fees ₹" aria-label="Estimated fees in rupees"/><button type="button" onClick={savePaperPosition}>Add paper position</button></div>
       {paperMessage && <p className="calc-foot" role="status">{paperMessage}</p>}
-      {paperPositions.length ? <div className="holding-list">{paperPositions.map(position=>{const cost=position.quantity*position.entryPrice;const value=position.quantity*position.markPrice;const pnl=value-cost-position.fees;const pct=cost>0?pnl/cost*100:0;return <div className="research-news-item" key={position.id}><div className="news-meta"><b>{position.symbol}</b><small>{position.quantity} units · Updated {position.updatedAt ? new Date(position.updatedAt).toLocaleString() : "time not recorded"}</small></div><div className="calc-result"><span>Unrealised P/L after entered fees</span><b>{money(pnl)} ({pct.toFixed(2)}%)</b></div><div className="form-row"><label>Update manual mark price ₹<input type="number" min="0" step="any" value={String(position.markPrice)} onChange={e=>updatePaperMark(position.id,e.target.value)}/></label><span className="calc-foot">Entry {money(position.entryPrice)} · Mark {money(position.markPrice)} · Fees {money(position.fees)}</span><button className="text-action" onClick={()=>removePaperPosition(position.id)}>Remove paper position</button></div></div>;})}</div> : <div className="empty-data">No paper positions yet. Start with hypothetical values; no money is used.</div>}
+      {paperPositions.length ? <div className="holding-list">{paperPositions.map(position=>{const {pnl,pct}=paperPnl(position);return <div className="research-news-item" key={position.id}><div className="news-meta"><b>{position.symbol}</b><small>{position.quantity} units · Updated {position.updatedAt ? new Date(position.updatedAt).toLocaleString() : "time not recorded"}</small></div><div className="calc-result"><span>Unrealised P/L after entered fees</span><b>{price(pnl)} ({pct.toFixed(2)}% of entry cost)</b></div><div className="form-row"><MarkInput value={position.markPrice} label={"Update manual mark price ₹ for "+position.symbol} onCommit={value=>updatePaperMark(position.id,value)}/><span className="calc-foot">Entry {price(position.entryPrice)} · Mark {price(position.markPrice)} · Fees {price(position.fees)}</span><button type="button" className="text-action" onClick={()=>removePaperPosition(position.id)} aria-label={"Remove paper position "+position.symbol}>Remove paper position</button></div></div>;})}</div> : <div className="empty-data">No paper positions yet. Start with hypothetical values; no money is used.</div>}
       <div className="resource-links"><button className="text-action" onClick={exportPaperPositions} disabled={!paperPositions.length}>Export paper portfolio JSON <ArrowUpRight size={13}/></button></div>
       <p className="calc-foot">Simulation only. No order execution, recommendations, live prices, taxes, slippage, dividends, corporate actions or brokerage-specific charges are included. Paper results do not predict real returns.</p>
     </div>
     <div className="panel workspace-panel"><div className="eyebrow">DEVICE-LOCAL TRACKER</div><h2>Personal asset notes</h2><p>Entries are stored only in this browser on this device. They are not synced to an account or encrypted by FinPilot; export your own backup. Do not enter account numbers or sensitive identifiers.</p>
-      <div className="form-row"><input value={assetName} onChange={e=>setAssetName(e.target.value)} placeholder="Asset label (e.g. Savings account)"/><input type="number" min="0" value={assetAmount} onChange={e=>setAssetAmount(e.target.value)} placeholder="Approx. value ₹"/><select value={assetCategory} onChange={e=>setAssetCategory(e.target.value)}><option>Cash & deposits</option><option>Equity / mutual funds</option><option>Bonds / fixed income</option><option>Gold / commodities</option><option>Property / REITs</option><option>International assets</option><option>Digital assets</option><option>Other</option></select><button onClick={saveHolding}>Add entry</button></div>{saved && <p className="success-note">Entry saved in this browser.</p>}
+      <div className="form-row"><input value={assetName} onChange={e=>setAssetName(e.target.value)} placeholder="Asset label (e.g. Savings account)" aria-label="Asset label"/><input type="number" min="0" value={assetAmount} onChange={e=>setAssetAmount(e.target.value)} placeholder="Approx. value ₹" aria-label="Approximate value in rupees"/><select aria-label="Asset category" value={assetCategory} onChange={e=>setAssetCategory(e.target.value)}><option>Cash & deposits</option><option>Equity / mutual funds</option><option>Bonds / fixed income</option><option>Gold / commodities</option><option>Property / REITs</option><option>International assets</option><option>Digital assets</option><option>Other</option></select><button onClick={saveHolding}>Add entry</button></div>{saved && <p className="success-note">Entry saved in this browser.</p>}
       <div className="holding-list">{holdings.length ? holdings.map((h,i)=><div className="holding-row" key={i}><span>{h.name} <small>· {h.category}</small></span><b>{money(h.amount)}</b><button onClick={()=>removeHolding(i)} aria-label={"Remove "+h.name}>Remove</button></div>) : <div className="empty-data">No entries yet. You can use this as a manual note tracker.</div>}</div>
       <div className="total-row"><span>Recorded total (not verified net worth)</span><b>{money(holdingTotal)}</b></div>
       {holdings.length > 0 && <div className="module-grid">{Array.from(allocation.entries()).map(([category, amount])=><div className="module-tile" key={category}><b>{category}</b><span>{money(amount)} · {holdingTotal > 0 ? (amount / holdingTotal * 100).toFixed(1) : "0.0"}% of recorded assets</span></div>)}</div>}
       <div className="calculator-card"><div className="tool-heading"><ShieldCheck size={17}/><b>Portfolio concentration review</b></div><p className="calc-foot">Simple concentration flags based on the values you entered. These are not a risk score and cannot assess asset quality, volatility, correlation, liquidity or tax.</p>{holdings.length ? <><div className="calc-result"><span>Largest single entry</span><b>{topHoldingShare.toFixed(1)}%</b></div><div className="calc-result"><span>Largest asset category</span><b>{categoryShares[0]?.category} · {categoryShares[0]?.share.toFixed(1)}%</b></div><ul className="review-gaps">{topHoldingShare > 30 && <li>One holding is over 30% of recorded assets. Review single-name concentration.</li>}{categoryShares[0]?.share > 60 && <li>One asset category is over 60%. Check whether this matches your goal and loss capacity.</li>}{holdings.some(item=>item.category==="Digital assets") && <li>Digital assets are volatile and may involve custody, platform and regulatory risks. Do not use emergency funds.</li>}{topHoldingShare <= 30 && categoryShares[0]?.share <= 60 && <li>No simple concentration threshold was crossed; this does not mean the portfolio is low-risk.</li>}</ul></> : <div className="empty-data">Add asset notes to see concentration checks.</div>}</div>
-      <div className="resource-links"><button className="text-action" onClick={exportHoldings} disabled={!holdings.length}>Export backup JSON <ArrowUpRight size={13}/></button><label className="text-action">Import backup JSON<input type="file" accept=".json,application/json" onChange={e=>void importHoldingsFile(e.target.files?.[0])}/></label><button className="text-action" onClick={clearHoldings} disabled={!holdings.length}>Clear local entries</button></div>{importMessage && <p className="calc-foot">{importMessage}</p>}
+      <div className="resource-links"><button className="text-action" onClick={exportHoldings} disabled={!holdings.length}>Export backup JSON <ArrowUpRight size={13}/></button><label className="text-action">Import backup JSON<input type="file" accept=".json,application/json" onChange={e=>{const file=e.target.files?.[0];e.target.value="";void importHoldingsFile(file);}}/></label><button className="text-action" onClick={clearHoldings} disabled={!holdings.length}>Clear local entries</button></div>{importMessage && <p className="calc-foot">{importMessage}</p>}
       <p className="calc-foot">Export a backup before clearing browser data. The export is a plain JSON file; keep it private and do not upload it to a public repository.</p>
     </div>
   </div>;
@@ -587,10 +477,10 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
   return <div className="workspace-stack">
     <div className="panel workspace-panel"><div className="eyebrow">FINANCIAL TOOLS</div><h2>Simple planning calculators</h2><p>Illustrative calculations only. They are not forecasts, promises or investment recommendations.</p>
       <div className="calculator-grid">
-        <div className="calculator-card"><div className="tool-heading"><Wallet size={17}/><b>Goal funding planner</b></div><label>Goal name<input value={goalName} onChange={e=>setGoalName(e.target.value)} placeholder="e.g. Education, vehicle, home"/></label><label>Today's goal cost (₹)<input type="number" min="0" value={goalTarget} onChange={e=>setGoalTarget(e.target.value)}/></label><label>Already saved (₹)<input type="number" min="0" value={goalCurrent} onChange={e=>setGoalCurrent(e.target.value)}/></label><label>Years until goal<input type="number" min="1" max="50" value={goalYears} onChange={e=>setGoalYears(e.target.value)}/></label><label>Assumed annual inflation (%)<input type="number" min="0" max="30" step="0.5" value={goalInflation} onChange={e=>setGoalInflation(e.target.value)}/></label><label>Optional annual return assumption (%)<input type="number" min="0" max="30" step="0.5" value={goalReturn} onChange={e=>setGoalReturn(e.target.value)}/></label><div className="calc-result"><span>Estimated future cost · {goalName || "Goal"}</span><b>{money(goalProjection.futureTarget)}</b></div><div className="calc-result"><span>Monthly saving needed at 0% return</span><b>{money(goalProjection.zeroReturnMonthly)}</b></div><div className="calc-result"><span>Monthly contribution at selected return assumption</span><b>{money(goalProjection.monthlyAtAssumption)}</b></div><p className="calc-foot">Inflation and return are assumptions, not forecasts. The 0% return figure is the conservative savings reference. The return-based figure excludes taxes, fees and volatility; never use it as a promise.</p></div>
-        <div className="calculator-card"><div className="tool-heading"><ShieldCheck size={17}/><b>Debt payoff estimator</b></div><label>Outstanding debt (₹)<input type="number" min="0" value={debtBalance} onChange={e=>setDebtBalance(e.target.value)}/></label><label>Annual interest rate (%)<input type="number" min="0" max="100" step="0.1" value={debtRate} onChange={e=>setDebtRate(e.target.value)}/></label><label>Monthly payment (₹)<input type="number" min="0" value={debtPayment} onChange={e=>setDebtPayment(e.target.value)}/></label><div className="calc-result"><span>Estimated payoff time</span><b>{debtProjection.status === "Illustrative payoff estimate" ? (Math.floor(debtProjection.months/12) + "y " + (debtProjection.months%12) + "m") : debtProjection.status}</b></div><div className="calc-result"><span>Estimated interest paid</span><b>{money(debtProjection.interest)}</b></div><div className="calc-result"><span>Total estimated payments</span><b>{money(debtProjection.totalPaid)}</b></div><p className="calc-foot">Assumes a constant rate and fixed monthly payment, with monthly interest and no new borrowing, penalties or fees. Actual lender schedules and prepayment rules differ. Keep minimum payments current and verify terms with your lender.</p></div>
+        <div className="calculator-card"><div className="tool-heading"><Wallet size={17}/><b>Goal funding planner</b></div><label>Goal name<input value={goalName} onChange={e=>setGoalName(e.target.value)} placeholder="e.g. Education, vehicle, home"/></label><label>Today's goal cost (₹)<input type="number" min="0" value={goalTarget} onChange={e=>setGoalTarget(e.target.value)}/></label><label>Already saved (₹)<input type="number" min="0" value={goalCurrent} onChange={e=>setGoalCurrent(e.target.value)}/></label><label>Years until goal<input type="number" min="1" max="50" value={goalYears} onChange={e=>setGoalYears(e.target.value)}/></label><label>Assumed annual inflation (%, effective annual)<input type="number" min="0" max="30" step="0.5" value={goalInflation} onChange={e=>setGoalInflation(e.target.value)}/></label><label>Optional annual return assumption (%, effective annual)<input type="number" min="0" max="30" step="0.5" value={goalReturn} onChange={e=>setGoalReturn(e.target.value)}/></label><div className="calc-result"><span>Estimated future cost · {goalName || "Goal"}</span><b>{money(goalProjection.futureTarget)}</b></div><div className="calc-result"><span>Monthly saving needed at 0% return</span><b>{money(goalProjection.zeroReturnMonthly)}</b></div><div className="calc-result"><span>Monthly contribution at selected return assumption</span><b>{money(goalProjection.monthlyAtAssumption)}</b></div><p className="calc-foot">Inflation and return are assumptions, not forecasts. The 0% return figure is the conservative savings reference. The return-based figure excludes taxes, fees and volatility; never use it as a promise.</p></div>
+        <div className="calculator-card"><div className="tool-heading"><ShieldCheck size={17}/><b>Debt payoff estimator</b></div><label>Outstanding debt (₹)<input type="number" min="0" value={debtBalance} onChange={e=>setDebtBalance(e.target.value)}/></label><label>Annual interest rate (%)<input type="number" min="0" max="100" step="0.1" value={debtRate} onChange={e=>setDebtRate(e.target.value)}/></label><label>Monthly payment (₹)<input type="number" min="0" value={debtPayment} onChange={e=>setDebtPayment(e.target.value)}/></label><div className="calc-result"><span>Estimated payoff time</span><b>{debtProjection.status === DEBT_OK ? (Math.floor(debtProjection.months/12) + "y " + (debtProjection.months%12) + "m") : debtProjection.status}</b></div><div className="calc-result"><span>Estimated interest paid</span><b>{money(debtProjection.interest)}</b></div><div className="calc-result"><span>Total estimated payments</span><b>{money(debtProjection.totalPaid)}</b></div><p className="calc-foot">Assumes a constant rate and fixed monthly payment, with monthly interest and no new borrowing, penalties or fees. Actual lender schedules and prepayment rules differ. Keep minimum payments current and verify terms with your lender.</p></div>
         <div className="calculator-card"><div className="tool-heading"><Wallet size={17}/><b>Monthly cash-flow check</b></div><label>Monthly take-home income (₹)<input type="number" min="0" value={monthlyIncome} onChange={e=>setMonthlyIncome(e.target.value)}/></label><label>Monthly expenses (₹)<input type="number" min="0" value={monthlyExpenses} onChange={e=>setMonthlyExpenses(e.target.value)}/></label><div className="calc-result"><span>Monthly surplus / shortfall</span><b>{money(monthlySurplus)}</b></div><label>Emergency reserve horizon<select value={emergencyMonths} onChange={e=>setEmergencyMonths(e.target.value)}><option value="3">3 months</option><option value="6">6 months</option><option value="9">9 months</option><option value="12">12 months</option></select></label><label>Existing emergency savings (₹)<input type="number" min="0" value={currentReserve} onChange={e=>setCurrentReserve(e.target.value)}/></label><div className="calc-result"><span>Illustrative reserve target</span><b>{money(emergencyTarget)}</b></div><div className="calc-result"><span>Remaining reserve gap</span><b>{money(emergencyGap)}</b></div><p className="calc-foot">A positive surplus is not automatically investable. Reserve months are a planning choice, not a universal rule; consider income stability, dependants, debt and health/insurance cover.</p></div>
-        <div className="calculator-card"><div className="tool-heading"><Calculator size={17}/><b>SIP illustration</b></div><label>Monthly contribution (₹)<input type="number" min="0" value={sip} onChange={e=>setSip(e.target.value)}/></label><label>Years<input type="number" min="1" max="60" value={years} onChange={e=>setYears(e.target.value)}/></label><label>Assumed annual return (%)<input type="number" min="-50" max="50" step="0.5" value={rate} onChange={e=>setRate(e.target.value)}/></label><div className="calc-result"><span>Illustrative future value</span><b>{money(projected)}</b></div><p className="calc-foot">Assumed constant return, monthly compounding and month-end contributions; actual returns vary and can be negative. Taxes and fees excluded. Keep this at ₹0 until you have a reliable surplus and safety reserve.</p></div>
+        <div className="calculator-card"><div className="tool-heading"><Calculator size={17}/><b>SIP illustration</b></div><label>Monthly contribution (₹)<input type="number" min="0" value={sip} onChange={e=>setSip(e.target.value)}/></label><label>Years<input type="number" min="1" max="60" value={years} onChange={e=>setYears(e.target.value)}/></label><label>Assumed annual return (%, nominal, compounded monthly)<input type="number" min="-50" max="50" step="0.5" value={rate} onChange={e=>setRate(e.target.value)}/></label><div className="calc-result"><span>Illustrative future value</span><b>{money(sipResult.futureValue)}</b></div><div className="calc-result"><span>Total contributed · estimated gain</span><b>{money(sipResult.invested)} · {money(sipResult.gain)}</b></div><p className="calc-foot">Rate is treated as a nominal annual rate compounded monthly (rate ÷ 12), with month-end contributions; actual returns vary and can be negative. Taxes and fees excluded. Keep this at ₹0 until you have a reliable surplus and safety reserve.</p></div>
       </div>
     </div>
   </div>;
