@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "status": "waiting_for_market_data",
+  "generated_at": null,
+  "mode": "paper_only_defined_risk_debit_spreads",
+  "data": {
+    "status": "unavailable",
+    "message": "Waiting for a permitted Upstox option-chain and contract metadata snapshot."
+  },
+  "strategy": "EMA20/EMA50 + RSI14 directional filter; one-lot call/put debit verticals",
+  "summary": {
+    "cash": 100000,
+    "equity": 100000,
+    "open_positions": 0,
+    "pending_orders": 0,
+    "closed_trades": 0,
+    "realised_pnl": 0,
+    "unrealised_pnl": 0
+  },
+  "signals": [],
+  "positions": [],
+  "pending_orders": [],
+  "recent_trades": [],
+  "limitations": [
+    "No real broker orders."
+  ]
+}
