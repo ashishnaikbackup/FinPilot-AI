@@ -128,10 +128,10 @@ def run_bot(snapshot:Any,state:Any,now:str|None=None)->tuple[dict,dict]:
         if current.tzinfo is None:current=current.replace(tzinfo=timezone.utc)
         if current-source>timedelta(days=10) or source-current>timedelta(hours=6):
             report=_report("waiting_for_market_data",timestamp,{"status":"unavailable","message":"Underlying market snapshot is stale or future-dated."},cash,positions,pending,trades,[])
-            return report,state
+            return report,state or {"cash":STARTING_CASH,"positions":[],"pending_orders":[],"trades":[]}
     except (TypeError,ValueError):
         report=_report("waiting_for_market_data",timestamp,{"status":"unavailable","message":"Underlying snapshot timestamp is invalid."},cash,positions,pending,trades,[])
-        return report,state
+        return report,state or {"cash":STARTING_CASH,"positions":[],"pending_orders":[],"trades":[]}
     if state.get("last_processed_as_of")==as_of:
         trends=[{"underlying":name,**trend_from_bars(chain.get("underlying_bars",[])),"candidate":None,"action":"ALREADY_PROCESSED"} for name,chain in chains.items()]
         return _report("available",timestamp,{"status":"available","provider":snapshot.get("provider","Upstox"),"as_of":as_of,"note":"This daily snapshot was already processed."},cash,positions,pending,trades,trends),state
