@@ -47,6 +47,29 @@ class PaperBotTests(unittest.TestCase):
         self.assertEqual(report["pending_orders"], [{"symbol": "XYZ"}])
         self.assertEqual(state, prior)
 
+    def test_performance_summary_uses_daily_weekly_and_monthly_windows(self):
+        from automation.paper_bot import summarise_performance
+        history = [{"equity": 1_000_000 + i * 1_000} for i in range(22)]
+        result = summarise_performance(history, 1_021_000)
+        self.assertAlmostEqual(result["daily_return_pct"], (1_021_000 / 1_020_000 - 1) * 100, places=3)
+        self.assertAlmostEqual(result["weekly_5_session_return_pct"], (1_021_000 / 1_016_000 - 1) * 100, places=3)
+        self.assertAlmostEqual(result["monthly_21_session_return_pct"], 2.1, places=3)
+        self.assertEqual(result["history_points"], 22)
+
+    def test_equity_history_is_saved_once_per_new_snapshot(self):
+        bars = []
+        for i in range(70):
+            close = 100 + i * 0.8
+            bars.append({"open": close - 0.2, "high": close + 1.0, "low": close - 1.0, "close": close, "date": str(i)})
+        item = {"symbol": "TEST", "market": "TEST", "asset_type": "equity", "currency": "INR", "bars": bars}
+        snapshot = {"status": "available", "freshness": "end_of_day", "provider": "test-fixture", "as_of": "2026-11-12", "instruments": [item]}
+        first_report, first_state = run_bot(snapshot, {"cash": 1_000_000, "positions": [], "trades": []}, "2026-11-13T00:00:00Z")
+        second_report, second_state = run_bot(snapshot, first_state, "2026-11-13T01:00:00Z")
+        self.assertEqual(len(first_state["equity_history"]), 1)
+        self.assertEqual(len(second_state["equity_history"]), 1)
+        self.assertEqual(first_report["performance"]["history_points"], 1)
+        self.assertEqual(second_report["performance"]["history_points"], 1)
+
     def test_rejects_derivatives(self):
         bars = [{"open": 100+i, "high": 102+i, "low": 99+i, "close": 101+i, "date": str(i)} for i in range(60)]
         self.assertIsNone(analyse_instrument({"symbol": "NIFTY26NOVFUT", "asset_type": "future", "bars": bars}))
