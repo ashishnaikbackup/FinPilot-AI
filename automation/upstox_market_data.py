@@ -59,13 +59,15 @@ def main() -> int:
     QUOTE_OUT.parent.mkdir(parents=True,exist_ok=True)
     now=datetime.now(timezone.utc).isoformat()
     status={"provider":"Upstox","retrieved_at":now,"status":"not_configured","quote_count":0,"option_underlyings":0,"errors":[]}
-    if not token:
-        status.update(status="waiting_for_credentials",message="Add UPSTOX_ACCESS_TOKEN as a GitHub Actions secret to enable the read-only adapter.")
-        STATUS_OUT.write_text(json.dumps(status,indent=2)+"\n")
-        print(json.dumps(status)); return 0
-    if not public_ok:
-        status.update(status="blocked_by_display_rights_gate",message="Public quote/option snapshots are not published until MARKET_DATA_PUBLIC_DISPLAY_RIGHTS=true is explicitly configured after confirming provider terms.")
-        STATUS_OUT.write_text(json.dumps(status,indent=2)+"\n")
+    if not token or not public_ok:
+        if not token:
+            status.update(status="waiting_for_credentials",message="Add UPSTOX_ACCESS_TOKEN as a GitHub Actions secret to enable the read-only adapter.")
+        else:
+            status.update(status="blocked_by_display_rights_gate",message="Public quote/option snapshots are not published until MARKET_DATA_PUBLIC_DISPLAY_RIGHTS=true is explicitly configured after confirming provider terms.")
+        unavailable={"status":"unavailable","provider":"Upstox","as_of":now,"freshness":"unavailable","instruments":[]}
+        QUOTE_OUT.write_text(json.dumps(unavailable,indent=2)+"\\n",encoding="utf-8")
+        OPTIONS_OUT.write_text(json.dumps({"provider":"Upstox","retrieved_at":now,"status":"unavailable","underlyings":[]},indent=2)+"\\n",encoding="utf-8")
+        STATUS_OUT.write_text(json.dumps(status,indent=2)+"\\n")
         print(json.dumps(status)); return 0
     config=json.loads(CONFIG.read_text(encoding="utf-8"))
     instruments=config.get("india_equities",[])
