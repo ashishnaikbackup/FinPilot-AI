@@ -447,7 +447,8 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     <div className="panel workspace-panel"><h2>Risk guardrails</h2><div className="module-grid">{["No guaranteed-return claims","No leverage or derivatives","No automatic trading","No broker credentials stored","No unverified buy/sell signals","Capital preservation first"].map(x=><div className="module-tile" key={x}><ShieldCheck size={16}/><b>{x}</b></div>)}</div></div>
   </div>;
 
-  if (active === "Paper Bot") return <PaperBot />;\n  if (active === "Options Lab") return <OptionsLab />;
+  if (active === "Paper Bot") return <PaperBot />;
+  if (active === "Options Lab") return <OptionsLab />;
 
   if (active === "Portfolio") return <div className="workspace-stack">
     <div className="panel workspace-panel"><div className="eyebrow">PAPER LAB · NO BROKER CONNECTION</div><h2>Manual-price paper portfolio</h2><p>Practise tracking hypothetical positions without placing orders. You enter both entry and current mark prices manually; FinPilot does not fetch live quotes, calculate tax, or connect to a broker. Results exclude slippage and may not match executable prices.</p>
