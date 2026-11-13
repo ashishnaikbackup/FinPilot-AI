@@ -7,6 +7,7 @@ FinPilot includes two optional, read-only data adapters and a provider merge ste
 ### India — Upstox
 - Fetches completed daily OHLC candles for configured NSE/BSE equity/ETF instrument keys using Upstox Historical Candle V3.
 - Fetches option chains for configured underlyings/expiries using the Upstox Put/Call Option Chain API, including LTP, OI, bid/ask and provider Greeks.
+- Fetches completed daily index candles for each configured option underlying; these drive the separate limited F&O paper simulator.
 - Fetches matching option contracts from the Upstox Option Contracts API and enriches chain rows with provider-supplied lot size, minimum lot, freeze quantity, tick size, trading symbol and expiry metadata.
 - Default option-chain underlyings are NIFTY, BANKNIFTY and FINNIFTY. Cash-equity watchlist starts empty to avoid guessing instrument identifiers.
 
@@ -42,7 +43,7 @@ Then run the GitHub Actions workflow manually or wait for the scheduled refresh.
 ## Important limitations
 
 - Upstox adapter uses completed daily candles, not streaming live ticks. It can feed the existing cash-equity/ETF paper bot with EOD data once configured.
-- Upstox option chains and provider-supplied contract lot-size metadata are displayed in Options Lab, but the paper bot still does not trade futures/options. Margin, contract-master freshness validation, multi-leg portfolio risk, expiry settlement, F&O backtesting and the autonomous F&O paper engine remain separate release gates.
+- Upstox option chains, index bars and provider-supplied contract lot-size metadata feed a limited rules-based Indian index debit-spread paper simulator. Full exchange margin modelling, contract-master reconciliation/freshness validation, portfolio Greeks, credit spreads, futures, global derivatives and F&O backtesting remain release gates.
 - Alpha Vantage adapter is daily EOD only; it does not satisfy the requirement for live global quotes.
 - Public Pages can show provider data only if the provider agreement explicitly allows public display and storage. GitHub Secrets protect credentials, not the data after publication.
 - No live quote or option-chain data is fabricated when a provider is not configured.
