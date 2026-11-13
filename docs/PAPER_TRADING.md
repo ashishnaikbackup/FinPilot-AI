@@ -30,7 +30,7 @@ A permitted provider adapter must write `frontend/public/data/market-quotes.json
 }
 ```
 
-Provide at least 51 ordered OHLC bars per instrument. Supported first-release instrument types are cash equities and ETFs only. Indices are reference-only; futures, options, F&O chains, crypto and leveraged instruments are excluded. The provider, timestamp and freshness class are mandatory. Never label delayed/EOD data as live.
+Provide at least 51 ordered OHLC bars per instrument. This cash-equity engine supports cash equities and ETFs only. Index bars are also consumed by the separate limited F&O simulator described below; futures, naked options, credit spreads, crypto and leveraged cash-equity positions are not handled by this engine. The provider, timestamp and freshness class are mandatory. Never label delayed/EOD data as live.
 
 ## Strategy and risk controls
 
@@ -61,3 +61,16 @@ Run:
 ```sh
 python -m unittest tests.test_paper_bot
 ```
+
+## Separate F&O paper simulator
+
+A second feed-gated engine, `automation/fno_paper_bot.py`, uses the Upstox option-chain snapshot plus the matching option-contract metadata. It currently considers only defined-risk one-lot debit verticals on the configured Indian index underlyings (NIFTY, BANKNIFTY and FINNIFTY):
+
+- Completed daily index bars provide the EMA20/EMA50 + RSI14 directional filter.
+- Bullish setups may queue a CALL debit spread; bearish setups may queue a PUT debit spread.
+- The long leg must be nearer the money and the short leg further out of the money, with matching expiry and provider lot size.
+- Entries are queued from one completed daily snapshot and can fill only on a later daily option-chain snapshot, using the long-leg ask and short-leg bid.
+- Maximum loss is limited to the debit paid for the spread plus estimated fees. The separate virtual account starts at ₹1,00,000 and risks at most 1% of its virtual equity per spread.
+- The engine manages stop, target, trend reversal and expiry settlement using provider quotes/underlying bars.
+
+This is a narrow rules-based paper simulator, not the requested full Indian/global F&O platform. It does not model exchange margin, futures, naked shorts, credit spreads, calendars, intraday fills, full taxes/brokerage, or global derivatives. Provider lot-size/freeze metadata must be checked against current exchange circulars. No broker order endpoint is called, and no F&O positions are generated while authorised market data is unavailable.
