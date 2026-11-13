@@ -191,6 +191,11 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
         if not bar_date or not signal_date or bar_date <= signal_date:
             still_pending.append(order)
             continue
+        # Cancel a stale entry if the latest completed-bar analysis no longer
+        # supports BUY; never execute yesterday's idea after its setup vanished.
+        latest_signal = by_symbol.get(order.get("symbol"))
+        if not latest_signal or latest_signal.get("signal") != "BUY":
+            continue
         try:
             open_price = float(bar["open"])
             risk_per_unit = float(order["risk_per_unit"])
