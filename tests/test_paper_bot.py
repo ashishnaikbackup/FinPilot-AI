@@ -34,6 +34,19 @@ class PaperBotTests(unittest.TestCase):
         self.assertEqual(report["signals"][0]["symbol"], "TEST")
         self.assertGreaterEqual(len(state["positions"]), 0)
 
+    def test_same_snapshot_does_not_duplicate_trades(self):
+        bars = []
+        for i in range(70):
+            close = 100 + i * 0.8
+            bars.append({"open": close - 0.2, "high": close + 1.0, "low": close - 1.0, "close": close, "date": f"2026-10-{(i % 28) + 1:02d}"})
+        item = {"symbol": "TEST", "market": "TEST", "asset_type": "equity", "currency": "INR", "bars": bars}
+        snapshot = {"status": "available", "freshness": "end_of_day", "provider": "test-fixture", "as_of": "2026-11-12", "instruments": [item]}
+        first_report, first_state = run_bot(snapshot, {"cash": 1_000_000, "positions": [], "trades": []}, "2026-11-13T00:00:00Z")
+        second_report, second_state = run_bot(snapshot, first_state, "2026-11-13T01:00:00Z")
+        self.assertEqual(first_state, second_state)
+        self.assertEqual(first_report["summary"]["closed_trades"], second_report["summary"]["closed_trades"])
+        self.assertIn("already been processed", second_report["data"]["note"])
+
 
 if __name__ == "__main__":
     unittest.main()
