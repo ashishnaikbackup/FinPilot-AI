@@ -33,6 +33,8 @@
 - [ ] Add source-grounded claim extraction, independent corroboration and claim-level evidence
 - [ ] Select a direct market-data provider with explicit public website-display rights
 - [ ] Add first-party live/delayed/EOD quote adapter only after provider entitlement is confirmed (TradingView embeds are external widgets, not this adapter)
+- [x] Add GitHub-native feed-gated paper-trading engine, scheduled report generation, deterministic tests and dashboard workspace
+- [ ] Connect a permitted structured quote provider; without it the bot intentionally remains in waiting state
 - [ ] Add source freshness monitoring and alerts for failed scheduled refreshes
 
 ## Phase 3 — India and global research
@@ -73,7 +75,9 @@
 ## Phase 6 — Portfolio and simulation
 - [ ] Portfolio tracker with fees, taxes and allocation
 - [x] Basic manual-price paper portfolio simulator (user-entered marks, fee-aware illustrative P/L; no live data or execution)
-- [ ] Advanced paper trading and backtesting with historical data, realistic fills and look-ahead controls
+- [x] Deterministic long-only cash-equity/ETF paper simulation with EMA/RSI signals, ATR stops, position sizing, fees/slippage assumptions and conservative daily-bar fills
+- [ ] Historical backtesting with point-in-time data, realistic intraday fills and look-ahead/survivorship-bias controls
+- [ ] Add a licensed options-chain/contract-data adapter and separate F&O payoff/Greeks simulator
 - [ ] Read-only broker connectivity after security review
 
 ## Phase 7 — Research framework adapters
