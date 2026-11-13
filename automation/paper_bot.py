@@ -138,15 +138,22 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
     timestamp = now or datetime.now(timezone.utc).isoformat()
     ok, error = valid_snapshot(snapshot)
     if not ok:
+        prior = state if isinstance(state, dict) else {"cash": STARTING_CASH, "positions": [], "pending_orders": [], "trades": []}
+        cash = float(prior.get("cash", STARTING_CASH))
+        positions = prior.get("positions", []) if isinstance(prior.get("positions"), list) else []
+        trades = prior.get("trades", []) if isinstance(prior.get("trades"), list) else []
+        pending_orders = prior.get("pending_orders", []) if isinstance(prior.get("pending_orders"), list) else []
+        unrealised = sum(float(p.get("quantity", 0)) * (float(p.get("last_price", p.get("entry_price", 0))) - float(p.get("entry_price", 0))) for p in positions)
+        equity = cash + sum(float(p.get("quantity", 0)) * float(p.get("last_price", p.get("entry_price", 0))) for p in positions)
         report = {
             "schema_version": 1, "status": "waiting_for_market_data",
             "generated_at": timestamp, "data": {"status": "unavailable", "message": error},
             "mode": "paper_only", "strategy": "EMA20/EMA50 trend + RSI14 filter",
-            "summary": {"open_positions": 0, "closed_trades": 0, "cash": STARTING_CASH, "equity": STARTING_CASH, "realised_pnl": 0.0, "unrealised_pnl": 0.0},
-            "signals": [], "positions": [], "recent_trades": [],
-            "limitations": ["No prices are fabricated.", "No live orders or broker connections.", "F&O is not enabled in this release."]
+            "summary": {"open_positions": len(positions), "closed_trades": len(trades), "cash": round(cash, 2), "equity": round(equity, 2), "realised_pnl": round(sum(float(t.get("pnl", 0)) for t in trades), 2), "unrealised_pnl": round(unrealised, 2)},
+            "signals": [], "positions": positions, "pending_orders": pending_orders, "recent_trades": list(reversed(trades[-20:])),
+            "limitations": ["Market data is unavailable; no new decisions or fills were made.", "Existing paper positions are shown using their last stored marks, which may be stale.", "No prices are fabricated.", "No live orders or broker connections.", "F&O is not enabled in this release."]
         }
-        return report, state if isinstance(state, dict) else {"cash": STARTING_CASH, "positions": [], "trades": []}
+        return report, prior
 
     state = state if isinstance(state, dict) else {}
     cash = float(state.get("cash", STARTING_CASH))
@@ -170,7 +177,7 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
             "data": {"status": "available", "provider": snapshot["provider"], "as_of": snapshot_as_of, "freshness": snapshot["freshness"], "instrument_count": len(snapshot["instruments"]), "note": "No new trades: this exact market snapshot has already been processed."},
             "mode": "paper_only", "strategy": "EMA20/EMA50 trend + RSI14 filter; ATR14 stop; 3R target",
             "summary": {"open_positions": len(positions), "closed_trades": len(trades), "cash": round(cash, 2), "equity": round(equity, 2), "realised_pnl": round(sum(float(t.get("pnl", 0)) for t in trades), 2), "unrealised_pnl": round(unrealised, 2)},
-            "signals": analyses, "positions": positions, "recent_trades": list(reversed(trades[-20:])),
+            "signals": analyses, "positions": positions, "pending_orders": pending_orders, "recent_trades": list(reversed(trades[-20:])),
             "limitations": ["This market snapshot was already processed; no duplicate trades were generated.", "No broker connection or real orders.", "F&O/options/futures remain excluded from paper execution."]
         }
         return report, state
