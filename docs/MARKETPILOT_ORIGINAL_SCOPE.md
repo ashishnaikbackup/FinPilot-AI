@@ -29,7 +29,7 @@ The operating constraint is GitHub-first and free-first. Never represent an embe
 | Global macro/news | World Bank country comparisons, Fed/ECB feeds, GDELT discovery | Built with freshness and verification caveats. |
 | India stock data | Read-only Upstox daily-bar adapter | Adapter built; equity watchlist is empty; credentials and public-display/storage rights not configured. |
 | Global stock data | Alpha Vantage daily EOD adapter | Adapter built; global watchlist is empty; not a global real-time feed. |
-| India option-chain intelligence | Upstox option-chain adapter and Options Lab for configured underlyings | Read-only and rights-gated; default NIFTY/BANKNIFTY only. FINNIFTY and broader derivatives universe are not configured. |
+| India option-chain intelligence | Upstox option-chain adapter and Options Lab for NIFTY, BANKNIFTY and FINNIFTY, with provider contract lot-size/tick/freeze metadata | Read-only and rights-gated; no F&O paper execution, margin model or broader derivatives universe yet. |
 | Greeks, IV, OI and PCR | Displays provider-supplied option-chain fields | Partial; no independent analytics, max pain, IV rank/percentile or full market-wide scanner. |
 | Single-leg option payoff | Expiry payoff calculator | Built; manual inputs and no margin/lot validation. |
 | Multi-leg options strategy payoffs | Interactive strategy builder merged in PR #21 | Built and tested; manual inputs, expiry-only, no live execution/margin. |
@@ -57,7 +57,7 @@ The operating constraint is GitHub-first and free-first. Never represent an embe
 ## Next build priorities
 
 1. Add a rights-compliant, broad India/global provider and configure real watchlists only after entitlement review.
-2. Build an F&O paper engine using verified contract master/lot size/expiry/margin data, bid/ask-aware fills, defined-risk strategy limits and a complete trade journal.
+2. Build an F&O paper engine using fresh contract master/lot size/expiry metadata, a verified margin model, bid/ask-aware fills, defined-risk strategy limits and a complete trade journal.
 3. Improve the autonomous scanner with multi-timeframe signals, liquidity filters, event/fundamental context, risk-manager checks and explainable skipped-trade reasons.
 4. Expand reports with performance attribution, market-wide weekly/monthly analysis and failure/freshness alerts; add delivery channels only if securely available.
 5. Expand asset research across ETFs, mutual funds, gold/commodities, fixed income, REITs/InvITs and legally accessible international instruments.
