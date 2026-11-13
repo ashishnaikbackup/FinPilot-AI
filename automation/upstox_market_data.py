@@ -17,6 +17,7 @@ CONFIG=ROOT/"automation/config/market-watchlist.json"
 QUOTE_OUT=ROOT/"frontend/public/data/market-quotes-india.json"
 OPTIONS_OUT=ROOT/"frontend/public/data/options-chain.json"
 STATUS_OUT=ROOT/"frontend/public/data/market-provider-status.json"
+CONTRACTS_OUT=ROOT/"frontend/public/data/fno-contracts.json"
 BASE="https://api.upstox.com"
 
 class ProviderError(RuntimeError): pass
@@ -53,12 +54,38 @@ def fetch_option_chain(item: dict, token: str) -> dict:
     payload=api_get("/v2/option/chain",{"instrument_key":item["instrument_key"],"expiry_date":item.get("expiry","current_week")},token)
     return {"underlying":item["name"],"instrument_key":item["instrument_key"],"expiry_request":item.get("expiry","current_week"),"retrieved_at":datetime.now(timezone.utc).isoformat(),"contracts":payload.get("data",[])}
 
+def fetch_option_contracts(item: dict, token: str) -> list[dict]:
+    payload=api_get("/v2/option/contract",{"instrument_key":item["instrument_key"],"expiry_date":item.get("expiry","current_week")},token)
+    rows=payload.get("data",[])
+    if not isinstance(rows,list):
+        raise ProviderError("Upstox option-contract response did not contain a list.")
+    return [row for row in rows if isinstance(row,dict)
+            and row.get("instrument_key")
+            and row.get("instrument_type") in {"CE","PE"}
+            and isinstance(row.get("lot_size"),(int,float))
+            and row.get("lot_size",0)>0]
+
+def enrich_chain_with_contracts(chain: dict, contract_rows: list[dict]) -> dict:
+    by_key={row["instrument_key"]:row for row in contract_rows if row.get("instrument_key")}
+    for strike in chain.get("contracts",[]):
+        if not isinstance(strike,dict): continue
+        for side_name in ("call_options","put_options"):
+            side=strike.get(side_name)
+            if not isinstance(side,dict): continue
+            metadata=by_key.get(side.get("instrument_key"))
+            if metadata:
+                side["contract_meta"]={key:metadata.get(key) for key in (
+                    "trading_symbol","expiry","strike_price","instrument_type","lot_size",
+                    "minimum_lot","freeze_quantity","tick_size","weekly"
+                ) if metadata.get(key) is not None}
+    return chain
+
 def main() -> int:
     token=os.environ.get("UPSTOX_ACCESS_TOKEN","").strip()
     public_ok=os.environ.get("MARKET_DATA_PUBLIC_DISPLAY_RIGHTS","").lower()=="true"
     QUOTE_OUT.parent.mkdir(parents=True,exist_ok=True)
     now=datetime.now(timezone.utc).isoformat()
-    status={"provider":"Upstox","retrieved_at":now,"status":"not_configured","quote_count":0,"option_underlyings":0,"errors":[]}
+    status={"provider":"Upstox","retrieved_at":now,"status":"not_configured","quote_count":0,"option_underlyings":0,"option_contracts":0,"errors":[]}
     if not token or not public_ok:
         if not token:
             status.update(status="waiting_for_credentials",message="Add UPSTOX_ACCESS_TOKEN as a GitHub Actions secret to enable the read-only adapter.")
@@ -67,6 +94,7 @@ def main() -> int:
         unavailable={"status":"unavailable","provider":"Upstox","as_of":now,"freshness":"unavailable","instruments":[]}
         QUOTE_OUT.write_text(json.dumps(unavailable,indent=2)+"\n",encoding="utf-8")
         OPTIONS_OUT.write_text(json.dumps({"provider":"Upstox","retrieved_at":now,"status":"unavailable","underlyings":[]},indent=2)+"\n",encoding="utf-8")
+        CONTRACTS_OUT.write_text(json.dumps({"provider":"Upstox","retrieved_at":now,"status":"unavailable","underlyings":[]},indent=2)+"\\n",encoding="utf-8")
         STATUS_OUT.write_text(json.dumps(status,indent=2)+"\n")
         print(json.dumps(status)); return 0
     config=json.loads(CONFIG.read_text(encoding="utf-8"))
@@ -89,11 +117,22 @@ def main() -> int:
         snapshot={"status":"unavailable","provider":"Upstox","as_of":now,"freshness":"unavailable","instruments":[]}
     QUOTE_OUT.write_text(json.dumps(snapshot,indent=2)+"\n",encoding="utf-8")
     chains=[]
+    contract_sets=[]
+    contract_count=0
     for item in config.get("india_option_underlyings",[]):
-        try: chains.append(fetch_option_chain(item,token))
-        except (KeyError,ValueError,TypeError,ProviderError) as exc: status["errors"].append(f"{item.get('name','underlying')} option chain: {str(exc)}")
+        try:
+            chain=fetch_option_chain(item,token)
+            contracts=fetch_option_contracts(item,token)
+            contract_count+=len(contracts)
+            chain=enrich_chain_with_contracts(chain,contracts)
+            chain["contract_metadata_count"]=len(contracts)
+            chains.append(chain)
+            contract_sets.append({"underlying":item["name"],"instrument_key":item["instrument_key"],"expiry_request":item.get("expiry","current_week"),"contracts":contracts})
+        except (KeyError,ValueError,TypeError,ProviderError) as exc:
+            status["errors"].append(f"{item.get('name','underlying')} option chain/contracts: {str(exc)}")
     OPTIONS_OUT.write_text(json.dumps({"provider":"Upstox","retrieved_at":now,"status":"available" if chains else "unavailable","underlyings":chains},indent=2)+"\n",encoding="utf-8")
-    status.update(status="available" if normalised or chains else "no_usable_data",quote_count=len(normalised),option_underlyings=len(chains),as_of=snapshot.get("as_of"))
+    CONTRACTS_OUT.write_text(json.dumps({"provider":"Upstox","retrieved_at":now,"status":"available" if contract_sets else "unavailable","underlyings":contract_sets},indent=2)+"\n",encoding="utf-8")
+    status.update(status="available" if normalised or chains else "no_usable_data",quote_count=len(normalised),option_underlyings=len(chains),option_contracts=contract_count,as_of=snapshot.get("as_of"))
     STATUS_OUT.write_text(json.dumps(status,indent=2)+"\n",encoding="utf-8")
     print(json.dumps(status))
     return 0
