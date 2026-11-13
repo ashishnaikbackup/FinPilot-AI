@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import math
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -71,7 +71,7 @@ def load_json(path: Path, default: Any) -> Any:
         return default
 
 
-def valid_snapshot(payload: Any) -> tuple[bool, str]:
+def valid_snapshot(payload: Any, now: str | None = None) -> tuple[bool, str]:
     if not isinstance(payload, dict):
         return False, "Quote snapshot is missing or malformed."
     if payload.get("status") != "available":
@@ -82,6 +82,19 @@ def valid_snapshot(payload: Any) -> tuple[bool, str]:
         return False, "Quote snapshot must identify its provider and as-of timestamp."
     if not isinstance(payload.get("instruments"), list):
         return False, "Quote snapshot instruments must be a list."
+    try:
+        as_of = datetime.fromisoformat(str(payload["as_of"]).replace("Z", "+00:00"))
+        current = datetime.fromisoformat((now or datetime.now(timezone.utc).isoformat()).replace("Z", "+00:00"))
+        if as_of.tzinfo is None: as_of = as_of.replace(tzinfo=timezone.utc)
+        if current.tzinfo is None: current = current.replace(tzinfo=timezone.utc)
+        age = current - as_of
+        max_age = {"live": timedelta(hours=6), "delayed": timedelta(hours=48), "end_of_day": timedelta(days=10)}[payload["freshness"]]
+        if age < timedelta(hours=-6):
+            return False, "Market snapshot timestamp is unexpectedly in the future."
+        if age > max_age:
+            return False, f"Market snapshot is stale for its {payload['freshness']} classification ({age.days} days old)."
+    except (TypeError, ValueError, KeyError, OverflowError):
+        return False, "Market snapshot as-of timestamp is invalid."
     return True, ""
 
 
@@ -136,7 +149,7 @@ def analyse_instrument(item: dict[str, Any]) -> dict[str, Any] | None:
 
 def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
     timestamp = now or datetime.now(timezone.utc).isoformat()
-    ok, error = valid_snapshot(snapshot)
+    ok, error = valid_snapshot(snapshot, timestamp)
     if not ok:
         prior = state if isinstance(state, dict) else {"cash": STARTING_CASH, "positions": [], "pending_orders": [], "trades": []}
         cash = float(prior.get("cash", STARTING_CASH))
@@ -237,7 +250,10 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
         bar = source.get("bars", [])[-1]
         low, high = float(bar["low"]), float(bar["high"])
         stop, target = float(position["stop"]), float(position["target"])
-        exit_price = stop if low <= stop else target if high >= target else None
+        bar_open = float(bar.get("open", analysis["price"]))
+        # A stop-market order gaps through at the open when the session opens
+        # below the stop; never grant a better fill at the stale stop level.
+        exit_price = (bar_open if bar_open < stop else stop) if low <= stop else target if high >= target else None
         if analysis["signal"] == "EXIT" and exit_price is None:
             exit_price = analysis["price"]
         if exit_price is not None:
@@ -247,7 +263,7 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
             fee = proceeds * FEE_RATE
             pnl = proceeds - fee - float(position["entry_cost"])
             cash += proceeds - fee
-            trade = {"symbol": position["symbol"], "side": "LONG", "quantity": qty, "entry_price": position["entry_price"], "exit_price": round(fill, 6), "pnl": round(pnl, 2), "closed_at": timestamp, "reason": "stop" if exit_price == stop else "target" if exit_price == target else "trend_exit"}
+            trade = {"symbol": position["symbol"], "side": "LONG", "quantity": qty, "entry_price": position["entry_price"], "exit_price": round(fill, 6), "pnl": round(pnl, 2), "closed_at": timestamp, "reason": "stop_gap" if exit_price == bar_open and bar_open < stop else "stop" if exit_price == stop else "target" if exit_price == target else "trend_exit"}
             trades.append(trade)
             closed.append(trade)
             positions.remove(position)
