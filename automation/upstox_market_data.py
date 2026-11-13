@@ -65,9 +65,9 @@ def main() -> int:
         else:
             status.update(status="blocked_by_display_rights_gate",message="Public quote/option snapshots are not published until MARKET_DATA_PUBLIC_DISPLAY_RIGHTS=true is explicitly configured after confirming provider terms.")
         unavailable={"status":"unavailable","provider":"Upstox","as_of":now,"freshness":"unavailable","instruments":[]}
-        QUOTE_OUT.write_text(json.dumps(unavailable,indent=2)+"\\n",encoding="utf-8")
-        OPTIONS_OUT.write_text(json.dumps({"provider":"Upstox","retrieved_at":now,"status":"unavailable","underlyings":[]},indent=2)+"\\n",encoding="utf-8")
-        STATUS_OUT.write_text(json.dumps(status,indent=2)+"\\n")
+        QUOTE_OUT.write_text(json.dumps(unavailable,indent=2)+"\n",encoding="utf-8")
+        OPTIONS_OUT.write_text(json.dumps({"provider":"Upstox","retrieved_at":now,"status":"unavailable","underlyings":[]},indent=2)+"\n",encoding="utf-8")
+        STATUS_OUT.write_text(json.dumps(status,indent=2)+"\n")
         print(json.dumps(status)); return 0
     config=json.loads(CONFIG.read_text(encoding="utf-8"))
     instruments=config.get("india_equities",[])
