@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import {
-  Activity, ArrowUpRight, Bell, BookOpen, BriefcaseBusiness,
+  Activity, ArrowUpRight, Bell, BookOpen, Bot, BriefcaseBusiness,
   CalendarDays, ChevronDown, CircleHelp, Compass, Globe2, Landmark, LayoutDashboard,
   Menu, Newspaper, Search, ShieldCheck, Sparkles, TrendingUp,
   Wallet, X
@@ -13,13 +13,14 @@ import { loadHoldings } from "./lib/storage";
 
 const MacroChart = lazy(() => import("./MacroChart"));
 
-type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Portfolio" | "Learning Centre" | "Career & Income";
+type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Paper Bot" | "Portfolio" | "Learning Centre" | "Career & Income";
 const navItems: { label: Section; icon: typeof LayoutDashboard }[] = [
   { label: "Overview", icon: LayoutDashboard },
   { label: "Markets", icon: Globe2 },
   { label: "Opportunities", icon: Compass },
   { label: "News Intelligence", icon: Newspaper },
   { label: "AI Mentor", icon: Sparkles },
+  { label: "Paper Bot", icon: Bot },
   { label: "Portfolio", icon: Wallet },
   { label: "Learning Centre", icon: BookOpen },
   { label: "Career & Income", icon: BriefcaseBusiness }
