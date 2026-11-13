@@ -78,7 +78,7 @@ class PaperBotTests(unittest.TestCase):
     def test_pending_buy_fills_at_later_session_open(self):
         bars = []
         for i in range(70):
-            close = 100 + i * 0.8
+            close = 100 + i * 0.8 + (2 if i % 3 == 0 else -2 if i % 3 == 1 else 0)
             bars.append({"open": close - 0.2, "high": close + 1.0, "low": close - 1.0, "close": close, "date": f"2026-10-{(i % 28) + 1:02d}"})
         item = {"symbol": "TEST", "market": "TEST", "asset_type": "equity", "currency": "INR", "bars": bars}
         first = {"status": "available", "freshness": "end_of_day", "provider": "test-fixture", "as_of": "2026-11-12", "instruments": [item]}
@@ -99,7 +99,7 @@ class PaperBotTests(unittest.TestCase):
             bars.append({"open": close + 0.2, "high": close + 1.0, "low": close - 1.0, "close": close, "date": f"2026-10-{(i % 28) + 1:02d}"})
         item = {"symbol": "TEST", "market": "TEST", "asset_type": "equity", "currency": "INR", "bars": bars}
         snapshot = {"status": "available", "freshness": "end_of_day", "provider": "test-fixture", "as_of": "2026-11-13", "instruments": [item]}
-        pending = [{"symbol": "TEST", "market": "TEST", "currency": "INR", "risk_per_unit": 4.0, "signal_as_of": "2026-11-12", "created_at": "2026-11-12T00:00:00Z"}]
+        pending = [{"symbol": "TEST", "market": "TEST", "currency": "INR", "risk_per_unit": 4.0, "signal_as_of": "2026-10-13", "created_at": "2026-10-13T00:00:00Z"}]
         _, state = run_bot(snapshot, {"cash": 1_000_000, "positions": [], "pending_orders": pending, "trades": []}, "2026-11-14T00:00:00Z")
         self.assertEqual(state["positions"], [])
         self.assertEqual(state["pending_orders"], [])
