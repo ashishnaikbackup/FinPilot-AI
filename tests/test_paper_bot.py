@@ -11,6 +11,20 @@ class PaperBotTests(unittest.TestCase):
     def test_rsi_flat_series_is_neutral(self):
         self.assertEqual(rsi([10.0] * 20), 50.0)
 
+    def test_rejects_stale_eod_snapshot(self):
+        from automation.paper_bot import valid_snapshot
+        payload = {"status": "available", "freshness": "end_of_day", "provider": "test", "as_of": "2026-10-01T00:00:00Z", "instruments": []}
+        ok, message = valid_snapshot(payload, "2026-11-13T00:00:00Z")
+        self.assertFalse(ok)
+        self.assertIn("stale", message.lower())
+
+    def test_rejects_future_snapshot_timestamp(self):
+        from automation.paper_bot import valid_snapshot
+        payload = {"status": "available", "freshness": "end_of_day", "provider": "test", "as_of": "2026-11-20T00:00:00Z", "instruments": []}
+        ok, message = valid_snapshot(payload, "2026-11-13T00:00:00Z")
+        self.assertFalse(ok)
+        self.assertIn("future", message.lower())
+
     def test_missing_feed_never_invents_trades(self):
         report, state = run_bot({}, {"cash": 1_000_000, "positions": [], "trades": []}, "2026-11-13T00:00:00Z")
         self.assertEqual(report["status"], "waiting_for_market_data")
