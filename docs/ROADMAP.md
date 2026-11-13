@@ -82,8 +82,10 @@
 - [x] Deterministic long-only cash-equity/ETF paper simulation with EMA/RSI signals, ATR stops, position sizing, fees/slippage assumptions and conservative daily-bar fills
 - [x] Initial single-instrument daily-bar backtester with next-session-open fills, costs, drawdown and explicit limitations
 - [ ] Portfolio-grade point-in-time backtesting with corporate actions, survivorship controls and realistic intraday fills
-- [x] Add standalone single-leg options expiry payoff and breakeven calculator (manual inputs; no live chain)
-- [ ] Add a licensed options-chain/contract-data adapter, exchange lot-size validation, margin and Greeks simulator
+- [x] Add single-leg and multi-leg options expiry payoff/breakeven calculators (manual inputs; no live margin or contract validation)
+- [x] Add manual multi-leg call/put strategy builder with scenario P&L, breakevens, net debit/credit and unlimited short-call risk flags
+- [ ] Add licensed options-chain/contract-data adapter, exchange lot-size validation, margin and Greeks simulator
+- [ ] Add autonomous F&O paper strategies with verified contract metadata, defined-risk sizing, expiry handling and trade journal
 - [ ] Read-only broker connectivity after security review
 
 ## Phase 7 — Research framework adapters
