@@ -34,7 +34,7 @@ The operating constraint is GitHub-first and free-first. Never represent an embe
 | Single-leg option payoff | Expiry payoff calculator | Built; manual inputs and no margin/lot validation. |
 | Multi-leg options strategy payoffs | Interactive strategy builder merged in PR #21 | Built and tested; manual inputs, expiry-only, no live execution/margin. |
 | Human-like autonomous paper trader | Rules-based EMA20/EMA50 + RSI14 + ATR cash-equity/ETF engine | Partial. It is not an LLM agent and does not trade F&O. Next-session fills, stale-feed protection and Git-backed state merged in PR #20. |
-| F&O autonomous paper trading | No execution engine yet | Not built. Needs licensed contract data, verified lot sizes, expiry calendar, margin/risk model, bid/ask fills, multi-leg position management and tests. |
+| F&O autonomous paper trading | Separate rules-based simulator for one-lot defined-risk CALL/PUT debit verticals on configured Indian index underlyings | Partial. NIFTY/BANKNIFTY/FINNIFTY only; daily snapshots; no futures, credit spreads, global derivatives, full margin model or portfolio Greeks. |
 | Global paper trading | Cash-equity engine can consume configured provider snapshots | Partial and EOD-only through current Alpha Vantage adapter. No broad exchange coverage or FX-aware portfolio accounting. |
 | Opportunity scanner | Rules-based cash-equity signals and research worksheet | Partial. No comprehensive cross-market ranking, fundamentals, event catalysts or verified trade shortlist. |
 | Daily/weekly/monthly analysis | Daily EOD paper report plus daily, five-session weekly and 21-session monthly simulated account returns and equity curve | Partial. Market-wide weekly/monthly analysis, performance attribution, forecast scorecards and delivery alerts remain. |
@@ -57,7 +57,7 @@ The operating constraint is GitHub-first and free-first. Never represent an embe
 ## Next build priorities
 
 1. Add a rights-compliant, broad India/global provider and configure real watchlists only after entitlement review.
-2. Build an F&O paper engine using fresh contract master/lot size/expiry metadata, a verified margin model, bid/ask-aware fills, defined-risk strategy limits and a complete trade journal.
+2. Expand the limited F&O paper engine with exchange-reconciled contract metadata, verified margin/portfolio Greeks, futures, credit spreads, broader Indian contracts and global derivatives.
 3. Improve the autonomous scanner with multi-timeframe signals, liquidity filters, event/fundamental context, risk-manager checks and explainable skipped-trade reasons.
 4. Expand reports with performance attribution, market-wide weekly/monthly analysis and failure/freshness alerts; add delivery channels only if securely available.
 5. Expand asset research across ETFs, mutual funds, gold/commodities, fixed income, REITs/InvITs and legally accessible international instruments.
