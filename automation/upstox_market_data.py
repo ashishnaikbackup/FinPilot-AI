@@ -94,7 +94,7 @@ def main() -> int:
         unavailable={"status":"unavailable","provider":"Upstox","as_of":now,"freshness":"unavailable","instruments":[]}
         QUOTE_OUT.write_text(json.dumps(unavailable,indent=2)+"\n",encoding="utf-8")
         OPTIONS_OUT.write_text(json.dumps({"provider":"Upstox","retrieved_at":now,"status":"unavailable","underlyings":[]},indent=2)+"\n",encoding="utf-8")
-        CONTRACTS_OUT.write_text(json.dumps({"provider":"Upstox","retrieved_at":now,"status":"unavailable","underlyings":[]},indent=2)+"\\n",encoding="utf-8")
+        CONTRACTS_OUT.write_text(json.dumps({"provider":"Upstox","retrieved_at":now,"status":"unavailable","underlyings":[]},indent=2)+"\n",encoding="utf-8")
         STATUS_OUT.write_text(json.dumps(status,indent=2)+"\n")
         print(json.dumps(status)); return 0
     config=json.loads(CONFIG.read_text(encoding="utf-8"))
@@ -122,14 +122,20 @@ def main() -> int:
     for item in config.get("india_option_underlyings",[]):
         try:
             chain=fetch_option_chain(item,token)
-            contracts=fetch_option_contracts(item,token)
-            contract_count+=len(contracts)
-            chain=enrich_chain_with_contracts(chain,contracts)
-            chain["contract_metadata_count"]=len(contracts)
-            chains.append(chain)
-            contract_sets.append({"underlying":item["name"],"instrument_key":item["instrument_key"],"expiry_request":item.get("expiry","current_week"),"contracts":contracts})
         except (KeyError,ValueError,TypeError,ProviderError) as exc:
-            status["errors"].append(f"{item.get('name','underlying')} option chain/contracts: {str(exc)}")
+            status["errors"].append(f"{item.get('name','underlying')} option chain: {str(exc)}")
+            continue
+        try:
+            contracts=fetch_option_contracts(item,token)
+        except (KeyError,ValueError,TypeError,ProviderError) as exc:
+            contracts=[]
+            status["errors"].append(f"{item.get('name','underlying')} contract metadata: {str(exc)}")
+        contract_count+=len(contracts)
+        chain=enrich_chain_with_contracts(chain,contracts)
+        chain["contract_metadata_count"]=len(contracts)
+        chains.append(chain)
+        if contracts:
+            contract_sets.append({"underlying":item["name"],"instrument_key":item["instrument_key"],"expiry_request":item.get("expiry","current_week"),"contracts":contracts})
     OPTIONS_OUT.write_text(json.dumps({"provider":"Upstox","retrieved_at":now,"status":"available" if chains else "unavailable","underlyings":chains},indent=2)+"\n",encoding="utf-8")
     CONTRACTS_OUT.write_text(json.dumps({"provider":"Upstox","retrieved_at":now,"status":"available" if contract_sets else "unavailable","underlyings":contract_sets},indent=2)+"\n",encoding="utf-8")
     status.update(status="available" if normalised or chains else "no_usable_data",quote_count=len(normalised),option_underlyings=len(chains),option_contracts=contract_count,as_of=snapshot.get("as_of"))
