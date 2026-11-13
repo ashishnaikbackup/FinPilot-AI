@@ -56,7 +56,7 @@ def _leg(row:dict,kind:str)->dict|None:
     if not all(isinstance(v,dict) for v in (meta,md,greeks)):return None
     try:
         lot=int(meta["lot_size"]); freeze=int(meta["freeze_quantity"])
-        strike=float(meta.get("strike_price",row["strike_price"])); delta=float(greeks["delta"])
+        strike=float(meta.get("strike_price") or row.get("strike_price")); delta=float(greeks["delta"])
         bid=float(md["bid_price"]); ask=float(md["ask_price"])
         oi=float(md.get("oi",0)); bq=float(md.get("bid_qty",0)); aq=float(md.get("ask_qty",0))
         expiry=str(meta.get("expiry") or row.get("expiry") or ""); key=str(side["instrument_key"])
