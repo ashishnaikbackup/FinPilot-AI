@@ -79,6 +79,7 @@ describe("options strategy workbench", () => {
     expect(screen.getByText("Maximum profit").closest(".calculator-card")).toHaveTextContent("₹14");
     expect(screen.getByText("Maximum loss").closest(".calculator-card")).toHaveTextContent("₹6");
     expect(screen.getByText("Breakeven(s)").closest(".calculator-card")).toHaveTextContent("₹106");
+    expect(screen.getByText("Defined-risk index options trader")).toBeInTheDocument();
   });
 });
 
