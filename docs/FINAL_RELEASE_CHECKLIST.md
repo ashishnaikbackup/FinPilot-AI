@@ -13,6 +13,8 @@ It is **not** a live institutional terminal, a generative-AI adviser, a broker-c
 
 ## Delivered and verified scope
 
+- GitHub-native, feed-gated paper-trading engine and dashboard workspace added on branch `feat/github-native-paper-bot`; CI and Pages deployment must pass before release. The bot intentionally waits without a permitted quote snapshot and does not claim to trade live markets.
+
 - React + TypeScript + Vite responsive web application.
 - Public macro/news snapshots, official-source feeds, retrieval timestamps, source links, provider health and stale-data handling.
 - TradingView chart, stock/crypto heatmaps and economic calendar embeds, with external-provider and market-data caveats.
@@ -35,6 +37,7 @@ The 31 October 2026 project review recorded successful frontend/backend/public-d
 - [ ] Test calculator inputs and zero-return goal baseline.
 - [ ] Test local portfolio/research save, JSON export and restore in the same browser.
 - [ ] Test paper portfolio creation, manual mark updates, fee-aware P/L and JSON export; verify no order execution or live quote claim.
+- [ ] Verify Paper Bot workspace shows `waiting_for_market_data` until a provider adapter supplies a permitted, timestamped snapshot; then validate position sizing, stops, exits, fees and daily report.
 - [ ] Test heuristic news grouping with repeated headlines, unrelated headlines and malformed/empty source metadata; confirm caveats remain visible.
 - [ ] Confirm privacy warnings are visible before entering personal data.
 - [ ] Confirm no API keys, passwords, broker credentials or private financial records are committed.
