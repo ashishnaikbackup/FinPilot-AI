@@ -7,7 +7,9 @@ on:
       - "frontend/**"
       - "automation/**"
       - "tests/test_paper_bot.py"
+      - "tests/test_backtest_options.py"
       - "docs/PAPER_TRADING.md"
+      - "docs/BACKTESTING_AND_OPTIONS.md"
       - "index.html"
       - "scripts/refresh_public_data.py"
       - "scripts/feed_utils.py"
@@ -57,8 +59,8 @@ jobs:
           key: finpilot-paper-bot-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             finpilot-paper-bot-
-      - name: Test paper-bot engine
-        run: python -m unittest discover -s tests -p 'test_paper_bot.py' -v
+      - name: Test all simulation and risk tools
+        run: python -m unittest discover -s tests -v
       - name: Run paper-bot simulation
         run: python automation/paper_bot.py
       - name: Cache paper-bot state
