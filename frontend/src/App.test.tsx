@@ -76,9 +76,9 @@ describe("options strategy workbench", () => {
     await user.type(screen.getByLabelText("Leg 2 strike"), "120");
     await user.type(screen.getByLabelText("Leg 2 premium"), "4");
     expect(await screen.findByText("Maximum profit")).toBeInTheDocument();
-    expect(screen.getByText("₹14")).toBeInTheDocument();
-    expect(screen.getByText("₹6")).toBeInTheDocument();
-    expect(screen.getByText(/₹106/)).toBeInTheDocument();
+    expect(screen.getByText("Maximum profit").closest(".calculator-card")).toHaveTextContent("₹14");
+    expect(screen.getByText("Maximum loss").closest(".calculator-card")).toHaveTextContent("₹6");
+    expect(screen.getByText("Breakeven(s)").closest(".calculator-card")).toHaveTextContent("₹106");
   });
 });
 
