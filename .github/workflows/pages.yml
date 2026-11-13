@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - "frontend/**"
+      - "automation/**"
+      - "tests/test_paper_bot.py"
+      - "docs/PAPER_TRADING.md"
       - "index.html"
       - "scripts/refresh_public_data.py"
       - "scripts/feed_utils.py"
@@ -47,6 +50,23 @@ jobs:
             finpilot-public-data-
       - name: Refresh public data snapshots
         run: python scripts/refresh_public_data.py
+      - name: Restore paper-bot state
+        uses: actions/cache/restore@v4
+        with:
+          path: automation/state/paper-bot-state.json
+          key: finpilot-paper-bot-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            finpilot-paper-bot-
+      - name: Test paper-bot engine
+        run: python -m unittest discover -s tests -p 'test_paper_bot.py' -v
+      - name: Run paper-bot simulation
+        run: python automation/paper_bot.py
+      - name: Cache paper-bot state
+        uses: actions/cache/save@v4
+        if: success()
+        with:
+          path: automation/state/paper-bot-state.json
+          key: finpilot-paper-bot-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Validate public data snapshots
         run: python scripts/validate_public_data.py
       - name: Write public data health summary
