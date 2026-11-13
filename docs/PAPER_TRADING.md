@@ -39,12 +39,13 @@ Provide at least 51 ordered OHLC bars per instrument. Supported first-release in
 - Risk budget is 1% of paper equity per position; maximum notional is 20% per position; maximum eight concurrent positions.
 - Long-only; no leverage, shorts, pyramiding or martingale.
 - Estimated 0.10% slippage and 0.03% fee per side.
+- A signal formed on a completed daily candle is queued and can fill no earlier than the next supplied session's open; it is never filled at the same candle's close.
 - When a daily candle touches both stop and target, the simulator assumes the stop happened first (conservative).
 - All trades are hypothetical. The strategy is not validated as profitable and is not investment advice.
 
 ## GitHub-only operation
 
-The scheduled GitHub Pages workflow restores the previous bot state from the Actions cache, runs the bot, saves the new state, and publishes `paper-bot.json` with the site. GitHub scheduled workflows can be delayed; the report's generated time and source as-of time are authoritative. The cache is an operational convenience, not a durable database or backup.
+The scheduled GitHub Pages workflow restores the previous bot state from the Actions cache, runs the bot, saves the new state, and publishes `paper-bot.json` with the site. New daily-bar signals are queued and filled at a later session open. GitHub scheduled workflows can be delayed; the report's generated time and source as-of time are authoritative. The cache is an operational convenience, not a durable database or backup.
 
 No Cloudflare Worker URL or BOT_READ_TOKEN is required. No broker password or provider API key belongs in frontend code, commits, workflow logs or prompts.
 
