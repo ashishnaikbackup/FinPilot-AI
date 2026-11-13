@@ -1,0 +1,8 @@
+{
+  "global_equities": [],
+  "notes": [
+    "Add exact Alpha Vantage ticker symbols, for example IBM or TSCO.LON.",
+    "Daily EOD bars only; real-time US quotes require a separate paid entitlement.",
+    "Only add symbols covered by your provider plan and display/storage rights."
+  ]
+}
