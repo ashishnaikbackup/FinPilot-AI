@@ -60,6 +60,13 @@ jobs:
           UPSTOX_ACCESS_TOKEN: ${{ secrets.UPSTOX_ACCESS_TOKEN }}
           MARKET_DATA_PUBLIC_DISPLAY_RIGHTS: ${{ secrets.MARKET_DATA_PUBLIC_DISPLAY_RIGHTS }}
         run: python automation/upstox_market_data.py
+      - name: Fetch permitted global EOD data (optional)
+        env:
+          ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
+          GLOBAL_DATA_PUBLIC_DISPLAY_RIGHTS: ${{ secrets.GLOBAL_DATA_PUBLIC_DISPLAY_RIGHTS }}
+        run: python automation/alphavantage_market_data.py
+      - name: Merge permitted provider snapshots
+        run: python automation/merge_market_quotes.py
       - name: Restore paper-bot state
         uses: actions/cache/restore@v4
         with:
