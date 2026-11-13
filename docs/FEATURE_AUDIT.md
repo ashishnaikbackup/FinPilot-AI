@@ -1,12 +1,12 @@
 # FinPilot AI — Requirements and Feature Audit
 
-Audit date: 31 October 2026  
+Audit date: 13 November 2026  
 Deployment model: GitHub Pages + GitHub Actions, free-first  
 No local installation is required to use the public website.
 
 ## Executive summary
 
-FinPilot now has a more usable multi-asset market workspace with externally hosted TradingView charts, heatmaps and an economic calendar. Public macro/news snapshots refresh on an hourly GitHub Actions schedule (subject to GitHub scheduling delays). Personal-finance calculators, browser-local portfolio/research tools, learning guidance and career-resource links remain available.
+FinPilot now includes GitHub-native, feed-gated cash-equity/ETF paper trading, a limited Indian index-options debit-spread paper simulator, Upstox option-chain/contract metadata adapters, an Options Lab and daily/weekly/monthly virtual-account performance reports. Provider credentials and public data rights are not configured by default, so the trading engines remain idle without a permitted feed. The broader market workspace, public macro/news snapshots, personal-finance calculators and browser-local research tools remain available.
 
 This is **not** a complete institutional financial terminal. The most important outstanding requirement is a direct, properly licensed, first-party quote service that covers every required exchange and instrument. TradingView embeds display current market information where their exchange coverage permits, but quote speed can be real-time, delayed or end-of-day (market-dependent) depending on market and entitlement. FinPilot does not receive those quotes as structured data.
 
@@ -48,11 +48,14 @@ This is a source-level implementation pass. Automated CI/build and real-device/b
 | Debt planning | Available | Fixed-rate debt payoff estimate and non-amortising payment warning. |
 | Portfolio tracker and risk checks | Partial | Manual local asset tracker, category allocation, concentration flags and JSON backup/restore, plus a manual-price paper portfolio simulator with editable marks, fee-aware illustrative P/L and JSON export. Not a broker-linked or cloud-synced portfolio; paper marks are user-entered. |
 | Generative AI financial analyst | Not complete | Current mentor is rules-based educational guidance, not a connected LLM. A hosted model requires an approved provider, budget, server-side secrets, privacy and safety controls. |
+| Paper trading and reports | Partial, implemented Nov 2026 | Separate ₹10 lakh cash-equity/ETF and ₹1 lakh Indian index-options virtual accounts; next-snapshot fills, risk limits, trade journals, equity history and daily/weekly/monthly simulated returns. Requires permitted data; not real trading or an AI learning agent. |
 | Career and income research | Partial | Official Goa/India recruitment and apprenticeship portals plus role-family skill guidance; no live verified job API or automatic eligibility engine. |
 | Personalized secure account | Not complete | No login, private cloud database or cross-device sync. Browser-local data is not encrypted by FinPilot. |
-| Trading, broker connection and automation | Intentionally excluded | No broker credentials, order execution, leverage, derivatives or unattended trading. |
+| Trading, broker connection and automation | Partial, paper-only | Cash-equity/ETF paper bot plus limited Indian index debit-spread simulator. No real broker credentials, order execution, leverage, global F&O, futures or full margin model. |
 
 ## Market data: what “live” means here
+
+The Markets workspace also has optional first-party read-only adapters: Upstox completed daily candles and NIFTY/BANKNIFTY/FINNIFTY option chains with provider contract metadata, plus Alpha Vantage global daily EOD equities. They are credential- and public-display-rights-gated; watchlists are not populated by default. These adapters do not supply a broad global real-time feed. The limited F&O paper engine uses only Indian index debit verticals and stays idle without permitted chain, index bars and contract metadata.
 
 The Markets workspace uses TradingView's official embeddable widgets:
 - Advanced chart with symbol and timeframe selection.
