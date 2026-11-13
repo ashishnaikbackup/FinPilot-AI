@@ -74,12 +74,15 @@ jobs:
       - name: Run paper-bot simulation
         if: github.event_name == 'workflow_dispatch' || github.event.schedule == '45 10 * * 1-5'
         run: python automation/paper_bot.py
+      - name: Run defined-risk F&O paper simulation
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '45 10 * * 1-5'
+        run: python automation/fno_paper_bot.py
       - name: Persist paper-bot state in Git
         if: github.event_name == 'workflow_dispatch' || github.event.schedule == '45 10 * * 1-5'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add automation/state/paper-bot-state.json
+          git add automation/state/paper-bot-state.json automation/state/fno-paper-state.json
           if git diff --cached --quiet; then
             echo "Paper-bot state is unchanged; nothing to persist."
           else
