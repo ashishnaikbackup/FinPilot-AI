@@ -21,6 +21,7 @@ on:
       - ".github/workflows/pages.yml"
   schedule:
     - cron: "17 * * * *"
+    - cron: "45 10 * * 1-5"
   workflow_dispatch:
 
 permissions:
@@ -57,16 +58,19 @@ jobs:
       - name: Refresh public data snapshots
         run: python scripts/refresh_public_data.py
       - name: Fetch permitted India market data (optional)
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '45 10 * * 1-5'
         env:
           UPSTOX_ACCESS_TOKEN: ${{ secrets.UPSTOX_ACCESS_TOKEN }}
           MARKET_DATA_PUBLIC_DISPLAY_RIGHTS: ${{ secrets.MARKET_DATA_PUBLIC_DISPLAY_RIGHTS }}
         run: python automation/upstox_market_data.py
       - name: Fetch permitted global EOD data (optional)
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '45 10 * * 1-5'
         env:
           ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
           GLOBAL_DATA_PUBLIC_DISPLAY_RIGHTS: ${{ secrets.GLOBAL_DATA_PUBLIC_DISPLAY_RIGHTS }}
         run: python automation/alphavantage_market_data.py
       - name: Merge permitted provider snapshots
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '45 10 * * 1-5'
         run: python automation/merge_market_quotes.py
       - name: Restore paper-bot state
         uses: actions/cache/restore@v4
@@ -78,6 +82,7 @@ jobs:
       - name: Test all simulation and risk tools
         run: python -m unittest discover -s tests -v
       - name: Run paper-bot simulation
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '45 10 * * 1-5'
         run: python automation/paper_bot.py
       - name: Cache paper-bot state
         uses: actions/cache/save@v4
