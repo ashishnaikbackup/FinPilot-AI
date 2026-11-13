@@ -79,7 +79,8 @@
 ## Phase 6 — Portfolio and simulation
 - [ ] Portfolio tracker with fees, taxes and allocation
 - [x] Basic manual-price paper portfolio simulator (user-entered marks, fee-aware illustrative P/L; no live data or execution)
-- [x] Deterministic long-only cash-equity/ETF paper simulation with EMA/RSI signals, ATR stops, position sizing, fees/slippage assumptions and conservative daily-bar fills
+- [x] Deterministic long-only cash-equity/ETF paper simulation with EMA/RSI signals, ATR stops, position sizing, fees/slippage assumptions and conservative next-session daily-bar fills
+- [x] Persist paper account state in Git and track up to 365 sessions of equity history with daily, five-session weekly and 21-session monthly performance reporting
 - [x] Initial single-instrument daily-bar backtester with next-session-open fills, costs, drawdown and explicit limitations
 - [ ] Portfolio-grade point-in-time backtesting with corporate actions, survivorship controls and realistic intraday fills
 - [x] Add single-leg and multi-leg options expiry payoff/breakeven calculators (manual inputs; no live margin or contract validation)
