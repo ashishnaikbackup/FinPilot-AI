@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Activity, RefreshCw, ShieldCheck } from "lucide-react";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 type Signal = {
   symbol: string; market: string; currency: string; price: number;
@@ -11,11 +12,13 @@ type Position = {
   entry_price: number; last_price: number; stop: number; target: number;
 };
 type Trade = { symbol: string; quantity: number; entry_price: number; exit_price: number; pnl: number; closed_at: string; reason: string };
+type EquityPoint = { as_of: string; equity: number; cash: number; realised_pnl: number; unrealised_pnl: number; open_positions: number; closed_trades: number };
+type Performance = { daily_return_pct: number | null; weekly_5_session_return_pct: number | null; monthly_21_session_return_pct: number | null; since_start_return_pct: number | null; history_points: number; method: string };
 type Report = {
   status: string; generated_at: string | null; mode: string; strategy: string;
   data: { status: string; provider?: string; as_of?: string; freshness?: string; message?: string; note?: string };
   summary: { open_positions: number; closed_trades: number; cash: number; equity: number; realised_pnl: number; unrealised_pnl: number };
-  signals: Signal[]; positions: Position[]; pending_orders?: { symbol: string; signal_as_of: string; created_at: string }[]; recent_trades: Trade[]; limitations: string[];
+  signals: Signal[]; positions: Position[]; pending_orders?: { symbol: string; signal_as_of: string; created_at: string }[]; recent_trades: Trade[]; equity_history?: EquityPoint[]; performance?: Performance; limitations: string[];
 };
 
 const money = (value: number, currency = "INR") => {
@@ -23,6 +26,7 @@ const money = (value: number, currency = "INR") => {
   catch { return value.toFixed(2) + " " + currency; }
 };
 const date = (value?: string | null) => value ? new Date(value).toLocaleString("en-IN") : "Not available";
+const percent = (value?: number | null) => value == null ? "Collecting history" : `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
 
 export default function PaperBot() {
   const [report, setReport] = useState<Report | null>(null);
@@ -68,6 +72,27 @@ export default function PaperBot() {
       </div>
       <div className="calc-result"><span>Open positions · closed trades</span><b>{report?.summary?.open_positions ?? 0} · {report?.summary?.closed_trades ?? 0}</b></div>
       <p className="calc-foot">Starting virtual capital: ₹10,00,000. This is simulated capital, not a real account balance or investment recommendation.</p>
+    </div>
+    <div className="panel workspace-panel">
+      <div className="eyebrow">PERFORMANCE REPORT</div><h2>Daily · weekly · monthly</h2>
+      <div className="calculator-grid">
+        <div className="calculator-card"><span>Daily change</span><b>{percent(report?.performance?.daily_return_pct)}</b></div>
+        <div className="calculator-card"><span>Weekly · 5 sessions</span><b>{percent(report?.performance?.weekly_5_session_return_pct)}</b></div>
+        <div className="calculator-card"><span>Monthly · 21 sessions</span><b>{percent(report?.performance?.monthly_21_session_return_pct)}</b></div>
+        <div className="calculator-card"><span>Since start</span><b>{report?.performance?.since_start_return_pct == null ? "—" : percent(report.performance.since_start_return_pct)}</b></div>
+      </div>
+      {report?.equity_history && report.equity_history.length > 1 ? <div style={{ width: "100%", height: 260 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={report.equity_history} margin={{ top: 12, right: 12, left: 8, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" opacity={0.25}/>
+            <XAxis dataKey="as_of" tickFormatter={(value: string) => new Date(value).toLocaleDateString("en-IN",{day:"2-digit",month:"short"})}/>
+            <YAxis tickFormatter={(value: number) => "₹" + Math.round(value/1000) + "k"}/>
+            <Tooltip labelFormatter={(value) => date(String(value))} formatter={(value) => money(Number(value))}/>
+            <Line type="monotone" dataKey="equity" name="Virtual equity" stroke="#7c9cff" strokeWidth={2} dot={false} isAnimationActive={false}/>
+          </LineChart>
+        </ResponsiveContainer>
+      </div> : <div className="empty-data">Performance history starts when the first permitted market snapshot is processed. Weekly and monthly figures need at least 6 and 22 session records respectively.</div>}
+      <p className="calc-foot">{report?.performance?.method || "Returns are calculated from recorded simulated account equity, not forecasts."}</p>
     </div>
     <div className="panel workspace-panel">
       <div className="eyebrow">MARKET SCANNER</div><h2>Agent decisions</h2>
