@@ -34,7 +34,11 @@
 - [ ] Select a direct market-data provider with explicit public website-display rights
 - [ ] Add first-party live/delayed/EOD quote adapter only after provider entitlement is confirmed (TradingView embeds are external widgets, not this adapter)
 - [x] Add GitHub-native feed-gated paper-trading engine, scheduled report generation, deterministic tests and dashboard workspace
-- [ ] Connect a permitted structured quote provider; without it the bot intentionally remains in waiting state
+- [x] Build optional read-only Upstox India EOD/option-chain adapter and Alpha Vantage global EOD adapter with explicit public-display rights gates
+- [x] Merge permitted provider snapshots into the paper-bot feed; add Options Lab workspace
+- [ ] Configure provider credentials, permitted display/storage rights and real watchlists; without these the bot intentionally remains in waiting state
+- [ ] Add real-time global market-data provider and broader exchange coverage
+- [x] Add provider status/error snapshots and daily market-data refresh scheduling
 - [ ] Add source freshness monitoring and alerts for failed scheduled refreshes
 
 ## Phase 3 — India and global research
