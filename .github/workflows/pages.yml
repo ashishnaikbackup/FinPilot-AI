@@ -8,6 +8,9 @@ on:
       - "automation/**"
       - "tests/test_paper_bot.py"
       - "tests/test_backtest_options.py"
+      - "tests/test_upstox_adapter.py"
+      - "automation/config/**"
+      - "docs/MARKET_DATA_SETUP.md"
       - "docs/PAPER_TRADING.md"
       - "docs/BACKTESTING_AND_OPTIONS.md"
       - "index.html"
@@ -52,6 +55,12 @@ jobs:
             finpilot-public-data-
       - name: Refresh public data snapshots
         run: python scripts/refresh_public_data.py
+      - name: Fetch permitted India market data (optional)
+        if: ${{ secrets.UPSTOX_ACCESS_TOKEN != '' && secrets.MARKET_DATA_PUBLIC_DISPLAY_RIGHTS == 'true' }}
+        env:
+          UPSTOX_ACCESS_TOKEN: ${{ secrets.UPSTOX_ACCESS_TOKEN }}
+          MARKET_DATA_PUBLIC_DISPLAY_RIGHTS: ${{ secrets.MARKET_DATA_PUBLIC_DISPLAY_RIGHTS }}
+        run: python automation/upstox_market_data.py
       - name: Restore paper-bot state
         uses: actions/cache/restore@v4
         with:
