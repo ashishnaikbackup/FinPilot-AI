@@ -76,8 +76,10 @@
 - [ ] Portfolio tracker with fees, taxes and allocation
 - [x] Basic manual-price paper portfolio simulator (user-entered marks, fee-aware illustrative P/L; no live data or execution)
 - [x] Deterministic long-only cash-equity/ETF paper simulation with EMA/RSI signals, ATR stops, position sizing, fees/slippage assumptions and conservative daily-bar fills
-- [ ] Historical backtesting with point-in-time data, realistic intraday fills and look-ahead/survivorship-bias controls
-- [ ] Add a licensed options-chain/contract-data adapter and separate F&O payoff/Greeks simulator
+- [x] Initial single-instrument daily-bar backtester with next-session-open fills, costs, drawdown and explicit limitations
+- [ ] Portfolio-grade point-in-time backtesting with corporate actions, survivorship controls and realistic intraday fills
+- [x] Add standalone single-leg options expiry payoff and breakeven calculator (manual inputs; no live chain)
+- [ ] Add a licensed options-chain/contract-data adapter, exchange lot-size validation, margin and Greeks simulator
 - [ ] Read-only broker connectivity after security review
 
 ## Phase 7 — Research framework adapters
