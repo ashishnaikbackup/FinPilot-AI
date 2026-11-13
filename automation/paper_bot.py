@@ -218,7 +218,7 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
             "data": {"status": "available", "provider": snapshot["provider"], "as_of": snapshot_as_of, "freshness": snapshot["freshness"], "instrument_count": len(snapshot["instruments"]), "note": "No new trades: this exact market snapshot has already been processed."},
             "mode": "paper_only", "strategy": "EMA20/EMA50 trend + RSI14 filter; ATR14 stop; 3R target",
             "summary": {"open_positions": len(positions), "closed_trades": len(trades), "cash": round(cash, 2), "equity": round(equity, 2), "realised_pnl": round(sum(float(t.get("pnl", 0)) for t in trades), 2), "unrealised_pnl": round(unrealised, 2)},
-            "signals": analyses, "positions": positions, "pending_orders": pending_orders, "recent_trades": list(reversed(trades[-20:])), "equity_history": equity_history, "performance": performance, "equity_history": equity_history, "performance": summarise_performance(equity_history, equity),
+            "signals": analyses, "positions": positions, "pending_orders": pending_orders, "recent_trades": list(reversed(trades[-20:])), "equity_history": equity_history, "performance": summarise_performance(equity_history, equity),
             "limitations": ["This market snapshot was already processed; no duplicate trades were generated.", "No broker connection or real orders.", "F&O/options/futures remain excluded from paper execution."]
         }
         return report, state
@@ -330,7 +330,7 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
         "data": {"status": "available", "provider": snapshot["provider"], "as_of": snapshot["as_of"], "freshness": snapshot["freshness"], "instrument_count": len(snapshot["instruments"]), "note": "Provider data is not independently verified by FinPilot. Respect its licence and freshness label."},
         "mode": "paper_only", "strategy": "EMA20/EMA50 trend + RSI14 filter; ATR14 stop; 3R target",
         "summary": {"open_positions": len(positions), "closed_trades": len(trades), "cash": round(cash, 2), "equity": round(equity, 2), "realised_pnl": round(realised, 2), "unrealised_pnl": round(unrealised, 2)},
-        "signals": analyses, "positions": positions, "pending_orders": pending_orders, "recent_trades": list(reversed(trades[-20:])),
+        "signals": analyses, "positions": positions, "pending_orders": pending_orders, "recent_trades": list(reversed(trades[-20:])), "equity_history": equity_history, "performance": performance,
         "limitations": ["Signals from completed daily bars fill no earlier than the next supplied session open.", "Paper fills use daily-bar assumptions, slippage and estimated fees.", "No broker connection or real orders.", "F&O/options/futures are excluded until a permitted option-chain and contract-data source is configured.", "This rules-based strategy is educational and has no claim of predictive edge."]
     }
     new_state = {"cash": round(cash, 2), "positions": positions, "pending_orders": pending_orders, "trades": trades[-500:], "equity_history": equity_history, "updated_at": timestamp, "last_processed_as_of": snapshot_as_of}
