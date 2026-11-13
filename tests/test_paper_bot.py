@@ -18,6 +18,21 @@ class PaperBotTests(unittest.TestCase):
         self.assertEqual(report["summary"]["equity"], 1_000_000)
         self.assertEqual(state["positions"], [])
 
+    def test_feed_outage_preserves_existing_virtual_account(self):
+        prior = {
+            "cash": 750_000,
+            "positions": [{"symbol": "ABC", "quantity": 10, "entry_price": 100, "last_price": 110}],
+            "pending_orders": [{"symbol": "XYZ"}],
+            "trades": [{"symbol": "OLD", "pnl": 500}],
+        }
+        report, state = run_bot({"status": "unavailable"}, prior, "2026-11-13T00:00:00Z")
+        self.assertEqual(report["status"], "waiting_for_market_data")
+        self.assertEqual(report["summary"]["open_positions"], 1)
+        self.assertEqual(report["summary"]["cash"], 750_000)
+        self.assertEqual(report["summary"]["equity"], 751_100)
+        self.assertEqual(report["pending_orders"], [{"symbol": "XYZ"}])
+        self.assertEqual(state, prior)
+
     def test_rejects_derivatives(self):
         bars = [{"open": 100+i, "high": 102+i, "low": 99+i, "close": 101+i, "date": str(i)} for i in range(60)]
         self.assertIsNone(analyse_instrument({"symbol": "NIFTY26NOVFUT", "asset_type": "future", "bars": bars}))
