@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Activity, Plus, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 import { calculateStrategyPayoff, expirySpotGrid, type OptionLeg } from "./lib/options";
 
-type OptionSide = { instrument_key?: string; market_data?: { ltp?: number; volume?: number; oi?: number; bid_price?: number; ask_price?: number; bid_qty?: number; ask_qty?: number }; option_greeks?: { delta?: number; gamma?: number; theta?: number; vega?: number; iv?: number; pop?: number } };
+type OptionSide = { instrument_key?: string; contract_meta?: { trading_symbol?: string; expiry?: string; instrument_type?: string; lot_size?: number; minimum_lot?: number; freeze_quantity?: number; tick_size?: number; weekly?: boolean }; market_data?: { ltp?: number; volume?: number; oi?: number; bid_price?: number; ask_price?: number; bid_qty?: number; ask_qty?: number }; option_greeks?: { delta?: number; gamma?: number; theta?: number; vega?: number; iv?: number; pop?: number } };
 type Strike = { expiry?: string; pcr?: number; strike_price?: number; underlying_spot_price?: number; call_options?: OptionSide; put_options?: OptionSide };
-type Underlying = { underlying: string; expiry_request: string; retrieved_at: string; contracts: Strike[] };
+type Underlying = { underlying: string; expiry_request: string; retrieved_at: string; contract_metadata_count?: number; contracts: Strike[] };
 type Payload = { status: string; provider?: string; retrieved_at?: string; underlyings?: Underlying[] };
 const n=(v?:number)=>typeof v==="number"&&Number.isFinite(v)?v.toLocaleString("en-IN",{maximumFractionDigits:2}):"—";
 
@@ -69,7 +69,7 @@ export default function OptionsLab(){
   useEffect(()=>{void refresh();const t=window.setInterval(()=>{if(document.visibilityState==="visible")void refresh();},5*60*1000);return()=>window.clearInterval(t);},[]);
   return <div className="workspace-stack">
     <div className="panel workspace-panel"><div className="panel-heading"><div><div className="eyebrow">INDIA DERIVATIVES · READ ONLY</div><h2>Options chain intelligence</h2></div><button className="subtle-button" onClick={()=>{setLoading(true);void refresh();}}><RefreshCw size={14}/> Refresh</button></div>
-      <p>Displays the provider's option-chain snapshot, including market data and Greeks. This workspace does not place trades or issue F&amp;O recommendations.</p>
+      <p>Displays the provider's option-chain snapshot, including market data, Greeks and contract metadata such as exchange lot size when returned. This workspace does not place trades or issue F&amp;O recommendations.</p>
       <div className="calc-result"><span>Provider / last refresh</span><b>{data?.provider||"Not connected"} · {data?.retrieved_at?new Date(data.retrieved_at).toLocaleString("en-IN"):"—"}</b></div>
       {error&&<p className="calc-foot" role="status">{error}</p>}
       {loading&&!data&&<div className="empty-data">Loading option-chain snapshot…</div>}
@@ -81,8 +81,8 @@ export default function OptionsLab(){
       <div className="holding-list">{u.contracts?.map(row=><div className="research-news-item" key={row.strike_price}>
         <div className="news-meta"><b>Strike {n(row.strike_price)}</b><small>Expiry {row.expiry||"—"}</small></div>
         <div className="calculator-grid">
-          <div className="calculator-card"><span>CALL LTP · OI</span><b>{n(row.call_options?.market_data?.ltp)} · {n(row.call_options?.market_data?.oi)}</b><small>Δ {n(row.call_options?.option_greeks?.delta)} · IV {n(row.call_options?.option_greeks?.iv)}</small></div>
-          <div className="calculator-card"><span>PUT LTP · OI</span><b>{n(row.put_options?.market_data?.ltp)} · {n(row.put_options?.market_data?.oi)}</b><small>Δ {n(row.put_options?.option_greeks?.delta)} · IV {n(row.put_options?.option_greeks?.iv)}</small></div>
+          <div className="calculator-card"><span>CALL LTP · OI</span><b>{n(row.call_options?.market_data?.ltp)} · {n(row.call_options?.market_data?.oi)}</b><small>Δ {n(row.call_options?.option_greeks?.delta)} · IV {n(row.call_options?.option_greeks?.iv)} · Lot {n(row.call_options?.contract_meta?.lot_size)}</small></div>
+          <div className="calculator-card"><span>PUT LTP · OI</span><b>{n(row.put_options?.market_data?.ltp)} · {n(row.put_options?.market_data?.oi)}</b><small>Δ {n(row.put_options?.option_greeks?.delta)} · IV {n(row.put_options?.option_greeks?.iv)} · Lot {n(row.put_options?.contract_meta?.lot_size)}</small></div>
         </div>
         <div className="calc-result"><span>Call bid / ask · Put bid / ask</span><b>{n(row.call_options?.market_data?.bid_price)} / {n(row.call_options?.market_data?.ask_price)} · {n(row.put_options?.market_data?.bid_price)} / {n(row.put_options?.market_data?.ask_price)}</b></div>
         <div className="calc-result"><span>Call Θ / Vega · Put Θ / Vega</span><b>{n(row.call_options?.option_greeks?.theta)} / {n(row.call_options?.option_greeks?.vega)} · {n(row.put_options?.option_greeks?.theta)} / {n(row.put_options?.option_greeks?.vega)}</b></div>
