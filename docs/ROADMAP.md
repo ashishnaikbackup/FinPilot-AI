@@ -87,7 +87,8 @@
 - [x] Add manual multi-leg call/put strategy builder with scenario P&L, breakevens, net debit/credit and unlimited short-call risk flags
 - [x] Add rights-gated Upstox option-chain and option-contract metadata adapter with provider-supplied lot size, expiry, freeze quantity and tick size
 - [ ] Add contract-master freshness/consistency validation, F&O margin and portfolio Greeks simulator
-- [ ] Add autonomous F&O paper strategies with verified contract metadata, defined-risk sizing, expiry handling and trade journal
+- [x] Add limited rules-based Indian index options paper simulator for one-lot defined-risk debit verticals, with queued next-snapshot entries, lot-size checks, risk limits, stop/target/trend exits, expiry settlement and trade journal
+- [ ] Expand F&O simulator to verified exchange margin/portfolio Greeks, futures, credit spreads, broader contracts and global derivatives
 - [ ] Read-only broker connectivity after security review
 
 ## Phase 7 — Research framework adapters
