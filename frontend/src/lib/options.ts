@@ -56,7 +56,8 @@ export function calculateStrategyPayoff(legs: OptionLeg[], spots: number[]): Str
       breakevens.push(Math.round(crossing * 100) / 100);
     }
   }
-  if (points.at(-1)?.pnl === 0) breakevens.push(points.at(-1)!.spot);
+  const finalPoint = points[points.length - 1];
+  if (finalPoint.pnl === 0) breakevens.push(finalPoint.spot);
 
   const netCallUnits = legs.reduce((total, leg) => {
     if (leg.optionType !== "call") return total;
