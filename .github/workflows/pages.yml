@@ -104,7 +104,7 @@ jobs:
           path: frontend/public/data
           key: finpilot-public-data-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Install dependencies
