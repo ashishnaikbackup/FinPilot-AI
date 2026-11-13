@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { money, price, sipProjection } from "./lib/finance";
 
-const NAV = ["Overview", "Markets", "Opportunities", "News Intelligence", "AI Mentor", "Portfolio", "Learning Centre", "Career & Income"];
+const NAV = ["Overview", "Markets", "Opportunities", "News Intelligence", "AI Mentor", "Paper Bot", "Options Lab", "Portfolio", "Learning Centre", "Career & Income"];
 const NOW = "2026-10-31T10:00:00+00:00";
 
 const files: Record<string, unknown> = {
@@ -59,6 +59,26 @@ describe("app shell and navigation", () => {
       expect(document.title).toBe(label === "Overview" ? "FinPilot AI — Financial Intelligence" : `${label} | FinPilot AI`);
       expect(screen.getAllByRole("heading", { level: 1 }).length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("options strategy workbench", () => {
+  it("builds a defined-risk bull call spread from manual inputs", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await open(user, "Options Lab");
+    await user.click(screen.getByRole("button", { name: /Add leg/ }));
+    await user.click(screen.getByRole("button", { name: /Add leg/ }));
+    await user.type(screen.getByLabelText("Underlying spot for scenario (manual)"), "110");
+    await user.type(screen.getByLabelText("Leg 1 strike"), "100");
+    await user.type(screen.getByLabelText("Leg 1 premium"), "10");
+    await user.selectOptions(screen.getByLabelText("Leg 2 position"), "sell");
+    await user.type(screen.getByLabelText("Leg 2 strike"), "120");
+    await user.type(screen.getByLabelText("Leg 2 premium"), "4");
+    expect(await screen.findByText("Maximum profit")).toBeInTheDocument();
+    expect(screen.getByText("Maximum profit").closest(".calculator-card")).toHaveTextContent("₹14");
+    expect(screen.getByText("Maximum loss").closest(".calculator-card")).toHaveTextContent("₹6");
+    expect(screen.getByText("Breakeven(s)").closest(".calculator-card")).toHaveTextContent("₹106");
   });
 });
 

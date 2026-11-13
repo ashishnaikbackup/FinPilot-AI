@@ -12,7 +12,7 @@ At least 52 ordered bars are required. The engine computes indicators using only
 The sample input is intentionally not populated with fabricated market history. Use a provider/export whose licence permits local storage and backtesting. This initial backtester is single-instrument, long-only, daily-bar and educational; it is not yet a portfolio-grade institutional simulator.
 
 ## Options payoff
-`automation/options_payoff.py` computes expiry intrinsic P/L and breakeven for one long/short call or put leg. It requires user-supplied strike, premium, quantity and spot scenarios. It does not fetch option chains, infer lot sizes or estimate margin/Greeks. Short-call loss is marked unlimited. Do not treat the output as a trade recommendation.
+`automation/options_payoff.py` computes expiry intrinsic P/L and breakeven for one long/short call or put leg. The Options Lab also includes a browser-based multi-leg strategy payoff builder for manually entered calls/puts, premiums, strikes and quantities. It reports scenario P/L, breakevens, net debit/credit and flags unbounded net short-call loss. Quantities are units, not automatically validated exchange lots. Neither tool fetches execution-ready contract metadata, calculates margin, includes taxes/fees, models early exercise or volatility changes, nor produces trade recommendations. Verify contract specifications and lot sizes with the exchange/provider before using any scenario.
 
 ## Tests
 Run `python -m unittest discover -s tests -v`.
