@@ -85,7 +85,8 @@
 - [ ] Portfolio-grade point-in-time backtesting with corporate actions, survivorship controls and realistic intraday fills
 - [x] Add single-leg and multi-leg options expiry payoff/breakeven calculators (manual inputs; no live margin or contract validation)
 - [x] Add manual multi-leg call/put strategy builder with scenario P&L, breakevens, net debit/credit and unlimited short-call risk flags
-- [ ] Add licensed options-chain/contract-data adapter, exchange lot-size validation, margin and Greeks simulator
+- [x] Add rights-gated Upstox option-chain and option-contract metadata adapter with provider-supplied lot size, expiry, freeze quantity and tick size
+- [ ] Add contract-master freshness/consistency validation, F&O margin and portfolio Greeks simulator
 - [ ] Add autonomous F&O paper strategies with verified contract metadata, defined-risk sizing, expiry handling and trade journal
 - [ ] Read-only broker connectivity after security review
 
