@@ -17,7 +17,7 @@ def bullish_bars(count=70):
 def option_side(key, delta, bid, ask, lot=10):
     return {
         "instrument_key": key,
-        "contract_meta": {"instrument_key": key, "instrument_type": "CE", "lot_size": lot, "freeze_quantity": lot * 10, "expiry": "2026-11-26", "strike_price": 100 if "100" in key else 110, "trading_symbol": key},
+        "contract_meta": {"instrument_key": key, "instrument_type": "PE" if key.startswith("PUT") else "CE", "lot_size": lot, "freeze_quantity": lot * 10, "expiry": "2026-11-26", "strike_price": 100 if "100" in key else 110, "trading_symbol": key},
         "market_data": {"bid_price": bid, "ask_price": ask, "bid_qty": 20, "ask_qty": 20, "oi": 500, "volume": 1000},
         "option_greeks": {"delta": delta}
     }
@@ -54,6 +54,22 @@ class FnoPaperBotTests(unittest.TestCase):
         self.assertEqual(report["summary"]["open_positions"], 0)
         self.assertEqual(report["summary"]["pending_orders"], 1)
         self.assertEqual(state["pending_orders"][0]["option_type"], "CE")
+
+    def test_bearish_trend_selects_put_debit_spread(self):
+        start = datetime(2026, 9, 1)
+        bars = []
+        for i in range(70):
+            close = 200 - i * 0.8 + (2 if i % 3 == 0 else -2 if i % 3 == 1 else 0)
+            bars.append({"timestamp": (start + timedelta(days=i)).date().isoformat(), "open": close + 0.2, "high": close + 1, "low": close - 1, "close": close, "volume": 10000})
+        trend = trend_from_bars(bars)
+        self.assertEqual(trend["trend"], "BEARISH")
+        chain = {"underlying": "NIFTY", "underlying_bars": bars, "contracts": [
+            {"strike_price": 110, "expiry": "2026-11-26", "put_options": option_side("PUT110", -0.50, 4.8, 5.0)},
+            {"strike_price": 100, "expiry": "2026-11-26", "put_options": option_side("PUT100", -0.25, 2.3, 2.5)},
+        ]}
+        candidate = select_spread(chain, "BEARISH", trend["as_of"])
+        self.assertEqual(candidate["option_type"], "PE")
+        self.assertGreater(candidate["long_strike"], candidate["short_strike"])
 
     def test_pending_spread_fills_only_on_later_snapshot(self):
         first = bullish_snapshot()
