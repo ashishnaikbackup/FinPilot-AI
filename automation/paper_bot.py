@@ -152,8 +152,10 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
     cash = float(state.get("cash", STARTING_CASH))
     positions = state.get("positions", []) if isinstance(state.get("positions"), list) else []
     trades = state.get("trades", []) if isinstance(state.get("trades"), list) else []
+    pending_orders = state.get("pending_orders", []) if isinstance(state.get("pending_orders"), list) else []
     analyses = [a for item in snapshot["instruments"] if isinstance(item, dict) if (a := analyse_instrument(item))]
     by_symbol = {a["symbol"]: a for a in analyses}
+    sources_by_symbol = {i.get("symbol"): i for i in snapshot["instruments"] if isinstance(i, dict)}
     snapshot_as_of = str(snapshot.get("as_of") or "")
     # Daily EOD feeds are refreshed once per session. Re-running Actions against
     # the same snapshot must not duplicate entries/exits or churn the journal.
@@ -173,6 +175,45 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
         }
         return report, state
     closed = []
+
+    # Signals from a completed daily candle become pending orders. Fill only
+    # against a later session's open, never against the close that created them.
+    still_pending = []
+    for order in pending_orders:
+        source = sources_by_symbol.get(order.get("symbol"), {})
+        bars = source.get("bars", []) if isinstance(source, dict) else []
+        if not bars:
+            still_pending.append(order)
+            continue
+        bar = bars[-1]
+        bar_date = str(bar.get("timestamp") or bar.get("date") or "")
+        signal_date = str(order.get("signal_as_of") or "")
+        if not bar_date or not signal_date or bar_date <= signal_date:
+            still_pending.append(order)
+            continue
+        try:
+            open_price = float(bar["open"])
+            risk_per_unit = float(order["risk_per_unit"])
+            if not math.isfinite(open_price) or open_price <= 0 or risk_per_unit <= 0:
+                continue
+            entry = open_price * (1 + SLIPPAGE_RATE)
+            quantity = math.floor(min(
+                (cash + sum(float(p["quantity"]) * float(p.get("last_price", p["entry_price"])) for p in positions)) * RISK_FRACTION / risk_per_unit,
+                (cash * MAX_POSITION_WEIGHT) / entry
+            ))
+            total, fee = quantity * entry, quantity * entry * FEE_RATE
+            if quantity <= 0 or total + fee > cash or len(positions) >= MAX_POSITIONS:
+                continue
+            cash -= total + fee
+            positions.append({
+                "symbol": order["symbol"], "market": order["market"], "currency": order["currency"],
+                "quantity": quantity, "entry_price": round(entry, 6), "entry_cost": round(total + fee, 2),
+                "stop": round(entry - risk_per_unit, 6), "target": round(entry + 3 * risk_per_unit, 6),
+                "opened_at": bar_date, "last_price": float(bar.get("close", open_price))
+            })
+        except (KeyError, TypeError, ValueError, OverflowError):
+            continue
+    pending_orders = still_pending
 
     # Conservative daily-bar exits: if both stop and target are touched, assume
     # the stop was hit first. Stops/targets are checked against supplied OHLC.
@@ -199,27 +240,18 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
             closed.append(trade)
             positions.remove(position)
 
-    equity_before_entries = cash + sum(float(p["quantity"]) * by_symbol.get(p["symbol"], {}).get("price", float(p["entry_price"])) for p in positions)
+    # Queue today's new signals for the next available session open. Do not
+    # reuse today's closing price as an executable fill.
     for analysis in analyses:
-        if analysis["signal"] != "BUY" or any(p["symbol"] == analysis["symbol"] for p in positions) or len(positions) >= MAX_POSITIONS:
+        if analysis["signal"] != "BUY" or any(p["symbol"] == analysis["symbol"] for p in positions) or any(o.get("symbol") == analysis["symbol"] for o in pending_orders):
             continue
         risk_per_unit = 2 * analysis["atr14"]
         if risk_per_unit <= 0:
             continue
-        quantity_by_risk = (equity_before_entries * RISK_FRACTION) / risk_per_unit
-        quantity_by_weight = (equity_before_entries * MAX_POSITION_WEIGHT) / analysis["price"]
-        quantity = math.floor(min(quantity_by_risk, quantity_by_weight))
-        entry = analysis["price"] * (1 + SLIPPAGE_RATE)
-        total = quantity * entry
-        fee = total * FEE_RATE
-        if quantity <= 0 or total + fee > cash:
-            continue
-        cash -= total + fee
-        positions.append({
+        pending_orders.append({
             "symbol": analysis["symbol"], "market": analysis["market"], "currency": analysis["currency"],
-            "quantity": quantity, "entry_price": round(entry, 6), "entry_cost": round(total + fee, 2),
-            "stop": round(entry - risk_per_unit, 6), "target": round(entry + 3 * risk_per_unit, 6),
-            "opened_at": timestamp, "last_price": analysis["price"]
+            "risk_per_unit": round(risk_per_unit, 6), "signal_as_of": analysis["as_of"],
+            "created_at": timestamp
         })
     for position in positions:
         if position["symbol"] in by_symbol:
@@ -233,10 +265,10 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
         "data": {"status": "available", "provider": snapshot["provider"], "as_of": snapshot["as_of"], "freshness": snapshot["freshness"], "instrument_count": len(snapshot["instruments"]), "note": "Provider data is not independently verified by FinPilot. Respect its licence and freshness label."},
         "mode": "paper_only", "strategy": "EMA20/EMA50 trend + RSI14 filter; ATR14 stop; 3R target",
         "summary": {"open_positions": len(positions), "closed_trades": len(trades), "cash": round(cash, 2), "equity": round(equity, 2), "realised_pnl": round(realised, 2), "unrealised_pnl": round(unrealised, 2)},
-        "signals": analyses, "positions": positions, "recent_trades": list(reversed(trades[-20:])),
-        "limitations": ["Paper fills use daily-bar assumptions, slippage and estimated fees.", "No broker connection or real orders.", "F&O/options/futures are excluded until a permitted option-chain and contract-data source is configured.", "This rules-based strategy is educational and has no claim of predictive edge."]
+        "signals": analyses, "positions": positions, "pending_orders": pending_orders, "recent_trades": list(reversed(trades[-20:])),
+        "limitations": ["Signals from completed daily bars fill no earlier than the next supplied session open.", "Paper fills use daily-bar assumptions, slippage and estimated fees.", "No broker connection or real orders.", "F&O/options/futures are excluded until a permitted option-chain and contract-data source is configured.", "This rules-based strategy is educational and has no claim of predictive edge."]
     }
-    new_state = {"cash": round(cash, 2), "positions": positions, "trades": trades[-500:], "updated_at": timestamp, "last_processed_as_of": snapshot_as_of}
+    new_state = {"cash": round(cash, 2), "positions": positions, "pending_orders": pending_orders, "trades": trades[-500:], "updated_at": timestamp, "last_processed_as_of": snapshot_as_of}
     return report, new_state
 
 
