@@ -126,6 +126,11 @@ def main() -> int:
             status["errors"].append(f"{item.get('name','underlying')} option chain: {str(exc)}")
             continue
         try:
+            chain["underlying_bars"]=candle_bars(item["instrument_key"],token)
+        except (KeyError,ValueError,TypeError,ProviderError) as exc:
+            chain["underlying_bars"]=[]
+            status["errors"].append(f"{item.get('name','underlying')} historical bars: {str(exc)}")
+        try:
             contracts=fetch_option_contracts(item,token)
         except (KeyError,ValueError,TypeError,ProviderError) as exc:
             contracts=[]

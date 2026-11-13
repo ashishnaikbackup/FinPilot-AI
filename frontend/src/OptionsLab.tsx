@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Activity, Plus, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 import { calculateStrategyPayoff, expirySpotGrid, type OptionLeg } from "./lib/options";
+import FnoPaperBotPanel from "./FnoPaperBotPanel";
 
 type OptionSide = { instrument_key?: string; contract_meta?: { trading_symbol?: string; expiry?: string; instrument_type?: string; lot_size?: number; minimum_lot?: number; freeze_quantity?: number; tick_size?: number; weekly?: boolean }; market_data?: { ltp?: number; volume?: number; oi?: number; bid_price?: number; ask_price?: number; bid_qty?: number; ask_qty?: number }; option_greeks?: { delta?: number; gamma?: number; theta?: number; vega?: number; iv?: number; pop?: number } };
 type Strike = { expiry?: string; pcr?: number; strike_price?: number; underlying_spot_price?: number; call_options?: OptionSide; put_options?: OptionSide };
@@ -89,6 +90,7 @@ export default function OptionsLab(){
       </div>)}</div>
     </div>)}
     <StrategyBuilder/>
+    <FnoPaperBotPanel/>
     <div className="panel workspace-panel"><h2>Risk and data notes</h2><p><Activity size={14}/> Provider Greeks and PCR are descriptive fields, not guarantees or trade signals. Check bid/ask liquidity, lot size, expiry, exchange circulars, margin and transaction costs before any independent analysis.</p></div>
   </div>;
 }
