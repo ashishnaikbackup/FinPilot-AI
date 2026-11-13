@@ -6,10 +6,7 @@ on:
     paths:
       - "frontend/**"
       - "automation/**"
-      - "tests/test_paper_bot.py"
-      - "tests/test_backtest_options.py"
-      - "tests/test_upstox_adapter.py"
-      - "tests/test_market_data_merge.py"
+      - "tests/**"
       - "automation/config/**"
       - "docs/MARKET_DATA_SETUP.md"
       - "docs/PAPER_TRADING.md"
