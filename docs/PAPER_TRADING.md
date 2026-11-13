@@ -45,7 +45,7 @@ Provide at least 51 ordered OHLC bars per instrument. Supported first-release in
 
 ## GitHub-only operation
 
-The scheduled GitHub Pages workflow restores the previous bot state from the Actions cache, runs the bot, saves the new state, and publishes `paper-bot.json` with the site. New daily-bar signals are queued and filled at a later session open. GitHub scheduled workflows can be delayed; the report's generated time and source as-of time are authoritative. The cache is an operational convenience, not a durable database or backup.
+The scheduled GitHub Pages workflow reads the tracked state at `automation/state/paper-bot-state.json`, runs the bot, commits state changes back to the repository with the workflow token, and publishes `paper-bot.json` with the site. This makes the virtual account journal durable across workflow runs instead of relying on the evictable Actions cache. New daily-bar signals are queued and filled at a later session open. GitHub scheduled workflows can be delayed; the report's generated time and source as-of time are authoritative. The tracked state is public repository data: do not put personal financial information, credentials or real account details in it.
 
 No Cloudflare Worker URL or BOT_READ_TOKEN is required. No broker password or provider API key belongs in frontend code, commits, workflow logs or prompts.
 
