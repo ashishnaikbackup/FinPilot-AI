@@ -46,7 +46,7 @@ describe("expiry scenario grid", () => {
     const grid = expirySpotGrid(100, 10, 10);
     expect(grid).toHaveLength(11);
     expect(grid[0]).toBe(90);
-    expect(grid.at(-1)).toBe(110);
+    expect(grid[grid.length - 1]).toBe(110);
   });
 
   it("rejects invalid spot or range", () => {
