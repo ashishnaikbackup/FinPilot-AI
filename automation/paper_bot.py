@@ -147,6 +147,32 @@ def analyse_instrument(item: dict[str, Any]) -> dict[str, Any] | None:
         return None
 
 
+def summarise_performance(history: Any, current_equity: float) -> dict[str, Any]:
+    rows = history if isinstance(history, list) else []
+    values = []
+    for row in rows:
+        try:
+            value = float(row["equity"])
+            if math.isfinite(value) and value > 0:
+                values.append(value)
+        except (KeyError, TypeError, ValueError, OverflowError):
+            continue
+
+    def change(base: float) -> float | None:
+        if base <= 0:
+            return None
+        return round((current_equity / base - 1) * 100, 3)
+
+    return {
+        "daily_return_pct": change(values[-2]) if len(values) >= 2 else None,
+        "weekly_5_session_return_pct": change(values[-6]) if len(values) >= 6 else None,
+        "monthly_21_session_return_pct": change(values[-22]) if len(values) >= 22 else None,
+        "since_start_return_pct": change(STARTING_CASH),
+        "history_points": len(values),
+        "method": "Daily compares with the previous recorded session; weekly uses five sessions; monthly uses 21 sessions. These are simulated account returns, not forecasts."
+    }
+
+
 def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
     timestamp = now or datetime.now(timezone.utc).isoformat()
     ok, error = valid_snapshot(snapshot, timestamp)
@@ -156,6 +182,7 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
         positions = prior.get("positions", []) if isinstance(prior.get("positions"), list) else []
         trades = prior.get("trades", []) if isinstance(prior.get("trades"), list) else []
         pending_orders = prior.get("pending_orders", []) if isinstance(prior.get("pending_orders"), list) else []
+        equity_history = prior.get("equity_history", []) if isinstance(prior.get("equity_history"), list) else []
         unrealised = sum(float(p.get("quantity", 0)) * (float(p.get("last_price", p.get("entry_price", 0))) - float(p.get("entry_price", 0))) for p in positions)
         equity = cash + sum(float(p.get("quantity", 0)) * float(p.get("last_price", p.get("entry_price", 0))) for p in positions)
         report = {
@@ -163,7 +190,7 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
             "generated_at": timestamp, "data": {"status": "unavailable", "message": error},
             "mode": "paper_only", "strategy": "EMA20/EMA50 trend + RSI14 filter",
             "summary": {"open_positions": len(positions), "closed_trades": len(trades), "cash": round(cash, 2), "equity": round(equity, 2), "realised_pnl": round(sum(float(t.get("pnl", 0)) for t in trades), 2), "unrealised_pnl": round(unrealised, 2)},
-            "signals": [], "positions": positions, "pending_orders": pending_orders, "recent_trades": list(reversed(trades[-20:])),
+            "signals": [], "positions": positions, "pending_orders": pending_orders, "recent_trades": list(reversed(trades[-20:])), "equity_history": equity_history, "performance": summarise_performance(equity_history, equity),
             "limitations": ["Market data is unavailable; no new decisions or fills were made.", "Existing paper positions are shown using their last stored marks, which may be stale.", "No prices are fabricated.", "No live orders or broker connections.", "F&O is not enabled in this release."]
         }
         return report, prior
@@ -183,6 +210,7 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
         positions = state.get("positions", []) if isinstance(state.get("positions"), list) else []
         trades = state.get("trades", []) if isinstance(state.get("trades"), list) else []
         cash = float(state.get("cash", STARTING_CASH))
+        equity_history = state.get("equity_history", []) if isinstance(state.get("equity_history"), list) else []
         unrealised = sum(float(p.get("quantity", 0)) * (float(p.get("last_price", p.get("entry_price", 0))) - float(p.get("entry_price", 0))) for p in positions)
         equity = cash + sum(float(p.get("quantity", 0)) * float(p.get("last_price", p.get("entry_price", 0))) for p in positions)
         report = {
@@ -190,7 +218,7 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
             "data": {"status": "available", "provider": snapshot["provider"], "as_of": snapshot_as_of, "freshness": snapshot["freshness"], "instrument_count": len(snapshot["instruments"]), "note": "No new trades: this exact market snapshot has already been processed."},
             "mode": "paper_only", "strategy": "EMA20/EMA50 trend + RSI14 filter; ATR14 stop; 3R target",
             "summary": {"open_positions": len(positions), "closed_trades": len(trades), "cash": round(cash, 2), "equity": round(equity, 2), "realised_pnl": round(sum(float(t.get("pnl", 0)) for t in trades), 2), "unrealised_pnl": round(unrealised, 2)},
-            "signals": analyses, "positions": positions, "pending_orders": pending_orders, "recent_trades": list(reversed(trades[-20:])),
+            "signals": analyses, "positions": positions, "pending_orders": pending_orders, "recent_trades": list(reversed(trades[-20:])), "equity_history": equity_history, "performance": performance, "equity_history": equity_history, "performance": summarise_performance(equity_history, equity),
             "limitations": ["This market snapshot was already processed; no duplicate trades were generated.", "No broker connection or real orders.", "F&O/options/futures remain excluded from paper execution."]
         }
         return report, state
@@ -288,6 +316,15 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
     unrealised = sum(float(p["quantity"]) * (float(p.get("last_price", p["entry_price"])) - float(p["entry_price"])) for p in positions)
     equity = cash + sum(float(p["quantity"]) * float(p.get("last_price", p["entry_price"])) for p in positions)
     realised = sum(float(t.get("pnl", 0)) for t in trades)
+    equity_history = state.get("equity_history", []) if isinstance(state.get("equity_history"), list) else []
+    equity_history.append({
+        "as_of": snapshot_as_of, "generated_at": timestamp, "equity": round(equity, 2),
+        "cash": round(cash, 2), "realised_pnl": round(realised, 2),
+        "unrealised_pnl": round(unrealised, 2), "open_positions": len(positions),
+        "closed_trades": len(trades)
+    })
+    equity_history = equity_history[-365:]
+    performance = summarise_performance(equity_history, equity)
     report = {
         "schema_version": 1, "status": "available", "generated_at": timestamp,
         "data": {"status": "available", "provider": snapshot["provider"], "as_of": snapshot["as_of"], "freshness": snapshot["freshness"], "instrument_count": len(snapshot["instruments"]), "note": "Provider data is not independently verified by FinPilot. Respect its licence and freshness label."},
@@ -296,7 +333,7 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
         "signals": analyses, "positions": positions, "pending_orders": pending_orders, "recent_trades": list(reversed(trades[-20:])),
         "limitations": ["Signals from completed daily bars fill no earlier than the next supplied session open.", "Paper fills use daily-bar assumptions, slippage and estimated fees.", "No broker connection or real orders.", "F&O/options/futures are excluded until a permitted option-chain and contract-data source is configured.", "This rules-based strategy is educational and has no claim of predictive edge."]
     }
-    new_state = {"cash": round(cash, 2), "positions": positions, "pending_orders": pending_orders, "trades": trades[-500:], "updated_at": timestamp, "last_processed_as_of": snapshot_as_of}
+    new_state = {"cash": round(cash, 2), "positions": positions, "pending_orders": pending_orders, "trades": trades[-500:], "equity_history": equity_history, "updated_at": timestamp, "last_processed_as_of": snapshot_as_of}
     return report, new_state
 
 
