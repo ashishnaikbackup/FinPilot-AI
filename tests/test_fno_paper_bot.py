@@ -59,7 +59,7 @@ class FnoPaperBotTests(unittest.TestCase):
         start = datetime(2026, 9, 1)
         bars = []
         for i in range(70):
-            close = 200 - i * 0.8 + (2 if i % 3 == 0 else -2 if i % 3 == 1 else 0)
+            close = 200 - i * 0.8 - (2 if i % 3 == 0 else -2 if i % 3 == 1 else 0)
             bars.append({"timestamp": (start + timedelta(days=i)).date().isoformat(), "open": close + 0.2, "high": close + 1, "low": close - 1, "close": close, "volume": 10000})
         trend = trend_from_bars(bars)
         self.assertEqual(trend["trend"], "BEARISH")
