@@ -2,7 +2,8 @@
   "india_equities": [],
   "india_option_underlyings": [
     {"name": "NIFTY", "instrument_key": "NSE_INDEX|Nifty 50", "expiry": "current_week"},
-    {"name": "BANKNIFTY", "instrument_key": "NSE_INDEX|Nifty Bank", "expiry": "current_week"}
+    {"name": "BANKNIFTY", "instrument_key": "NSE_INDEX|Nifty Bank", "expiry": "current_week"},
+    {"name": "FINNIFTY", "instrument_key": "NSE_INDEX|Nifty Fin Service", "expiry": "current_week"}
   ],
   "notes": [
     "Add India cash equity/ETF instruments using exact Upstox instrument_key values before enabling the paper scanner.",

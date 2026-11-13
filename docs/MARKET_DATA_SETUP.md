@@ -7,7 +7,8 @@ FinPilot includes two optional, read-only data adapters and a provider merge ste
 ### India — Upstox
 - Fetches completed daily OHLC candles for configured NSE/BSE equity/ETF instrument keys using Upstox Historical Candle V3.
 - Fetches option chains for configured underlyings/expiries using the Upstox Put/Call Option Chain API, including LTP, OI, bid/ask and provider Greeks.
-- Default option-chain underlyings are NIFTY and BANKNIFTY. Cash-equity watchlist starts empty to avoid guessing instrument identifiers.
+- Fetches matching option contracts from the Upstox Option Contracts API and enriches chain rows with provider-supplied lot size, minimum lot, freeze quantity, tick size, trading symbol and expiry metadata.
+- Default option-chain underlyings are NIFTY, BANKNIFTY and FINNIFTY. Cash-equity watchlist starts empty to avoid guessing instrument identifiers.
 
 ### Global — Alpha Vantage
 - Fetches daily EOD OHLCV for configured global equity tickers using TIME_SERIES_DAILY.
@@ -41,7 +42,7 @@ Then run the GitHub Actions workflow manually or wait for the scheduled refresh.
 ## Important limitations
 
 - Upstox adapter uses completed daily candles, not streaming live ticks. It can feed the existing cash-equity/ETF paper bot with EOD data once configured.
-- Upstox option chains are displayed in Options Lab, but the paper bot still does not trade futures/options. Contract sizing, exchange lot sizes, margin, multi-leg risk and F&O backtesting remain separate release gates.
+- Upstox option chains and provider-supplied contract lot-size metadata are displayed in Options Lab, but the paper bot still does not trade futures/options. Margin, contract-master freshness validation, multi-leg portfolio risk, expiry settlement, F&O backtesting and the autonomous F&O paper engine remain separate release gates.
 - Alpha Vantage adapter is daily EOD only; it does not satisfy the requirement for live global quotes.
 - Public Pages can show provider data only if the provider agreement explicitly allows public display and storage. GitHub Secrets protect credentials, not the data after publication.
 - No live quote or option-chain data is fabricated when a provider is not configured.
@@ -50,6 +51,7 @@ Then run the GitHub Actions workflow manually or wait for the scheduled refresh.
 
 - Upstox Historical Candle V3: https://upstox.com/developer/api-documentation/v3/get-historical-candle-data/
 - Upstox Put/Call Option Chain: https://upstox.com/developer/api-documentation/get-pc-option-chain/
+- Upstox Option Contracts (lot size, freeze quantity, expiry): https://upstox.com/developer/api-documentation/get-option-contracts/
 - Alpha Vantage API documentation: https://www.alphavantage.co/documentation/
 - Alpha Vantage pricing and usage: https://www.alphavantage.co/premium/
 
