@@ -1,0 +1,42 @@
+name: FinPilot market data refresh
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  refresh-market-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Fetch permitted India market data
+        env:
+          UPSTOX_ACCESS_TOKEN: ${{ secrets.UPSTOX_ACCESS_TOKEN }}
+          MARKET_DATA_PUBLIC_DISPLAY_RIGHTS: ${{ secrets.MARKET_DATA_PUBLIC_DISPLAY_RIGHTS }}
+        run: python automation/upstox_market_data.py
+      - name: Fetch permitted global EOD market data
+        env:
+          ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
+          GLOBAL_DATA_PUBLIC_DISPLAY_RIGHTS: ${{ secrets.GLOBAL_DATA_PUBLIC_DISPLAY_RIGHTS }}
+        run: python automation/alphavantage_market_data.py
+      - name: Merge provider snapshots
+        run: python automation/merge_market_quotes.py
+      - name: Run paper simulation
+        run: python automation/paper_bot.py
+      - name: Upload provider and paper report
+        uses: actions/upload-artifact@v4
+        with:
+          name: finpilot-market-data-${{ github.run_id }}
+          path: |
+            frontend/public/data/market-provider-status.json
+            frontend/public/data/global-provider-status.json
+            frontend/public/data/options-chain.json
+            frontend/public/data/paper-bot.json
+            frontend/public/data/market-quotes.json
+          retention-days: 7

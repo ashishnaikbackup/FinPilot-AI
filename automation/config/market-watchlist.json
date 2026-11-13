@@ -1,0 +1,12 @@
+{
+  "india_equities": [],
+  "india_option_underlyings": [
+    {"name": "NIFTY", "instrument_key": "NSE_INDEX|Nifty 50", "expiry": "current_week"},
+    {"name": "BANKNIFTY", "instrument_key": "NSE_INDEX|Nifty Bank", "expiry": "current_week"}
+  ],
+  "notes": [
+    "Add India cash equity/ETF instruments using exact Upstox instrument_key values before enabling the paper scanner.",
+    "Option expiry accepts current_week, next_week, far_week, current_month, next_month, far_month or YYYY-MM-DD.",
+    "Only configure instruments and use cases covered by your provider entitlement and data licence."
+  ]
+}

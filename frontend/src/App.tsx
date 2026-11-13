@@ -13,7 +13,7 @@ import { loadHoldings } from "./lib/storage";
 
 const MacroChart = lazy(() => import("./MacroChart"));
 
-type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Paper Bot" | "Portfolio" | "Learning Centre" | "Career & Income";
+type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Paper Bot" | "Options Lab" | "Portfolio" | "Learning Centre" | "Career & Income";
 const navItems: { label: Section; icon: typeof LayoutDashboard }[] = [
   { label: "Overview", icon: LayoutDashboard },
   { label: "Markets", icon: Globe2 },
@@ -21,6 +21,7 @@ const navItems: { label: Section; icon: typeof LayoutDashboard }[] = [
   { label: "News Intelligence", icon: Newspaper },
   { label: "AI Mentor", icon: Sparkles },
   { label: "Paper Bot", icon: Bot },
+  { label: "Options Lab", icon: Activity },
   { label: "Portfolio", icon: Wallet },
   { label: "Learning Centre", icon: BookOpen },
   { label: "Career & Income", icon: BriefcaseBusiness }

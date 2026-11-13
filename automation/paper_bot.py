@@ -154,6 +154,24 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
     trades = state.get("trades", []) if isinstance(state.get("trades"), list) else []
     analyses = [a for item in snapshot["instruments"] if isinstance(item, dict) if (a := analyse_instrument(item))]
     by_symbol = {a["symbol"]: a for a in analyses}
+    snapshot_as_of = str(snapshot.get("as_of") or "")
+    # Daily EOD feeds are refreshed once per session. Re-running Actions against
+    # the same snapshot must not duplicate entries/exits or churn the journal.
+    if snapshot_as_of and state.get("last_processed_as_of") == snapshot_as_of:
+        positions = state.get("positions", []) if isinstance(state.get("positions"), list) else []
+        trades = state.get("trades", []) if isinstance(state.get("trades"), list) else []
+        cash = float(state.get("cash", STARTING_CASH))
+        unrealised = sum(float(p.get("quantity", 0)) * (float(p.get("last_price", p.get("entry_price", 0))) - float(p.get("entry_price", 0))) for p in positions)
+        equity = cash + sum(float(p.get("quantity", 0)) * float(p.get("last_price", p.get("entry_price", 0))) for p in positions)
+        report = {
+            "schema_version": 1, "status": "available", "generated_at": timestamp,
+            "data": {"status": "available", "provider": snapshot["provider"], "as_of": snapshot_as_of, "freshness": snapshot["freshness"], "instrument_count": len(snapshot["instruments"]), "note": "No new trades: this exact market snapshot has already been processed."},
+            "mode": "paper_only", "strategy": "EMA20/EMA50 trend + RSI14 filter; ATR14 stop; 3R target",
+            "summary": {"open_positions": len(positions), "closed_trades": len(trades), "cash": round(cash, 2), "equity": round(equity, 2), "realised_pnl": round(sum(float(t.get("pnl", 0)) for t in trades), 2), "unrealised_pnl": round(unrealised, 2)},
+            "signals": analyses, "positions": positions, "recent_trades": list(reversed(trades[-20:])),
+            "limitations": ["This market snapshot was already processed; no duplicate trades were generated.", "No broker connection or real orders.", "F&O/options/futures remain excluded from paper execution."]
+        }
+        return report, state
     closed = []
 
     # Conservative daily-bar exits: if both stop and target are touched, assume
@@ -218,7 +236,7 @@ def run_bot(snapshot: Any, state: Any, now: str | None = None) -> tuple[dict[str
         "signals": analyses, "positions": positions, "recent_trades": list(reversed(trades[-20:])),
         "limitations": ["Paper fills use daily-bar assumptions, slippage and estimated fees.", "No broker connection or real orders.", "F&O/options/futures are excluded until a permitted option-chain and contract-data source is configured.", "This rules-based strategy is educational and has no claim of predictive edge."]
     }
-    new_state = {"cash": round(cash, 2), "positions": positions, "trades": trades[-500:], "updated_at": timestamp}
+    new_state = {"cash": round(cash, 2), "positions": positions, "trades": trades[-500:], "updated_at": timestamp, "last_processed_as_of": snapshot_as_of}
     return report, new_state
 
 
