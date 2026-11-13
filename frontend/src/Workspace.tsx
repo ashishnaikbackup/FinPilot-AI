@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, Calculator, ShieldCheck, Wallet, BriefcaseBusiness, ExternalLink } from "lucide-react";
 import PaperBot from "./PaperBot";
+import OptionsLab from "./OptionsLab";
 import { DEBT_OK, debtPayoff, emergencyFund, goalPlan, money, paperPnl, parseAmount, price, sipProjection } from "./lib/finance";
 import { clusterNewsEvents, safeHttpsUrl, type NewsItem } from "./lib/news";
 import { answerMentor } from "./lib/mentor";
 import { HOLDINGS_KEY, MAX_HOLDINGS, MAX_PAPER_POSITIONS, PAPER_KEY, RESEARCH_KEY, downloadJson, hydrateHoldings, hydratePaperPositions, nextId, parseHoldingsBackup, readStored, writeStored, type Holding, type PaperPosition } from "./lib/storage";
 
-type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Paper Bot" | "Portfolio" | "Learning Centre" | "Career & Income";
+type Section = "Overview" | "Markets" | "Opportunities" | "News Intelligence" | "AI Mentor" | "Paper Bot" | "Options Lab" | "Portfolio" | "Learning Centre" | "Career & Income";
 type MacroObservation = { country_code: string; country: string; indicator_code: string; indicator: string; date: string; value: number | null; unit?: string };
 type ResearchCase = { id: number; name: string; type: string; horizon: string; valuation: string; liquidity: string; source: string; sourceDate: string; bull: string; base: string; bear: string; costs: string; risks: string; savedAt: string };
 type ProviderStatus = { global_news?: { status?: string; error?: string | null; official_primary_source_count?: number; discovery_index_count?: number; discovery_status?: string; discovery_error?: string | null; official_feeds?: {provider:string;status:string;items?:number;error?:string}[] } };
@@ -446,7 +447,7 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
     <div className="panel workspace-panel"><h2>Risk guardrails</h2><div className="module-grid">{["No guaranteed-return claims","No leverage or derivatives","No automatic trading","No broker credentials stored","No unverified buy/sell signals","Capital preservation first"].map(x=><div className="module-tile" key={x}><ShieldCheck size={16}/><b>{x}</b></div>)}</div></div>
   </div>;
 
-  if (active === "Paper Bot") return <PaperBot />;
+  if (active === "Paper Bot") return <PaperBot />;\n  if (active === "Options Lab") return <OptionsLab />;
 
   if (active === "Portfolio") return <div className="workspace-stack">
     <div className="panel workspace-panel"><div className="eyebrow">PAPER LAB · NO BROKER CONNECTION</div><h2>Manual-price paper portfolio</h2><p>Practise tracking hypothetical positions without placing orders. You enter both entry and current mark prices manually; FinPilot does not fetch live quotes, calculate tax, or connect to a broker. Results exclude slippage and may not match executable prices.</p>
