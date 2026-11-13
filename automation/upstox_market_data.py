@@ -14,7 +14,7 @@ from urllib.error import HTTPError, URLError
 
 ROOT=Path(__file__).resolve().parents[1]
 CONFIG=ROOT/"automation/config/market-watchlist.json"
-QUOTE_OUT=ROOT/"frontend/public/data/market-quotes.json"
+QUOTE_OUT=ROOT/"frontend/public/data/market-quotes-india.json"
 OPTIONS_OUT=ROOT/"frontend/public/data/options-chain.json"
 STATUS_OUT=ROOT/"frontend/public/data/market-provider-status.json"
 BASE="https://api.upstox.com"
