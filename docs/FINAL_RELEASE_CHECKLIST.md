@@ -1,19 +1,21 @@
 # FinPilot AI — Final Release Checklist
 
-**Review date:** 31 October 2026  
+**Review date:** 13 November 2026  
 **Release type:** Free-first public research, education and financial-planning workspace  
 **Repository:** https://github.com/ashishnaikbackup/FinPilot-AI  
 **Website:** https://ashishnaikbackup.github.io/FinPilot-AI/
 
 ## Release decision
 
-The current GitHub Pages release is feature-complete for its deliberately limited scope: public-source financial intelligence, external market visualisations, educational planning tools, browser-local research and portfolio notes, and career-resource links.
+The current GitHub Pages release includes public-source financial intelligence, external market visualisations, educational planning tools, browser-local research and portfolio notes, career-resource links, and feed-gated paper-trading simulations.
 
-It is **not** a live institutional terminal, a generative-AI adviser, a broker-connected portfolio, or a trading platform. Those ambitions remain deferred because they require licensed data, secure server infrastructure, privacy/legal review, and/or an approved budget. Do not represent them as delivered.
+It is **not** a live institutional terminal, a generative-AI adviser, a broker-connected portfolio, or a real-order trading platform. Full India/global market coverage, full F&O, private account storage and secure AI inference remain deferred because they require licensed data, secure infrastructure, privacy/legal review and/or an approved budget. Do not represent them as delivered.
 
 ## Delivered and verified scope
 
-- GitHub-native, feed-gated paper-trading engine and dashboard workspace added on branch `feat/github-native-paper-bot`; CI and Pages deployment must pass before release. The bot intentionally waits without a permitted quote snapshot and does not claim to trade live markets.
+- GitHub-native cash-equity/ETF paper bot with next-session fills, risk controls, Git-backed state, daily/weekly/monthly performance history and report.
+- Separate limited Indian index F&O paper simulator for one-lot defined-risk CALL/PUT debit verticals on NIFTY/BANKNIFTY/FINNIFTY, using provider contract metadata and later-snapshot bid/ask fills. It is not a full F&O engine.
+- Upstox option-chain/contract metadata and Alpha Vantage global EOD adapters are implemented but remain credential- and public-display-rights-gated; the engines wait without permitted data.
 
 - React + TypeScript + Vite responsive web application.
 - Public macro/news snapshots, official-source feeds, retrieval timestamps, source links, provider health and stale-data handling.
@@ -37,7 +39,8 @@ The 31 October 2026 project review recorded successful frontend/backend/public-d
 - [ ] Test calculator inputs and zero-return goal baseline.
 - [ ] Test local portfolio/research save, JSON export and restore in the same browser.
 - [ ] Test paper portfolio creation, manual mark updates, fee-aware P/L and JSON export; verify no order execution or live quote claim.
-- [ ] Verify Paper Bot workspace shows `waiting_for_market_data` until a provider adapter supplies a permitted, timestamped snapshot; then validate position sizing, stops, exits, fees and daily report.
+- [ ] Verify cash Paper Bot shows `waiting_for_market_data` until a permitted timestamped quote snapshot is supplied; then validate next-session entries, position sizing, stops, exits, fees and daily/weekly/monthly report.
+- [ ] Verify F&O paper workspace stays idle without permitted option-chain, index bars and contract metadata; with a test feed, validate debit spread selection, lot-size checks, pending fills, max-loss caps, stop/target and expiry settlement.
 - [ ] Test heuristic news grouping with repeated headlines, unrelated headlines and malformed/empty source metadata; confirm caveats remain visible.
 - [ ] Confirm privacy warnings are visible before entering personal data.
 - [ ] Confirm no API keys, passwords, broker credentials or private financial records are committed.
@@ -57,7 +60,7 @@ The frontend currently has no committed `package-lock.json`; CI uses `npm instal
 2. **Licensed market data:** no first-party live NSE/BSE/global quote service is connected. Do not scrape exchange sites or imply TradingView embeds are a FinPilot quote API.
 3. **Generative AI:** the mentor is rules-based. No local model, Ollama, paid inference API or exposed frontend secret is used.
 4. **Private accounts:** no login, cloud sync or encrypted personal-finance vault exists. Browser-local data is not a secure vault.
-5. **Advice and execution:** no personalized regulated investment advice, broker credentials, live orders, leverage, derivatives or unattended trading.
+5. **Advice and execution:** no personalized regulated investment advice, broker credentials or real orders. Only limited cash-equity/ETF and defined-risk Indian index-options paper simulations exist; full F&O, leverage and global derivatives are not implemented.
 6. **Research depth:** annual macro data, headline feeds and GDELT discovery do not constitute real-time market intelligence or claim-level news verification.
 7. **Career feeds:** official portal links are provided; this is not a live vacancy feed or automated eligibility determination.
 
