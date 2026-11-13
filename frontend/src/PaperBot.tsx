@@ -15,7 +15,7 @@ type Report = {
   status: string; generated_at: string | null; mode: string; strategy: string;
   data: { status: string; provider?: string; as_of?: string; freshness?: string; message?: string; note?: string };
   summary: { open_positions: number; closed_trades: number; cash: number; equity: number; realised_pnl: number; unrealised_pnl: number };
-  signals: Signal[]; positions: Position[]; recent_trades: Trade[]; limitations: string[];
+  signals: Signal[]; positions: Position[]; pending_orders?: { symbol: string; signal_as_of: string; created_at: string }[]; recent_trades: Trade[]; limitations: string[];
 };
 
 const money = (value: number, currency = "INR") => {
@@ -76,6 +76,13 @@ export default function PaperBot() {
         <div className="calc-result"><span>EMA20 / EMA50 · RSI14</span><b>{item.ema20} / {item.ema50} · {item.rsi14}</b></div>
         <p className="calc-foot">{item.reason}</p>
       </div>)}</div> : <div className="empty-data"><Activity size={18}/> No instrument signals yet. The scanner needs at least 51 valid daily OHLC bars per instrument.</div>}
+    </div>
+    <div className="panel workspace-panel">
+      <div className="eyebrow">NEXT-SESSION QUEUE</div><h2>Pending paper entries</h2>
+      {report?.pending_orders?.length ? <div className="holding-list">{report.pending_orders.map((item, index) => <div className="research-news-item" key={item.symbol + item.signal_as_of + index}>
+        <div className="news-meta"><b>{item.symbol}</b><small>BUY signal · waiting for a later session open</small></div>
+        <div className="calc-result"><span>Signal candle</span><b>{date(item.signal_as_of)}</b></div>
+      </div>)}</div> : <div className="empty-data">No pending paper entries.</div>}
     </div>
     <div className="panel workspace-panel">
       <div className="eyebrow">OPEN SIMULATED POSITIONS</div><h2>Position management</h2>
