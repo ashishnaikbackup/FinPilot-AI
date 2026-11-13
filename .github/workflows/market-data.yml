@@ -2,8 +2,6 @@ name: FinPilot market data refresh
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "35 11 * * 1-5"
 
 permissions:
   contents: read
@@ -40,4 +38,5 @@ jobs:
             frontend/public/data/global-provider-status.json
             frontend/public/data/options-chain.json
             frontend/public/data/paper-bot.json
+            frontend/public/data/market-quotes.json
           retention-days: 7
