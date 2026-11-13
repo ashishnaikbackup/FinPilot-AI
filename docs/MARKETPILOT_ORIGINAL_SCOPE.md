@@ -32,13 +32,13 @@ The operating constraint is GitHub-first and free-first. Never represent an embe
 | India option-chain intelligence | Upstox option-chain adapter and Options Lab for configured underlyings | Read-only and rights-gated; default NIFTY/BANKNIFTY only. FINNIFTY and broader derivatives universe are not configured. |
 | Greeks, IV, OI and PCR | Displays provider-supplied option-chain fields | Partial; no independent analytics, max pain, IV rank/percentile or full market-wide scanner. |
 | Single-leg option payoff | Expiry payoff calculator | Built; manual inputs and no margin/lot validation. |
-| Multi-leg options strategy payoffs | Interactive strategy builder added in PR #21 | Pending CI/merge at audit time; manual inputs, expiry-only, no live execution/margin. |
+| Multi-leg options strategy payoffs | Interactive strategy builder merged in PR #21 | Built and tested; manual inputs, expiry-only, no live execution/margin. |
 | Human-like autonomous paper trader | Rules-based EMA20/EMA50 + RSI14 + ATR cash-equity/ETF engine | Partial. It is not an LLM agent and does not trade F&O. Next-session fills, stale-feed protection and Git-backed state merged in PR #20. |
 | F&O autonomous paper trading | No execution engine yet | Not built. Needs licensed contract data, verified lot sizes, expiry calendar, margin/risk model, bid/ask fills, multi-leg position management and tests. |
 | Global paper trading | Cash-equity engine can consume configured provider snapshots | Partial and EOD-only through current Alpha Vantage adapter. No broad exchange coverage or FX-aware portfolio accounting. |
 | Opportunity scanner | Rules-based cash-equity signals and research worksheet | Partial. No comprehensive cross-market ranking, fundamentals, event catalysts or verified trade shortlist. |
-| Daily/weekly/monthly analysis | Scheduled daily EOD workflow and public data refresh | Partial. Weekly/monthly strategy reports, performance attribution and forecast scorecards remain. |
-| End-of-day/night reports | Paper-bot JSON report and dashboard journal; scheduled GitHub Actions | Partial. No email, push, Telegram or guaranteed delivery; GitHub schedule can be delayed. |
+| Daily/weekly/monthly analysis | Daily EOD paper report plus daily, five-session weekly and 21-session monthly simulated account returns and equity curve | Partial. Market-wide weekly/monthly analysis, performance attribution, forecast scorecards and delivery alerts remain. |
+| End-of-day/night reports | Paper-bot JSON report, dashboard journal, up to 365 session equity points and daily/weekly/monthly return summaries | Partial. No email, push, Telegram or guaranteed delivery; GitHub schedule can be delayed. |
 | Trade explanations and journal | Signals, reasons, positions, closed trades, P&L and pending entries | Partial; richer decision attribution, skipped-trade reasoning and performance analytics remain. |
 | Personal finance / wealth tools | SIP, emergency reserve, goals, debt, browser-local assets and manual paper portfolio | Partial; no private account, secure cloud sync, live holdings, tax-lot accounting or comprehensive net-worth vault. |
 | Asset-class research | Learning material and basic opportunity categories | Not complete. Live comparisons for funds, bonds, gold, REITs/InvITs, commodities and international access remain. |
@@ -56,13 +56,12 @@ The operating constraint is GitHub-first and free-first. Never represent an embe
 
 ## Next build priorities
 
-1. Complete PR #21 after frontend tests and build pass.
-2. Add a rights-compliant, broad India/global provider and configure real watchlists only after entitlement review.
-3. Build an F&O paper engine using verified contract master/lot size/expiry/margin data, bid/ask-aware fills, defined-risk strategy limits, and a complete trade journal.
-4. Improve the autonomous scanner with multi-timeframe signals, liquidity filters, event/fundamental context, risk-manager checks and explainable skipped-trade reasons.
-5. Add daily, weekly and monthly report packages with performance attribution and failure/freshness alerts.
-6. Expand asset research across ETFs, mutual funds, gold/commodities, fixed income, REITs/InvITs and legally accessible international instruments.
-7. Add secure private financial storage only after authentication, encryption and privacy design are approved.
+1. Add a rights-compliant, broad India/global provider and configure real watchlists only after entitlement review.
+2. Build an F&O paper engine using verified contract master/lot size/expiry/margin data, bid/ask-aware fills, defined-risk strategy limits and a complete trade journal.
+3. Improve the autonomous scanner with multi-timeframe signals, liquidity filters, event/fundamental context, risk-manager checks and explainable skipped-trade reasons.
+4. Expand reports with performance attribution, market-wide weekly/monthly analysis and failure/freshness alerts; add delivery channels only if securely available.
+5. Expand asset research across ETFs, mutual funds, gold/commodities, fixed income, REITs/InvITs and legally accessible international instruments.
+6. Add secure private financial storage only after authentication, encryption and privacy design are approved.
 
 ## Completion rule
 
