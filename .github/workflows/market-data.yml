@@ -30,7 +30,7 @@ jobs:
       - name: Run paper simulation
         run: python automation/paper_bot.py
       - name: Upload provider and paper report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: finpilot-market-data-${{ github.run_id }}
           path: |
