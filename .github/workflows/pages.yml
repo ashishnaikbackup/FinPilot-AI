@@ -46,7 +46,7 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Restore last-known-good public snapshots
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: frontend/public/data
           key: finpilot-public-data-${{ github.run_id }}-${{ github.run_attempt }}
@@ -120,7 +120,7 @@ jobs:
               summary.write("\n".join(lines) + "\n")
           PY
       - name: Cache refreshed public snapshots
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         if: success()
         with:
           path: frontend/public/data
