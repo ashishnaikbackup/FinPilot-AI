@@ -44,7 +44,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Restore last-known-good public snapshots
         uses: actions/cache/restore@v4
         with:
