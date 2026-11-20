@@ -2,14 +2,15 @@ import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import {
   Activity, ArrowUpRight, Bell, BookOpen, Bot, BriefcaseBusiness,
   CalendarDays, ChevronDown, CircleHelp, Compass, Globe2, Landmark, LayoutDashboard,
-  Menu, Newspaper, Search, ShieldCheck, Sparkles, TrendingUp,
-  Wallet, X
+  Menu, Moon, Newspaper, Search, ShieldCheck, Sparkles, TrendingUp,
+  Sun, Wallet, X
 } from "lucide-react";
 import Workspace from "./Workspace";
 import type { MacroPoint } from "./MacroChart";
 import { money } from "./lib/finance";
 import { sanitizeNewsItems, type NewsItem } from "./lib/news";
 import { loadHoldings } from "./lib/storage";
+import { applyTheme, getInitialTheme, type Theme } from "./lib/theme";
 
 const MacroChart = lazy(() => import("./MacroChart"));
 
@@ -49,6 +50,9 @@ const opportunities = [
 function App() {
   const [active, setActive] = useState<Section>("Overview");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  useEffect(() => { applyTheme(theme); }, [theme]);
+  const toggleTheme = () => { const next: Theme = theme === "light" ? "dark" : "light"; setTheme(next); applyTheme(next, true); };
   const [query, setQuery] = useState("");
   const [showNotice, setShowNotice] = useState(true);
   const [apiState, setApiState] = useState<"loading" | "connected" | "partial" | "offline">("loading");
@@ -147,7 +151,7 @@ function App() {
       <header className="topbar">
         <button className="menu-button" type="button" onClick={() => setMobileOpen(true)} aria-label="Open menu" aria-expanded={mobileOpen} aria-controls="workspace-navigation"><Menu/></button>
         <div className="breadcrumbs">Workspace <span>/</span> <b>{active}</b></div>
-        <div className="top-actions"><div className="search-box"><Search size={16} aria-hidden="true"/><input aria-label="Search markets" value={query} onChange={e => setQuery(e.target.value)} placeholder={active === "Overview" || active === "Markets" ? "Search markets..." : "Search disabled here"} disabled={active !== "Overview" && active !== "Markets"} /></div><a className="icon-button" href="https://github.com/ashishnaikbackup/FinPilot-AI/actions" target="_blank" rel="noreferrer" aria-label="Open update history" title="Open data refresh and software update history"><Bell size={18}/><i/></a><div className="top-avatar">FP</div></div>
+        <div className="top-actions"><div className="search-box"><Search size={16} aria-hidden="true"/><input aria-label="Search markets" value={query} onChange={e => setQuery(e.target.value)} placeholder={active === "Overview" || active === "Markets" ? "Search markets..." : "Search disabled here"} disabled={active !== "Overview" && active !== "Markets"} /></div><button type="button" className="icon-button theme-toggle" onClick={toggleTheme} aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"} title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}>{theme === "light" ? <Moon size={18}/> : <Sun size={18}/>}</button><a className="icon-button" href="https://github.com/ashishnaikbackup/FinPilot-AI/actions" target="_blank" rel="noreferrer" aria-label="Open update history" title="Open data refresh and software update history"><Bell size={18}/><i/></a><div className="top-avatar">FP</div></div>
       </header>
 
       {active !== "Overview" && <h1 className="sr-only">{active}</h1>}
@@ -181,9 +185,9 @@ function App() {
         </section>
 
         <section className="footer-grid"><div className="foot-card"><div className="foot-icon"><BookOpen/></div><div><b>Learn the language of money</b><p>Plain-English explainers, from bonds and ETFs to inflation and valuation.</p><button onClick={() => setActive("Learning Centre")}>Go to learning centre <ArrowUpRight size={13}/></button></div></div><div className="foot-card"><div className="foot-icon"><BriefcaseBusiness/></div><div><b>Grow your earning power</b><p>Build skills, explore career paths and find legitimate income opportunities.</p><button onClick={() => setActive("Career & Income")}>Explore career workspace <ArrowUpRight size={13}/></button></div></div></section>
-        <Workspace active="Overview" query={query} newsItems={newsItems} providerStatus={providerStatus}/>
+        <Workspace theme={theme} active="Overview" query={query} newsItems={newsItems} providerStatus={providerStatus}/>
         </>}
-        {active !== "Overview" && <Workspace active={active} query={query} newsItems={newsItems} providerStatus={providerStatus}/>}
+        {active !== "Overview" && <Workspace theme={theme} active={active} query={query} newsItems={newsItems} providerStatus={providerStatus}/>}
         <div className="data-footnote"><b>Data integrity</b><span>Public data: {apiState} {lastRefresh ? "· snapshot " + lastRefresh : ""}</span><span>India GDP: {providerStatus?.india_macro.status || "checking"}</span><span>FinPilot quote API: {providerStatus?.market_quotes.status || "checking"} · TradingView widgets in Markets</span><span>News: {providerStatus?.global_news.status || "checking"} · {providerStatus?.global_news.official_primary_source_count ?? 0} official / {providerStatus?.global_news.discovery_index_count ?? 0} discovery</span></div><footer><span>FINPILOT AI · RESEARCH BEFORE ACTION</span><span>Educational use only · Not investment advice</span></footer>
       </div>
     </main>

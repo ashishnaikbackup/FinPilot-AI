@@ -117,7 +117,7 @@ function isHttpsUrl(value: string) {
   return safeHttpsUrl(value) !== null;
 }
 
-export default function Workspace({ active, query, newsItems = [], providerStatus }: { active: Section; query: string; newsItems?: NewsItem[]; providerStatus?: ProviderStatus | null }) {
+export default function Workspace({ active, query, newsItems = [], providerStatus, theme = "dark" }: { theme?: "dark" | "light"; active: Section; query: string; newsItems?: NewsItem[]; providerStatus?: ProviderStatus | null }) {
   const [monthlyIncome, setMonthlyIncome] = useState("0");
   const [monthlyExpenses, setMonthlyExpenses] = useState("0");
   const [emergencyMonths, setEmergencyMonths] = useState("6");
@@ -348,24 +348,24 @@ export default function Workspace({ active, query, newsItems = [], providerStatu
         <button className="primary-button" onClick={()=>{const value=chartSymbolDraft.trim().toUpperCase();if(!/^[A-Z0-9._-]+:[A-Z0-9._-]+$/.test(value)){setChartInputError("Use EXCHANGE:TICKER format, for example NSE:RELIANCE.");return;}setChartSymbol(value);setChartInputError("");}}>Load chart <ArrowUpRight size={14}/></button>
       </div>
       {chartInputError && <p className="error-note">{chartInputError}</p>}
-      <TradingViewEmbed tag="tv-advanced-chart" script="https://widgets.tradingview-widget.com/w/en/tv-advanced-chart.js" attributes={{symbol:chartSymbol,interval:chartInterval,theme:"dark",timezone:"Asia/Kolkata","allow-symbol-change":"true",autosize:"true"}} height={540} label={"TradingView chart for "+chartSymbol}/>
+      <TradingViewEmbed tag="tv-advanced-chart" script="https://widgets.tradingview-widget.com/w/en/tv-advanced-chart.js" attributes={{symbol:chartSymbol,interval:chartInterval,theme,timezone:"Asia/Kolkata","allow-symbol-change":"true",autosize:"true"}} height={540} label={"TradingView chart for "+chartSymbol}/>
       <p className="calc-foot">Source: TradingView embedded chart. Stock widgets may be delayed; forex and crypto widgets may be real-time. Data levels vary by market and exchange. A TradingView subscription does not upgrade exchange data rights; some real-time exchange data requires a separate exchange entitlement. FinPilot does not copy these quotes into its own database. <a href="https://www.tradingview.com/widget/" target="_blank" rel="noreferrer">Widget data and market coverage details <ExternalLink size={11}/></a></p>
     </div>
     <div className="panel workspace-panel">
       <div className="eyebrow">MARKET BREADTH</div><h2>Global stock market heatmap</h2>
       <p>Explore market performance by sector and market capitalisation. This view is provided and refreshed by TradingView; it is not an independently verified FinPilot quote feed.</p>
-      <TradingViewEmbed tag="tv-heatmap" script="https://widgets.tradingview-widget.com/w/en/tv-heatmap.js" attributes={{"heatmap-type":"stock","data-source":"SPX500",grouping:"sector","block-size":"market_cap_basic","block-color":"change"}} height={440} label="Global stock market heatmap"/>
+      <TradingViewEmbed tag="tv-heatmap" script="https://widgets.tradingview-widget.com/w/en/tv-heatmap.js" attributes={{theme,"heatmap-type":"stock","data-source":"SPX500",grouping:"sector","block-size":"market_cap_basic","block-color":"change"}} height={440} label="Global stock market heatmap"/>
       <div className="resource-links"><a href="https://www.tradingview.com/markets/stocks-india/market-movers-all-stocks/" target="_blank" rel="noreferrer">India stock screener <ExternalLink size={13}/></a><a href="https://www.tradingview.com/markets/stocks-usa/market-movers-all-stocks/" target="_blank" rel="noreferrer">US stock screener <ExternalLink size={13}/></a><a href="https://www.tradingview.com/markets/cryptocurrencies/prices-all/" target="_blank" rel="noreferrer">Crypto market <ExternalLink size={13}/></a><a href="https://www.tradingview.com/markets/etfs/funds/" target="_blank" rel="noreferrer">ETF market <ExternalLink size={13}/></a></div>
     </div>
     <div className="panel workspace-panel">
       <div className="eyebrow">DIGITAL ASSETS · HIGH VOLATILITY</div><h2>Crypto market heatmap</h2>
       <p>Market-cap and daily-change view for supported crypto assets. This is market information, not a recommendation or a prompt to trade.</p>
-      <TradingViewEmbed tag="tv-heatmap" script="https://widgets.tradingview-widget.com/w/en/tv-heatmap.js" attributes={{"heatmap-type":"crypto-coins","data-source":"Crypto","block-size":"market_cap_calc","block-color":"24h_close_change|5"}} height={420} label="Cryptocurrency market heatmap"/>
+      <TradingViewEmbed tag="tv-heatmap" script="https://widgets.tradingview-widget.com/w/en/tv-heatmap.js" attributes={{theme,"heatmap-type":"crypto-coins","data-source":"Crypto","block-size":"market_cap_calc","block-color":"24h_close_change|5"}} height={420} label="Cryptocurrency market heatmap"/>
     </div>
     <div className="panel workspace-panel">
       <div className="eyebrow">ECONOMIC EVENTS</div><h2>Global economic calendar</h2>
       <p>Upcoming macro releases and central-bank events can move markets. Check the actual release, consensus, revisions and source before drawing conclusions.</p>
-      <TradingViewEmbed tag="tv-economic-calendar" script="https://widgets.tradingview-widget.com/w/en/tv-economic-calendar.js" attributes={{}} height={440} label="Global economic calendar"/>
+      <TradingViewEmbed tag="tv-economic-calendar" script="https://widgets.tradingview-widget.com/w/en/tv-economic-calendar.js" attributes={{theme}} height={440} label="Global economic calendar"/>
     </div>
     <div className="panel workspace-panel"><h2>Primary market information</h2><p>Use exchange and regulator sources for official notices, market status and disclosures. Always check the document date and data entitlement.</p><div className="resource-links"><a href="https://www.nseindia.com/" target="_blank" rel="noreferrer">NSE India <ExternalLink size={13}/></a><a href="https://www.bseindia.com/" target="_blank" rel="noreferrer">BSE India <ExternalLink size={13}/></a><a href="https://www.sebi.gov.in/" target="_blank" rel="noreferrer">SEBI <ExternalLink size={13}/></a><a href="https://www.rbi.org.in/" target="_blank" rel="noreferrer">RBI <ExternalLink size={13}/></a><a href="https://www.sec.gov/edgar/search/" target="_blank" rel="noreferrer">SEC EDGAR <ExternalLink size={13}/></a></div></div>
     <div className="panel workspace-panel"><div className="eyebrow">GLOBAL MACRO · WORLD BANK</div><h2>Compare economies and economic trends</h2><p>Annual observations for India, the United States, China, the United Kingdom, Germany and Japan. The latest year differs by country and indicator; these are not live prices or forecasts.</p><p className="calc-foot">Snapshot freshness: {globalMacroFreshness}. Retrieved: {globalMacroRetrievedAt ? new Date(globalMacroRetrievedAt).toLocaleString() + " (device local time)" : "timestamp unavailable"}.</p>

@@ -85,9 +85,9 @@ export default function PaperBot() {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={report.equity_history} margin={{ top: 12, right: 12, left: 8, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.25}/>
-            <XAxis dataKey="as_of" tickFormatter={(value: string) => new Date(value).toLocaleDateString("en-IN",{day:"2-digit",month:"short"})}/>
-            <YAxis tickFormatter={(value: number) => "₹" + Math.round(value/1000) + "k"}/>
-            <Tooltip labelFormatter={(value) => date(String(value))} formatter={(value) => money(Number(value))}/>
+            <XAxis stroke="var(--chart-tick)" dataKey="as_of" tickFormatter={(value: string) => new Date(value).toLocaleDateString("en-IN",{day:"2-digit",month:"short"})}/>
+            <YAxis stroke="var(--chart-tick)" tickFormatter={(value: number) => "₹" + Math.round(value/1000) + "k"}/>
+            <Tooltip contentStyle={{ background: "var(--chart-tip-bg)", border: "1px solid var(--chart-tip-border)", color: "var(--chart-tip-text)" }} labelFormatter={(value) => date(String(value))} formatter={(value) => money(Number(value))}/>
             <Line type="monotone" dataKey="equity" name="Virtual equity" stroke="#7c9cff" strokeWidth={2} dot={false} isAnimationActive={false}/>
           </LineChart>
         </ResponsiveContainer>
