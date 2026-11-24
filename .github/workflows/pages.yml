@@ -149,4 +149,11 @@ jobs:
           path: frontend/dist
       - name: Deploy to GitHub Pages
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      - name: Wait before retrying deploy
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 45
+      - name: Deploy to GitHub Pages (retry after a transient GitHub error)
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v5
